@@ -1,0 +1,8 @@
+id: 02
+name: B_lateral_mix
+base height: 0.55 m
+base pitch: 0.0 deg
+base fw vel: 0.6 m/s
+base lat vel: 0.6 m/s
+t_video: [ 4.24800]
+t_video_speedUpDown: [ 21.24000]

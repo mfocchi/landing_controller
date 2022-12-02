@@ -1,0 +1,3 @@
+/home/francesco/solo/pysolo_froscia/pysolo/controllers/landing_controller/SLIP_dynamics/CMakeFiles/SLIP_dynamics_lib.dir
+/home/francesco/solo/pysolo_froscia/pysolo/controllers/landing_controller/SLIP_dynamics/CMakeFiles/edit_cache.dir
+/home/francesco/solo/pysolo_froscia/pysolo/controllers/landing_controller/SLIP_dynamics/CMakeFiles/rebuild_cache.dir
