@@ -353,7 +353,7 @@ if __name__ == '__main__':
                                 p.u.setLegJointState(i, q_des_leg, q_des)
 
                         # joints velocity
-                        W_v_feet = -lc.T_v_com_ref_k
+                        W_v_feet = -p.u.linPart(lc.twist_des)
                         B_v_feet = p.b_R_w @ W_v_feet
                         for i, leg in enumerate(lc.legs):  # ['lf', 'rf', 'lh', 'lh']
                             qd_leg_des = p.IK.diff_ik_leg(q_des=q_des,
@@ -364,7 +364,7 @@ if __name__ == '__main__':
                             p.u.setLegJointState(i, qd_leg_des, qd_des)
 
 
-                        tau_ffwd = p.gravityCompensation() + p.self_weightCompensation()
+                        tau_ffwd = p.projectionWBC(lc.pose_des, lc.twist_des, lc.acc_des)
                 # print('T_feet_task: ', lc.T_feet_task)
                 # print('T_feet_home: ', lc.T_feet_home)
                 # print('B_feet_task: ', lc.B_feet_task)
@@ -374,10 +374,8 @@ if __name__ == '__main__':
                 p.send_command(q_des, qd_des, tau_ffwd)
 
                 # save LC references for com, feet, zmp
-                #p.u.linPart(p.basePoseW) +
-                p.comPoseW_des[:3] =  lc.T_p_com_ref_k.reshape([3,])
-                p.comPoseW_des[3:6] = lc.euler_des.reshape([3,])
-                p.comTwistW_des[:3] = lc.T_v_com_ref_k.reshape([3,])
+                p.comPoseW_des =  lc.pose_des.copy()
+                p.comTwistW_des = lc.twist_des.copy()
 
                 for leg in range(4):
                     p.W_contacts_des[leg] = p.u.linPart(p.basePoseW) + p.b_R_w.T @ lc.B_feet_task[leg]
