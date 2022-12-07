@@ -340,7 +340,7 @@ if __name__ == '__main__':
                                                                                               p.u.angPart(p.baseTwistW),
                                                                                               p.qd)
                         # use last computed trajectories
-                        lc.landed_phase(p.euler)
+                        lc.landed_phase(p.time, p.euler)
 
                         # set references
                         # joints position
