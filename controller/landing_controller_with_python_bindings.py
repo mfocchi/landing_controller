@@ -81,11 +81,11 @@ class LandingController:
 
         floor2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
         self.L = floor2base
-        self.max_spring_compression = 0.2 * self.L
+        self.max_spring_compression = 0.4 * self.L
         w_v = 1.
         w_p = 1.
         w_u = 0.
-        max_settling_time = 12
+        max_settling_time = 1.2
 
         self.slip_dyn = SLIP_dyn.SLIP_dynamics(self.dt, 
                                                self.L, 
@@ -95,12 +95,17 @@ class LandingController:
                                                w_v, w_p, w_u, 
                                                max_settling_time)
 
-        self.T_p_com_ref_k = np.zeros([3,1])
-        self.T_v_com_ref_k = np.zeros([3,1])
-        self.euler_des = np.zeros([3,1])
+        # self.T_p_com_ref_k = np.zeros([3,1])
+        # self.T_v_com_ref_k = np.zeros([3,1])
+        # self.euler_des = np.zeros([3,1])
 
-        self.euler_TD = np.zeros([3,1])
+        self.euler_TD = np.zeros(3)
         self.eig_ang = 0.
+
+        self.pose_des = np.zeros(6)
+        self.twist_des = np.zeros(6)
+        self.acc_des = np.zeros(6)
+
 
 
         self.T_o_B = np.array([0, 0, self.L])
@@ -189,14 +194,14 @@ class LandingController:
 
 
 
-    def landed_phase(self, euler):
+    def landed_phase(self, t, euler):
         # use the last trajectory computed
         # task for feet in terrain frame
         if not self.landed_phase_flag:
             self.slip_dyn.xy_dynamics()
 
             self.euler_TD = euler
-            self.eig_ang = -4 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
+            self.eig_ang = -2 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
             self.landed_phase_flag = True
 
         # lp_counter counts how many times landed_phase has been called. the reference computed by slip_dyn.xy_dynamics()
@@ -207,20 +212,38 @@ class LandingController:
                 self.ref_k += 1
 
 
-        self.T_p_com_ref_k = self.slip_dyn.T_p_com_ref[:, self.ref_k]
-        self.T_v_com_ref_k = self.slip_dyn.T_v_com_ref[:, self.ref_k]
-        self.T_o_B[2] = self.T_p_com_ref_k[2]
+        # REFERENCES
+        # ---> POSE
+        # to avoid reshape, use these three lines
+        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k]
+        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k]
+        self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
-        t = self.ref_k*self.dt
-        self.euler_des = np.exp(self.eig_ang*t) * self.euler_TD
+        self.pose_des[3:6] = np.exp(self.eig_ang * (t-self.jumping_data_times.touch_down.t)) * self.euler_TD
 
-        B_R_T_des = pin.rpy.rpyToMatrix(self.euler_des).T
+        B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3:6]).T
 
+        # ---> TWIST
+        self.twist_des[0] = self.slip_dyn.T_v_com_ref[0, self.ref_k]
+        self.twist_des[1] = self.slip_dyn.T_v_com_ref[1, self.ref_k]
+        self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
+
+        self.twist_des[3:6] = self.eig_ang * self.pose_des[3:6]
+
+        # ---> ACCELERATION
+        self.acc_des[0] = self.slip_dyn.T_a_com_ref[0, self.ref_k]
+        self.acc_des[1] = self.slip_dyn.T_a_com_ref[1, self.ref_k]
+        self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
+
+        self.acc_des[3:6] = self.eig_ang * self.twist_des[3:6]
+
+
+        self.T_o_B[2] = self.pose_des[2]
         for leg in range(4):
             self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.slip_dyn.zmp_xy[0]
             self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.slip_dyn.zmp_xy[1]
 
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.T_p_com_ref_k)
+            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3])
 
 
     def setCheckTimings(self, expected_lift_off_time=None, expected_apex_time=None, expected_touch_down_time=None, clearance=None):
