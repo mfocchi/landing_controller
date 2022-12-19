@@ -171,7 +171,9 @@ class LandingController:
         self.init_pos[0] = 0.
         self.init_pos[1] = 0.
         self.init_pos[2] = self.L
-        self.init_vel = com_vel_W.copy()
+        self.init_vel[0] = com_vel_W[0]
+        self.init_vel[1] = com_vel_W[1]
+        self.init_vel[2] = com_vel_W[2]
 
         self.slip_dyn.def_and_solveOCP(self.init_pos, self.init_vel)
 
