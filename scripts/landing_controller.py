@@ -98,7 +98,9 @@ INIT_COND = []
 #                   'pose': np.array([0., 0., robot_height_init + 0.30, 10. * DEG2RAD, 0., 0.]),
 #                   'twist': np.array([-0.2, 0.5, 0., 0., 0., 0.]),
 #                   't_video':0})
-
+import cProfile, pstats, io
+from pstats import SortKey
+pr = cProfile.Profile()
 
 def initCond2str(init_cond, speedUpDown=1.):
     ICstr = ''
@@ -244,6 +246,7 @@ if __name__ == '__main__':
             vcom_z_pre = 0.
 
             p.unpause_physics_client()
+            # pr.enable()
             while fsm_state < 3:
                 #print('fsm_state', fsm_state)
                 # update kinematic and dynamic model
@@ -390,6 +393,12 @@ if __name__ == '__main__':
                 p.zmp[0] = lc.slip_dyn.zmp_xy[0]
                 p.zmp[1] = lc.slip_dyn.zmp_xy[1]
 
+            # pr.disable()
+            # s = io.StringIO()
+            # sortby = SortKey.CUMULATIVE
+            # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            # ps.print_stats()
+            # print(s.getvalue())
             ####################
             # store some plots #
             ####################
