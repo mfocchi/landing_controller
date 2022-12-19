@@ -1,8 +1,6 @@
 import numpy as np
 import pinocchio as pin
 from base_controllers.utils.utils import Utils
-from base_controllers.components.leg_odometry.leg_odometry import LegOdometry
-from base_controllers.components.inverse_kinematics.inv_kinematics_quadruped import InverseKinematics
 from controller.SLIP_dynamics.SLIP_dynamics_lib import SLIP_dynamics
 import tabulate
 
@@ -187,7 +185,6 @@ class LandingController:
             self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
             self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
-
 
 
     def landed_phase(self, t, euler):
