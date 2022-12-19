@@ -159,7 +159,9 @@ INIT_COND.append({'id': '00',
 
 
 # plot options
-plt.ioff()
+showPlots = True
+savePlots = False
+#plt.ioff()
 width_inches = 0.
 height_inches = 0.
 mm2inches = 0.0393701
@@ -168,15 +170,15 @@ for m in get_monitors():
         width_inches = m.width_mm*mm2inches
         height_inches = m.height_mm*mm2inches
         break
-
-now = datetime.datetime.now()
-now_s = str(now)
-now_s = now_s.replace('-', '')
-now_s = now_s.replace(' ', '_')
-now_s = now_s.replace(':', '')
-now_s = now_s[: now_s.find('.')]
-save_path = os.environ['HOME'] + '/landing_controller/simulations/'+now_s
-os.mkdir(save_path)
+if savePlots:
+    now = datetime.datetime.now()
+    now_s = str(now)
+    now_s = now_s.replace('-', '')
+    now_s = now_s.replace(' ', '_')
+    now_s = now_s.replace(':', '')
+    now_s = now_s[: now_s.find('.')]
+    save_path = os.environ['HOME'] + '/landing_controller/simulations/'+now_s
+    os.mkdir(save_path)
 # plt.rcParams["figure.figsize"] = [7.00, 3.50]
 # plt.rcParams["figure.autolayout"] = True
 
@@ -388,45 +390,146 @@ if __name__ == '__main__':
             # store some plots #
             ####################
             p.pause_physics_client()
-            directory_path=save_path+'/sim'+init_cond['id']
-            os.mkdir(directory_path)
+            if savePlots:
+                directory_path=save_path+'/sim'+init_cond['id']
+                os.mkdir(directory_path)
 
             # joint position
             fig = plotJoint('position', 0, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log)
             fig.set_size_inches([width_inches, height_inches])
-            plt.savefig(directory_path + '/q.png')
-            plt.close()
-            print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
+            if savePlots:
+                plt.savefig(directory_path + '/q.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
 
+            # joint torques
+            plotJoint('torque', 11, time_log=p.time_log.flatten(), tau_ffwd_log=p.tau_ffwd_log, tau_log = p.tau_log,
+                      tau_des_log=p.tau_des_log)
+            fig.set_size_inches([width_inches, height_inches])
+            if savePlots:
+                plt.savefig(directory_path + '/tau.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/tau.png saved', color='green'), flush=True)
+
+            # com position
             p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] += p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
             p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] += p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
 
-            fig = plotCoM('position', 3, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log, des_basePoseW=p.comPoseW_des_log)
+            fig = plotCoM('position', fig.number+1, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log, des_basePoseW=p.comPoseW_des_log)
             fig.set_size_inches([width_inches, height_inches])
-            plt.savefig(directory_path + '/com.png')
-            plt.close()
-            print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
+            if savePlots:
+                plt.savefig(directory_path + '/com.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
+
+            # com velocity
+            # fig = plotCoM('velocity', fig.number+1, time_log=p.time_log.flatten(), basePoseW=p.comTwistW_log,
+            #               des_basePoseW=p.comTwistW_des_log)
+            # fig.set_size_inches([width_inches, height_inches])
+            # if savePlots:
+            #     plt.savefig(directory_path + '/vcom.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/vcom.png saved', color='green'), flush=True)
 
             # feet position in w-frame and contact flag
-            fig = plotFeet(10, time_log=p.time_log.flatten(), des_feet=p.W_contacts_des_log, act_feet=p.W_contacts_log,
-                                  contact_states=p.contact_state_log)
+            fig = plotFeet(fig.number+1, time_log=p.time_log.flatten(), des_feet=p.W_contacts_des_log, act_feet=p.W_contacts_log, contact_states=p.contact_state_log)
             fig.set_size_inches([width_inches, height_inches])
-            plt.savefig(directory_path + '/feet.png')
-            plt.close()
-            print(colored('Plot ' + directory_path + '/feet.png saved', color='green'), flush=True)
+            if savePlots:
+                plt.savefig(directory_path + '/Wfeet.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/Wfeet.png saved', color='green'), flush=True)
+
+            if showPlots:
+                plt.show()
+
+            # feet position in b-frame and contact flag
+            fig = plotFeet(fig.number+1, time_log=p.time_log.flatten(), des_feet=p.B_contacts_des_log,
+                           act_feet=p.B_contacts_log, contact_states=p.contact_state_log)
+            fig.set_size_inches([width_inches, height_inches])
+            if savePlots:
+                plt.savefig(directory_path + '/Bfeet.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/Bfeet.png saved', color='green'), flush=True)
+
+            if showPlots:
+                plt.show()
+
+            # com displacement
+            fig = plt.figure(fig.number+1)
+
+            plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[2, lc.jumping_data_times.touch_down.sample:], color='r')
+            plt.plot(p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_log[2, lc.jumping_data_times.touch_down.sample:], color='b')
+            fig.set_size_inches([width_inches, height_inches])
+
+            plt.legend(["desired com path", "actual com path"])
+
+            plt.grid()
+
+            if savePlots:
+                plt.savefig(directory_path + '/com_path.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/com_path.png saved', color='green'), flush=True)
+
+            if showPlots:
+                plt.show()
+
+
+            # margins
+            # fig = plt.figure(fig.number+1)
+            # ax = plt.subplots()
+            # X_vals = []
+            # Y_vals = []
+            # T_contacts = p.W_contacts.copy()
+            # for c in T_contacts:
+            #     c[0] -= p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
+            #     c[1] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
+            # T_sp = p.support_poly(T_contacts)
+            # for side in T_sp:
+            #     X_vals.append(T_sp[side]['p0'][0])
+            #     Y_vals.append(T_sp[side]['p0'][1])
+            # X_vals.append(X_vals[0])
+            # Y_vals.append(Y_vals[0])
+            # plt.plot(X_vals, Y_vals)
+            #
+            # eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy = lc.velocity_margin(T_sp)
+            # # for plotting in world, we should add the position as td
+            # ax.add_patch(plt.Circle((lc.slip_dyn.zmp_xy[0], lc.slip_dyn.zmp_xy[1]), 0.005, color='r'))
+            # ax.add_patch(plt.Circle((limit_zmp[0], limit_zmp[1]), 0.005, color='b'))
+            # n = np.linalg.norm(lc.init_vel)
+            # plt.plot([0, lc.init_vel[0]/n], [0, lc.init_vel[1]/n])
+            # plt.plot([0, limit_vx/n], [0,limit_vy/n])
+            #
+            # p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[ 0, lc.jumping_data_times.touch_down.sample]
+            # p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
+            # plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:])
+            # ax.set_aspect('equal', adjustable='box')
+            #
+            # plt.legend(["support polygon", "zmp", "limit zmp", "TD velocity normalized", "limit TD velocity 'normalized'", "com reference"])
+            #
+            # if savePlots:
+            #     plt.savefig(directory_path + '/margin.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/margin.png saved', color='green'), flush=True)
+            #
+            # if showPlots:
+            #     plt.show()
+            #
 
             # init cond file
-            f = open(directory_path + "/init_cond.txt", "w")
-            init_cond_str = ""
-            init_cond_key = init_cond.keys()
-            for key in init_cond_key:
-                init_cond_str += key+': '
-                init_cond_str += str(init_cond[key])
-                init_cond_str += '\n'
-            f.write( initCond2str(init_cond, speedUpDown) )
-            f.close()
-            print(colored('File ' + directory_path + '/init_cond.txt saved', color='green'), flush=True)
+            if savePlots:
+                f = open(directory_path + "/init_cond.txt", "w")
+                init_cond_str = ""
+                init_cond_key = init_cond.keys()
+                for key in init_cond_key:
+                    init_cond_str += key+': '
+                    init_cond_str += str(init_cond[key])
+                    init_cond_str += '\n'
+                f.write( initCond2str(init_cond, speedUpDown) )
+                f.close()
+                print(colored('File ' + directory_path + '/init_cond.txt saved', color='green'), flush=True)
             p.unpause_physics_client()
+
+
 
 
     except (ros.ROSInterruptException, ros.service.ServiceException) as e:
@@ -437,11 +540,12 @@ if __name__ == '__main__':
         os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
     # store all the init conds
-    f = open(save_path + "/ALL_init_conds.txt", "w")
-    for init_cond in INIT_COND:
-        f.write(initCond2str(init_cond, speedUpDown)+'\n'+'-'*10+'\n')
-    f.close()
-    print(save_path + '/ALL_init_conds.txt saved')
+    if savePlots:
+        f = open(save_path + "/ALL_init_conds.txt", "w")
+        for init_cond in INIT_COND:
+            f.write(initCond2str(init_cond, speedUpDown)+'\n'+'-'*10+'\n')
+        f.close()
+        print(save_path + '/ALL_init_conds.txt saved')
 
-    # save the video
-    p.save_video(save_path, speedUpDown=speedUpDown)
+        # save the video
+        p.save_video(save_path, speedUpDown=speedUpDown)
