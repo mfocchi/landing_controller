@@ -272,13 +272,12 @@ class LandingController:
         return anyLO
 
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
+
         if t > self.check_apex_time:
-            if np.sign(vel_z_pre * vel_z_now) == -1:
+            if vel_z_pre >=0. and vel_z_now < 0.:
                 self.jumping_data_times.apex.set(t, sample)
                 return True
-            elif vel_z_now <= 0:
-                self.jumping_data_times.apex.set(t, sample)
-                return True
+
         return False
 
     def touchDown(self, t, sample, contacts_state):
