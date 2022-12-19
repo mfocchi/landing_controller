@@ -131,39 +131,10 @@ SLIP_dynamics::SLIP_dynamics(double dt,
     state_xy.setZero();
     state_xy_init.setZero();
     zmp_xy.setZero();
-}
-
-/*
-// first method: compute exponential matrix of dynamical matrix for each loop with expm
-// slow (computationlal time aprox 0.067ms * ctrl_horz)
-void SLIP_dynamics::z_dynamics1()
-{
-    // T_state_z_init is the initial state of com z:
-    // T_state_z_init = [velocity_init    position_init].T
-
-    // The dynamics is computed using the explicit form! (not recursive)
-
-    K = m * pow( T_state_z_init[0]/(exp(1) * max_spring_compression), 2);
-    D = 2 * sqrt(m * K);
-
-    A_z(0,0) = - D/m;
-    A_z(0,1) = - K/m;
-
-    for(int k = 0; k <= ctrl_horz; k++)
-    {
-        A_zt = A_z * (k * dt);
-        expAt = A_zt.exp();
-        state_z = expAt * T_state_z_init;
-        T_p_com_ref(2, k) = state_z(1) + L;
-        T_v_com_ref(2, k) = state_z(0);
-        T_a_com_ref(2, k) = A_z.row(0) * state_z;
-
-        omega_sq_ref(0,k) = ( g_mag + T_a_com_ref(2, k) ) / T_p_com_ref(2, k);
-    }
 
 }
-*/
-// second method: compute explicit form of the dynamics
+
+// compute explicit form of the dynamics
 void SLIP_dynamics::z_dynamics()
 {
     // T_state_z_init is the initial state of com z:
@@ -187,114 +158,6 @@ void SLIP_dynamics::z_dynamics()
     }
 }
 
-/*
-// third method: compute explicitly exponential matrix of dynamical matrix for each loop
-//slow (computationlal time aprox 0.067ms * ctrl_horz)
-void SLIP_dynamics::z_dynamics3()
-{
-    // T_state_z_init is the initial state of com z:
-    // T_state_z_init = [velocity_init    position_init].T
-
-    // The dynamics is computed using the explicit form! (not recursive)
-
-
-    K = m * pow( T_state_z_init[0]/(exp(1) * max_spring_compression), 2);
-    D = 2 * sqrt(m * K);
-
-    A_z(0,0) = - D/m;
-    A_z(0,1) = - K/m;
-
-    double t = 0.;
-    eig_z = -sqrt(K/m);
-    double exp_eig_t = 0.;
-
-    for(int k = 0; k <= ctrl_horz; k++)
-    {
-        t = ctrl_time[k];
-        exp_eig_t = exp(eig_z * t);
-        expAt(0,0) = exp_eig_t * (eig_z * t + 1);
-        expAt(0,1) = - pow(eig_z, 2)* t * exp_eig_t;
-        expAt(1,0) = t * exp_eig_t;
-        expAt(1,1) = -exp_eig_t * (eig_z * t - 1);
-
-
-        state_z = expAt * T_state_z_init;
-        T_p_com_ref(2, k) = state_z(1) + L;
-        T_v_com_ref(2, k) = state_z(0);
-        T_a_com_ref(2, k) = A_z.row(0) * state_z;
-
-        omega_sq_ref(0,k) = ( g_mag + T_a_com_ref(2, k) ) / T_p_com_ref(2, k);
-    }
-
-}
-
-*/
-/*
-// fourth method: discretize the dynamics
-// slow (computationlal time aprox 0.067ms * ctrl_horz)
-void SLIP_dynamics::z_dynamics4()
-{
-    // T_state_z_init is the initial state of com z:
-    // T_state_z_init = [velocity_init    position_init].T
-
-    // The dynamics is computed using the explicit form! (not recursive)
-
-    K = m * pow( T_state_z_init[0]/(exp(1) * max_spring_compression), 2);
-    D = 2 * sqrt(m * K);
-
-    A_z(0,0) = - D/m;
-    A_z(0,1) = - K/m;
-
-    double t = dt;
-    eig_z = -sqrt(K/m);
-    double exp_eig_t = exp(eig_z * t);
-
-
-    expAt(0,0) = exp_eig_t * (eig_z * t + 1);
-    expAt(0,1) = - pow(eig_z, 2)* t * exp_eig_t;
-    expAt(1,0) = t * exp_eig_t;
-    expAt(1,1) = -exp_eig_t * (eig_z * t - 1);
-
-    state_z(0) = T_state_z_init(0);
-    state_z(1) = T_state_z_init(1);
-
-
-    for(int k = 0; k <= ctrl_horz; k++)
-    {
-        state_z = expAt * state_z;
-        T_p_com_ref(2, k) = state_z(1) + L;
-        T_v_com_ref(2, k) = state_z(0);
-        T_a_com_ref(2, k) = A_z.row(0) * state_z;
-
-        omega_sq_ref(0,k) = ( g_mag + T_a_com_ref(2, k) ) / T_p_com_ref(2, k);
-    }
-
-}
-*/
-/*
-// fifth method: as two but without loop
-void SLIP_dynamics::z_dynamics5()
-{
-    // T_state_z_init is the initial state of com z:
-    // T_state_z_init = [velocity_init    position_init].T
-
-    // The dynamics is computed using the explicit form! (not recursive)
-
-    //auto p = (exp_eig_t_arr.block(0, 0, ctrl_horz, 1).cwiseProduct( ctrl_time_arr.block(0, 0, ctrl_horz, 1)) * T_state_z_init[0]).transpose();
-    //auto v = (exp_eig_t_arr.block(0, 0, ctrl_horz, 1).cwiseProduct(eig_t_arr.block(0,0,ctrl_horz,1) + 1) * T_state_z_init[0]).transpose();
-
-    p = (exp_eig_t_arr.block(0, 0, 1, ctrl_horz).cwiseProduct( ctrl_time_arr.block(0, 0, 1, ctrl_horz)) * T_state_z_init[0]);
-    v = (exp_eig_t_arr.block(0, 0, 1, ctrl_horz).cwiseProduct(eig_t_arr.block(0,0, 1, ctrl_horz) + 1) * T_state_z_init[0]);
-
-    T_p_com_ref.block(2, 0, 1, ctrl_horz) = p+L_vec.block(0, 0, 1, ctrl_horz);
-    T_v_com_ref.block(2, 0, 1, ctrl_horz) = v;
-    T_a_com_ref.block(2, 0, 1, ctrl_horz) = -D/m*v-K/m*p;
-    omega_sq_ref.block(0, 0, 1, ctrl_horz) = (G.block(0, 0, 1, ctrl_horz) + T_a_com_ref.block(2, 0, 1, ctrl_horz)).cwiseProduct( T_p_com_ref.block(2, 0, 1, ctrl_horz).cwiseInverse() );
-}
-
-*/
-
-// this is faster
 void SLIP_dynamics::propagation_matrices()
 {
 
@@ -321,124 +184,17 @@ void SLIP_dynamics::propagation_matrices()
     }
 
 }
-/*
-// this is slower
-void SLIP_dynamics::propagation_matrices2()
-{
-    auto P_xy_prev = P_xy_stack.block<2,2>(0, 0);
-    auto P_u_prev = P_u_stack.block<2,1>(0, 0);
-
-    auto P_xy = P_xy_stack.block<2,2>(0, 0);
-    auto P_u = P_u_stack.block<2,1>(0, 0);
-
-    for(int k = 0; k < ctrl_horz; k++)
-    {
-
-        // the loop starts from 1 because P_xy(0) = I and P_u(0) = 0
-        A_xy(0,1) =-omega_sq_ref(0,k);
-        A_xy_d = dt * A_xy;
-        A_xy_d(0,0) += 1;
-        A_xy_d(1,1) += 1;
-
-        B_xy(0,0) = omega_sq_ref(0,k);
-        B_xy_d = dt * B_xy;
-
-        P_xy = P_xy_stack.block<2,2>(2*(k+1), 0);
-        P_u = P_u_stack.block<2,1>(2*(k+1), 0);
-
-        P_xy = A_xy_d * P_xy_prev;
-        P_u = A_xy_d * P_u_prev + B_xy_d;
-
-        P_xy_prev = P_xy;
-        P_u_prev = P_u;
-
-    }
-
-}
-
-*/
-
-/*
-void SLIP_dynamics::xy_dynamics()
-{
-    // T_state_x_init is the initial state of com x:
-    // T_state_x_init = [velocity_init    position_init].T
-    // similarly for y
-
-    // The dynamics is computed using the explicit form! (not recursive)
-    // x(k) = P_xy(k)+x(0) + P_u(k) * zmp_x
-
-    state_x.setZero();
-    state_y.setZero();
-
-    for(int k = 0; k < ctrl_horz; k++)
-    {
-        P_xy = P_xy_stack.block<2,2>(2*k, 0);
-        P_u = P_u_stack.block<2,1>(2*k, 0);
-
-        state_x = P_xy * T_state_x_init + P_u * zmp_x;
-        T_p_com_ref(0, k) = state_x(1);
-        T_v_com_ref(0, k) = state_x(0);
-        T_a_com_ref(0, k) = omega_sq_ref(0, k) * (T_p_com_ref(0, k) - zmp_x);
-
-
-        state_y = P_xy * T_state_y_init + P_u * zmp_y;
-        T_p_com_ref(1, k) = state_y(1);
-        T_v_com_ref(1, k) = state_y(0);
-        T_a_com_ref(1, k) = omega_sq_ref(0, k) * (T_p_com_ref(1, k) - zmp_y);
-    }
-
-}
-*/
 
 void SLIP_dynamics::xy_dynamics()
 {
     // state = [velocity_x  velocity_y
     //          position_x  position_y]
 
-    //auto t0 = std::chrono::high_resolution_clock::now();
-    //auto t1 = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double, std::milli> fp_ms;
-
-
-    // SET INIT
-    //t0 = std::chrono::high_resolution_clock::now();
-
-    //state_xy.setZero();
-
-    //t1 = std::chrono::high_resolution_clock::now();
-    //fp_ms = t1 - t0;
-    //std::cout << "sets took " << fp_ms.count() << " ms "<< std::endl;
-
-
-
 
     for(int k = 0; k < ctrl_horz; k++)
     {
-
-        //t0 = std::chrono::high_resolution_clock::now();
-
-        //P_xy = P_xy_stack.block<2,2>(2*k, 0);
-        //P_u = P_u_stack.block<2,1>(2*k, 0);
-
-        //t1 = std::chrono::high_resolution_clock::now();
-        //fp_ms = t1 - t0;
-        //std::cout << "get blocks took " << fp_ms.count() << " ms "<< std::endl;
-
-
-
-        //t0 = std::chrono::high_resolution_clock::now();
-
         state_xy.noalias()  = P_xy_stack.block<2,2>(2*k, 0) * state_xy_init;
         state_xy.noalias() += P_u_stack.block<2,1>(2*k, 0) * zmp_xy;
-        //t1 = std::chrono::high_resolution_clock::now();
-        //fp_ms = t1 - t0;
-        //std::cout << "compute states took " << fp_ms.count() << " ms "<< std::endl;
-
-
-
-        //t0 = std::chrono::high_resolution_clock::now();
-
         T_p_com_ref(0, k) = state_xy(1,0);
         T_v_com_ref(0, k) = state_xy(0,0);
         T_a_com_ref(0, k) = omega_sq_ref(0, k) * (T_p_com_ref(0, k) - zmp_xy(0));
