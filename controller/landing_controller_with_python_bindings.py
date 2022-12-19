@@ -290,6 +290,79 @@ class LandingController:
         return False
 
 
+    def velocity_margin(self, sp):
+        limit_zmp = self.marginal_zmp(sp)
+        P_x_last = self.slip_dyn.P_xy_stack[-2:, -2:]
+        P_u_last = self.slip_dyn.P_u_stack[-2:, ].reshape(2, 1)
+
+        # H = np.array([[0], [1]]) - P_u_last
+        # G = np.linalg.inv(P_x_last)
+        H = np.vstack([np.array([[0], [1]]) - P_u_last, 0])
+        G = np.vstack([P_x_last, np.array([0, 1])])
+
+        L = np.linalg.pinv(G) @ H
+
+        limit_vx = (L * limit_zmp[0])[0]
+        limit_vy = (L * limit_zmp[1])[0]
+
+        marg_vx = limit_vx - self.init_vel[0]
+        marg_vy = limit_vy - self.init_vel[1]
+
+        eta = L[0]
+
+        return eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy
+
+
+    def marginal_zmp(self, sp):
+        # marginal zmp is the intersection between the line defined by the touch down velocity and the support polygon
+        # in the direction of the touch down velocity
+        # sp lines equation : y = m*x+q
+        # v td line equation: y = r*x
+        # Wcontacts: lf, rf, lh, rh
+
+        r = self.init_vel[1]/self.init_vel[0]
+        angle_vTD = np.arctan2(self.init_vel[1], self.init_vel[0])
+        m_zmp = np.zeros(2)
+        for side in sp:
+            q = sp[side]['q']
+            m = sp[side]['m']
+            zmp_x = q/(r-m)
+            zmp_y = r * zmp_x
+            # check if candidate zmp is in the bounds of the line
+            if sp[side]['p0'][0] < zmp_x < sp[side]['p1'][0] and sp[side]['p0'][1] < zmp_y < sp[side]['p1'][1]:
+                # check if the zmp is in the correct direction
+                angle_zmp = np.arctan2(zmp_y, zmp_x)
+                if np.abs(angle_vTD - angle_zmp)< 1e-5:
+                    m_zmp[0] = zmp_x
+                    m_zmp[1] = zmp_y
+                    break
+        return m_zmp
+
+
+    def plot_margins(self, sp):
+        fig, ax = plt.subplots()
+        X_vals = []
+        Y_vals = []
+        for side in sp:
+            X_vals.append(sp[side]['p0'][0])
+            Y_vals.append(sp[side]['p0'][1])
+        X_vals.append(X_vals[0])
+        Y_vals.append(Y_vals[0])
+        plt.plot(X_vals, Y_vals)
+
+        self.m_zmp = self.marginal_zmp(sp)
+        ax.add_patch(plt.Circle((self.slip_dyn.zmp_xy[0], self.slip_dyn.zmp_xy[1]), 0.02, color='r'))
+        ax.add_patch(plt.Circle((self.m_zmp[0], self.m_zmp[1]), 0.02, color='b'))
+
+        plt.plot([0, self.init_vel[0]], [0, self.init_vel[1]])
+
+        ax.set_aspect('equal', adjustable='box')
+
+        plt.show()
+
+
+
+
 
 
     def plot_ref(self, figure_id=None):
