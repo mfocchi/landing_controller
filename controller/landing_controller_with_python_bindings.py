@@ -95,9 +95,6 @@ class LandingController:
                                                w_v, w_p, w_u, 
                                                max_settling_time)
 
-        # self.T_p_com_ref_k = np.zeros([3,1])
-        # self.T_v_com_ref_k = np.zeros([3,1])
-        # self.euler_des = np.zeros([3,1])
 
         self.euler_TD = np.zeros(3)
         self.eig_ang = 0.
@@ -129,12 +126,10 @@ class LandingController:
             self.T_feet_task.append(T_foot.copy())
 
 
-
         self.init_pos = np.zeros([3, 1])
         self.init_vel = np.zeros([3, 1])
 
 
-        self.base_vel = np.zeros(3)
         self.alpha = 0.
         self.smoothing_param = 0.005
 
