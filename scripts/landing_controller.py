@@ -231,7 +231,7 @@ if __name__ == '__main__':
             # fsm_state = 1 - from APEX to TOUCH DOWN: compute landing trajectory + kinematic adjustment
             # fsm_state = 2 - from TOUCH DOWN to END: use last landing trajectory
             # fsm_state = 3 - quit
-            fsm_state = 1
+            fsm_state = 0
             # TRANSITIONS
             # iff isApexReached == True, fsm_state: 0 -> 1
             # iff isTouchDownOccurred == True, fsm_state: 1 -> 2
@@ -245,6 +245,7 @@ if __name__ == '__main__':
 
             p.unpause_physics_client()
             while fsm_state < 3:
+                #print('fsm_state', fsm_state)
                 # update kinematic and dynamic model
                 p.updateKinematics()
                 # update estimate on linear velocity
@@ -260,27 +261,30 @@ if __name__ == '__main__':
                 ###############################################
                 if fsm_state == 0:
                     # check if apex is reached
+                    vcom_z_now = p.comTwistW[2]
                     isApexReached = lc.apexReached(t=p.time,
                                                    sample=p.log_counter,
                                                    vel_z_pre=vcom_z_pre,
                                                    vel_z_now=vcom_z_now)
+                    vcom_z_pre = vcom_z_now
+
                     if isApexReached:
                         fsm_state += 1
                         p.contact_state[:] = False # to be sure that contact state is false when flying down
                     else:
-                        # kinematic adjustment
-                        lc.flyingUp_phase(p.b_R_w)
-                        # set references
-                        for i, leg in enumerate(lc.legs): # ['lf', 'rf', 'lh', 'lh']
-                            q_des_leg, isFeasible  = p.IK.ik_leg(lc.B_feet_task[i],
-                                                                 p.robot.model.getFrameId(leg+'_foot'),
-                                                                 p.legConfig[leg][0],
-                                                                 p.legConfig[leg][1])
-                            if isFeasible:
-                                p.u.setLegJointState(i, q_des_leg, q_des)
-                        qd_des = np.zeros(p.robot.na)
-                        tau_ffwd = p.self_weightCompensation()
-
+                        # # kinematic adjustment
+                        # lc.flyingUp_phase(p.b_R_w)
+                        # # set references
+                        # for i, leg in enumerate(lc.legs): # ['lf', 'rf', 'lh', 'lh']
+                        #     q_des_leg, isFeasible  = p.IK.ik_leg(lc.B_feet_task[i],
+                        #                                          p.robot.model.getFrameId(leg+'_foot'),
+                        #                                          p.legConfig[leg][0],
+                        #                                          p.legConfig[leg][1])
+                        #     if isFeasible:
+                        #         p.u.setLegJointState(i, q_des_leg, q_des)
+                        # qd_des = np.zeros(p.robot.na)
+                        # tau_ffwd = p.self_weightCompensation()
+                        pass
 
 
                 ########################################################################################
