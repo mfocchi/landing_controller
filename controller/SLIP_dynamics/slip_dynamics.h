@@ -96,15 +96,11 @@ public:
     void runVerbose(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
     void def_and_solveOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
     void xy_dynamics();
-    void noOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
-    // after debug, the following methods must become private!
     void z_dynamics();
     void cost_matrices();
     void compute_zmp();
     void propagation_matrices();
     void set_init(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
-
-    void compute_zmp2();
 
 
 

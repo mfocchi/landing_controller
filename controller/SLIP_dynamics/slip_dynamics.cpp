@@ -195,6 +195,7 @@ void SLIP_dynamics::xy_dynamics()
     {
         state_xy.noalias()  = P_xy_stack.block<2,2>(2*k, 0) * state_xy_init;
         state_xy.noalias() += P_u_stack.block<2,1>(2*k, 0) * zmp_xy;
+        
         T_p_com_ref(0, k) = state_xy(1,0);
         T_v_com_ref(0, k) = state_xy(0,0);
         T_a_com_ref(0, k) = omega_sq_ref(0, k) * (T_p_com_ref(0, k) - zmp_xy(0));
@@ -277,14 +278,6 @@ void SLIP_dynamics::compute_zmp()
      zmp_xy = Q_hash * state_xy_init;
 }
 
-
-void SLIP_dynamics::compute_zmp2()
-{
-     double coeff = -sqrt(-T_state_z_init[0]/g_mag);
-     zmp_xy = state_xy_init.block<1,2>(0,0) * coeff;
-}
-
-
 void SLIP_dynamics::def_and_solveOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init)
 {
     set_init(T_pos_init, T_vel_init);
@@ -294,8 +287,6 @@ void SLIP_dynamics::def_and_solveOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eig
     compute_zmp();
 }
 
-void SLIP_dynamics::noOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init)
-{
     set_init(T_pos_init, T_vel_init);
     z_dynamics();
     propagation_matrices();
@@ -461,7 +452,6 @@ BOOST_PYTHON_MODULE(SLIP_dynamics_lib)
             .def("cost_matrices", &SLIP_dynamics::cost_matrices)
             .def("set_init", &SLIP_dynamics::set_init)
             .def("compute_zmp", &SLIP_dynamics::compute_zmp)
-            .def("noOCP", &SLIP_dynamics::noOCP)
 
     ;
 
