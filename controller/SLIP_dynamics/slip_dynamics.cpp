@@ -204,16 +204,9 @@ void SLIP_dynamics::xy_dynamics()
         T_v_com_ref(1, k) = state_xy(1,1);
         T_a_com_ref(1, k) = omega_sq_ref(0, k) * (T_p_com_ref(1, k) - zmp_xy(1));
 
-
-        //t1 = std::chrono::high_resolution_clock::now();
-        //fp_ms = t1 - t0;
-        //std::cout << "store data took " << fp_ms.count() << " ms "<< std::endl;
     }
 
 }
-
-
-
 
 void SLIP_dynamics::cost_matrices()
 {
@@ -236,23 +229,17 @@ void SLIP_dynamics::cost_matrices()
 
 
 
-
-
 void SLIP_dynamics::set_init(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init)
 {
-
-
-
     T_state_x_init << T_vel_init(0,0), T_pos_init(0,0);
     T_state_y_init << T_vel_init(1,0), T_pos_init(1,0);
     T_state_z_init << T_vel_init(2,0), T_pos_init(2,0)-L;
-
+   
     state_xy_init(0,0) = T_state_x_init(0);
     state_xy_init(1,0) = T_state_x_init(1);
     state_xy_init(0,1) = T_state_y_init(0);
     state_xy_init(1,1) = T_state_y_init(1);
-
-
+    
     // to avoid that com reference goes below max_spring_compression K is increased with the square of the velocity at touch down
     if (T_state_z_init[0]<limit_z_vel)
     {
