@@ -117,45 +117,45 @@ def initCond2str(init_cond, speedUpDown=1.):
 
 INIT_COND.append({'id': '00',
                   'name': 'A_high_jump',
-                  'pose': np.array([0., 0., 0.65, 0, 0., 0.]),
-                  'twist': np.array([1., 0., 0., 0., 0., 0.]),
-                  't_video': 0})
-
-INIT_COND.append({'id': '01',
-                  'name':'A_high_jump',
-                  'pose': np.array([0., 0., 0.85, 0, 0., 0.]),
+                  'pose': np.array([0., 0., .4, 0, 0., 0.]),
                   'twist': np.array([.5, 0., 0., 0., 0., 0.]),
                   't_video': 0})
 
-INIT_COND.append({'id': '02',
-                  'name':'B_lateral_mix',
-                  'pose': np.array([0., 0., 0.55, 0, 0., 0.]),
-                  'twist': np.array([0.6, 0.6, 0., 0., 0., 0.]),
-                  't_video': 0})
-
-INIT_COND.append({'id': '03',
-                  'name':'C_pitch',
-                  'pose': np.array([0., 0., 0.85, 0, -10.*DEG2RAD, 0.]),
-                  'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
-                  't_video': 0})
-
-INIT_COND.append({'id': '04',
-                  'name':'C_pitch',
-                  'pose': np.array([0., 0., 0.85, 0, +10.*DEG2RAD, 0.]),
-                  'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
-                  't_video': 0})
-
-INIT_COND.append({'id': '05',
-                  'name':'D_pitch_mix',
-                  'pose': np.array([0., 0., 0.85, 0, -10.*DEG2RAD, 0.]),
-                  'twist': np.array([0.5, 0.5, 0., 0., 0., 0.]),
-                  't_video': 0})
-
-INIT_COND.append({'id': '06',
-                  'name':'D_pitch_mix',
-                  'pose': np.array([0., 0., 0.85, 0, +10.*DEG2RAD, 0.]),
-                  'twist': np.array([0.5, 0.5, 0., 0., 0., 0.]),
-                  't_video': 0})
+# INIT_COND.append({'id': '01',
+#                   'name':'A_high_jump',
+#                   'pose': np.array([0., 0., 0.85, 0, 0., 0.]),
+#                   'twist': np.array([.5, 0., 0., 0., 0., 0.]),
+#                   't_video': 0})
+#
+# INIT_COND.append({'id': '02',
+#                   'name':'B_lateral_mix',
+#                   'pose': np.array([0., 0., 0.55, 0, 0., 0.]),
+#                   'twist': np.array([0.6, 0.6, 0., 0., 0., 0.]),
+#                   't_video': 0})
+#
+# INIT_COND.append({'id': '03',
+#                   'name':'C_pitch',
+#                   'pose': np.array([0., 0., 0.85, 0, -10.*DEG2RAD, 0.]),
+#                   'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
+#                   't_video': 0})
+#
+# INIT_COND.append({'id': '04',
+#                   'name':'C_pitch',
+#                   'pose': np.array([0., 0., 0.85, 0, +10.*DEG2RAD, 0.]),
+#                   'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
+#                   't_video': 0})
+#
+# INIT_COND.append({'id': '05',
+#                   'name':'D_pitch_mix',
+#                   'pose': np.array([0., 0., 0.85, 0, -10.*DEG2RAD, 0.]),
+#                   'twist': np.array([0.5, 0.5, 0., 0., 0., 0.]),
+#                   't_video': 0})
+#
+# INIT_COND.append({'id': '06',
+#                   'name':'D_pitch_mix',
+#                   'pose': np.array([0., 0., 0.85, 0, +10.*DEG2RAD, 0.]),
+#                   'twist': np.array([0.5, 0.5, 0., 0., 0., 0.]),
+#                   't_video': 0})
 
 
 # plot options
