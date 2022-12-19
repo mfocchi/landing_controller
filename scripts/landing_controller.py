@@ -25,7 +25,6 @@ from termcolor import colored
 import warnings
 warnings.filterwarnings('ignore')
 
-import signal
 
 
 ROBOT_NAME = 'go1'                         # go1, solo, (aliengo)
