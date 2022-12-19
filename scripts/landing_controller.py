@@ -184,7 +184,6 @@ if savePlots:
 # plt.rcParams["figure.figsize"] = [7.00, 3.50]
 # plt.rcParams["figure.autolayout"] = True
 
-
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
     try:
@@ -196,19 +195,23 @@ if __name__ == '__main__':
             q_des = p.qj_0.copy()
             qd_des = np.zeros_like(q_des)
             tau_ffwd = np.zeros_like(q_des)
+
             t_start_video = p.time.copy()
 
             init_cond['t_video'] = t_start_video
             if init_cond['id'] != '00':
                 init_cond['t_video'] += INIT_COND[int(init_cond['id'])-1]['t_video']
 
-            # reset controller
-            p.initVars()
-            print(colored("Starting simulation "+init_cond['id']+': '+init_cond['name'], "blue"))
             p.freezeBase(flag=True, basePoseW=init_cond['pose'])
             for k in range(100):
                 p.send_command(q_des, qd_des, tau_ffwd)
             p.freezeBase(flag=True, basePoseW=init_cond['pose'], baseTwistW=init_cond['twist'])
+            # reset controller
+            p.initVars()
+            print(colored("Starting simulation "+init_cond['id']+': '+init_cond['name'], "blue"))
+            #p.freezeBase(flag=True, basePoseW=init_cond['pose'])
+
+
             p.setGravity(-9.81)
             p.pause_physics_client()
 
@@ -221,7 +224,6 @@ if __name__ == '__main__':
 
 
             lc.setCheckTimings(expected_touch_down_time=np.sqrt(2*p.basePoseW[2]/9.81)+p.time, clearance=0.1)
-
 
 
             ############
@@ -255,9 +257,6 @@ if __name__ == '__main__':
                 p.imu_utils.compute_lin_vel(p.W_base_lin_acc, p.loop_time)
 
                 p.visualizeContacts()
-
-
-                vcom_z_now = p.comTwistW[2]
 
                 ###############################################
                 # STATE 0 - before APEX: kinematic adjustment #
