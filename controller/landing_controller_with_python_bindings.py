@@ -87,14 +87,13 @@ class LandingController:
         w_u = 0.
         max_settling_time = 0.8
 
-        self.slip_dyn = SLIP_dyn.SLIP_dynamics(self.dt, 
-                                               self.L, 
-                                               self.max_spring_compression, 
-                                               self.m, 
-                                               self.g_mag, 
-                                               w_v, w_p, w_u, 
-                                               max_settling_time)
-
+        self.slip_dyn = SLIP_dynamics(  self.dt,
+                                        self.L,
+                                        self.max_spring_compression,
+                                        self.m,
+                                        self.g_mag,
+                                        w_v, w_p, w_u,
+                                        max_settling_time)
 
         self.euler_TD = np.zeros(3)
         self.eig_ang = 0.
