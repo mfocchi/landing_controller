@@ -3,7 +3,7 @@ import pinocchio as pin
 from base_controllers.utils.utils import Utils
 from base_controllers.components.leg_odometry.leg_odometry import LegOdometry
 from base_controllers.components.inverse_kinematics.inv_kinematics_quadruped import InverseKinematics
-import pysolo.controllers.landing_controller.SLIP_dynamics.SLIP_dynamics_lib as SLIP_dyn
+from controller.SLIP_dynamics.SLIP_dynamics_lib import SLIP_dynamics
 import tabulate
 
 from matplotlib import pyplot as plt
@@ -81,11 +81,11 @@ class LandingController:
 
         floor2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
         self.L = floor2base
-        self.max_spring_compression = 0.4 * self.L
+        self.max_spring_compression = 0.5 * self.L
         w_v = 1.
         w_p = 1.
         w_u = 0.
-        max_settling_time = 1.2
+        max_settling_time = 0.8
 
         self.slip_dyn = SLIP_dyn.SLIP_dynamics(self.dt, 
                                                self.L, 
