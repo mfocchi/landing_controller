@@ -274,12 +274,50 @@ void SLIP_dynamics::def_and_solveOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eig
     compute_zmp();
 }
 
+void SLIP_dynamics::def_and_solveOCPVerbose(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init)
+{   
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> fp_ms;
+
+    for(int i=0; i<20;i++) {std::cout << "-";}
+    std::cout << std::endl;
+
+    t0 = std::chrono::high_resolution_clock::now();
+    t1 = std::chrono::high_resolution_clock::now();
     set_init(T_pos_init, T_vel_init);
+    t2 = std::chrono::high_resolution_clock::now();
+    fp_ms = t2 - t1;
+
+    std::cout << "K: " << K << ", v0: " << T_vel_init(2,0) << ", ctrl_horz: " << ctrl_horz << ", settling time: " << settling_time << std::endl;
+    std::cout << "set_init() took " << fp_ms.count() << " ms "<< std::endl;
+
+    t1 = std::chrono::high_resolution_clock::now();
     z_dynamics();
+    t2 = std::chrono::high_resolution_clock::now();
+    fp_ms = t2 - t1;
+    std::cout << "z_dynamics() took " << fp_ms.count() << " ms "<< std::endl;
+
+    t1 = std::chrono::high_resolution_clock::now();
     propagation_matrices();
+    t2 = std::chrono::high_resolution_clock::now();
+    fp_ms = t2 - t1;
+    std::cout << "propagation_matrices() took " << fp_ms.count() << " ms "<< std::endl;
+
+    t1 = std::chrono::high_resolution_clock::now();
     cost_matrices();
-    compute_zmp2();
+    t2 = std::chrono::high_resolution_clock::now();
+    fp_ms = t2 - t1;
+    std::cout << "cost_matrices() took " << fp_ms.count() << " ms "<< std::endl;
+
+    t1 = std::chrono::high_resolution_clock::now();
+    compute_zmp();
+    t2 = std::chrono::high_resolution_clock::now();
+    fp_ms = t2 - t1;
+    std::cout << "compute_zmp() took " << fp_ms.count() << " ms "<< std::endl;
 }
+
 
 void SLIP_dynamics::run(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init)
 {
@@ -420,6 +458,7 @@ BOOST_PYTHON_MODULE(SLIP_dynamics_lib)
 
 
 
+
             // methods
 
             .def("run", &SLIP_dynamics::run, args("T_pos_init", "T_vel_init"),
@@ -434,6 +473,10 @@ BOOST_PYTHON_MODULE(SLIP_dynamics_lib)
                  "Compute optimal zmp and ONLY z reference trajectory. It is equivalent to call in sequence: "
                  "set_init(), z_dynamics(), propagation_matrices(), compute_zmp(). After touch down one should call xy_dynamics()."
                  "It does side effect on class attributes.")
+            .def("def_and_solveOCPVerbose", &SLIP_dynamics::def_and_solveOCPVerbose, args("T_pos_init", "T_vel_init"),
+                 "Compute optimal zmp and ONLY z reference trajectory. It is equivalent to call in sequence: "
+                 "set_init(), z_dynamics(), propagation_matrices(), compute_zmp(). After touch down one should call xy_dynamics()."
+                 "It does side effect on class attributes.") 
             .def("xy_dynamics", &SLIP_dynamics::xy_dynamics)
             .def("propagation_matrices", &SLIP_dynamics::propagation_matrices)
             .def("cost_matrices", &SLIP_dynamics::cost_matrices)

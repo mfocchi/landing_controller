@@ -95,6 +95,7 @@ public:
     void run(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
     void runVerbose(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
     void def_and_solveOCP(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
+    void def_and_solveOCPVerbose(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matrix<double, 3, 1> T_vel_init);
     void xy_dynamics();
     void z_dynamics();
     void cost_matrices();
