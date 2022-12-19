@@ -130,7 +130,7 @@ class LandingController:
 
 
         self.alpha = 0.
-        self.smoothing_param = 0.005
+        self.smoothing_param = 0.015
 
         self.euler_final = np.zeros(3)
 
@@ -178,7 +178,7 @@ class LandingController:
 
         # task for feet in terrain frame
         if self.alpha < 1.:
-            self.alpha = np.around(self.alpha+self.smoothing_param, 4)
+            self.alpha = np.min([np.around(self.alpha+self.smoothing_param, 4), 1.])
 
 
         for leg in range(4):
