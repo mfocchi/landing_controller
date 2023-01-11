@@ -21,9 +21,8 @@ import os
 import datetime
 from screeninfo import get_monitors
 from termcolor import colored
+import scipy
 
-import warnings
-warnings.filterwarnings('ignore')
 
 
 
@@ -33,73 +32,8 @@ robot_height_init = 0.259
 speedUpDown = 0.2
 DEG2RAD = np.pi/180
 INIT_COND = []
-# different heights, zero orientation, zero init vel
-# INIT_COND.append({'id':'00',
-#                   'pose': np.array([0., 0., robot_height_init + 0.20, 0., 0., 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'01',
-#                   'pose': np.array([0., 0., robot_height_init + 0.40, 0., 0., 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'02',
-#                   'pose': np.array([0., 0., robot_height_init + 0.6, 0., 0., 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'03',
-#                   'pose': np.array([0., 0., robot_height_init + 1.0, 0., 0., 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-#
-# # same heights, zero orientation, different init vels
-# INIT_COND.append({'id':'08',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., 0., 0.]),
-#                   'twist': np.array([0.3, 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'09',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., 0., 0.]),
-#                   'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'10',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., 0., 0.]),
-#                   'twist': np.array([0.5, 0.5, 0., 0., 0., 0.]),
-#                   't_video':0})
-#
-# # same height, different orientations, zero init vel
-#
-# INIT_COND.append({'id':'04',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., -20. * DEG2RAD, 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'05',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., -5. * DEG2RAD, 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'06',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., 5. * DEG2RAD, 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'07',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., 20. * DEG2RAD, 0.]),
-#                   'twist': np.array([0., 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-#
-# # same heights, different orientations, different init vels
-# INIT_COND.append({'id':'11',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., -10. * DEG2RAD, 0.]),
-#                   'twist': np.array([0.3, 0., 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'12',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 0., 10. * DEG2RAD, 0.]),
-#                   'twist': np.array([0., 0.5, 0., 0., 0., 0.]),
-#                   't_video':0})
-# INIT_COND.append({'id':'13',
-#                   'pose': np.array([0., 0., robot_height_init + 0.30, 10. * DEG2RAD, 0., 0.]),
-#                   'twist': np.array([-0.2, 0.5, 0., 0., 0., 0.]),
-#                   't_video':0})
-import cProfile, pstats, io
-from pstats import SortKey
-pr = cProfile.Profile()
+
+
 
 def initCond2str(init_cond, speedUpDown=1.):
     ICstr = ''
@@ -118,8 +52,8 @@ def initCond2str(init_cond, speedUpDown=1.):
 
 INIT_COND.append({'id': '00',
                   'name': 'A_high_jump',
-                  'pose': np.array([0., 0., .4, 0, 0., 0.]),
-                  'twist': np.array([.5, 0., 0., 0., 0., 0.]),
+                  'pose': np.array([0., 0., .6, 0, 0., 0.]),
+                  'twist': np.array([0.3, -0.05, 0., 0., 0., 0.]),
                   't_video': 0})
 
 # INIT_COND.append({'id': '01',
@@ -158,6 +92,11 @@ INIT_COND.append({'id': '00',
 #                   'twist': np.array([0.5, 0.5, 0., 0., 0., 0.]),
 #                   't_video': 0})
 
+useWBC = True # if true after landing use wbc, otherwise use joint control
+control_settings = {}
+control_settings['useWBC'] = True
+control_settings['useIK'] = True
+
 
 # plot options
 showPlots = True
@@ -180,14 +119,13 @@ if savePlots:
     now_s = now_s[: now_s.find('.')]
     save_path = os.environ['HOME'] + '/landing_controller/simulations/'+now_s
     os.mkdir(save_path)
-# plt.rcParams["figure.figsize"] = [7.00, 3.50]
-# plt.rcParams["figure.autolayout"] = True
 
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
     try:
-        p.startController(world_name='camera_slow.world', additional_args=['gui:=False'])#, world_name="big_box.world")
-        p.startupProcedure(check_contacts=True)  # overloaded method
+        p.startController(world_name='slow.world', additional_args=['gui:=True', 'go0_conf:=standDown'])#, world_name="big_box.world")
+
+        p.startupProcedure()  # overloaded method
 
         for init_cond in INIT_COND:
 
@@ -208,7 +146,7 @@ if __name__ == '__main__':
             # reset controller
             p.initVars()
             print(colored("Starting simulation "+init_cond['id']+': '+init_cond['name'], "blue"))
-            #p.freezeBase(flag=True, basePoseW=init_cond['pose'])
+
 
 
             p.setGravity(-9.81)
@@ -247,9 +185,9 @@ if __name__ == '__main__':
             vcom_z_pre = 0.
 
             p.unpause_physics_client()
-            # pr.enable()
             while fsm_state < 3:
-                #print('fsm_state', fsm_state)
+
+                #print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
                 # update kinematic and dynamic model
                 p.updateKinematics()
                 # update estimate on linear velocity
@@ -297,9 +235,19 @@ if __name__ == '__main__':
                     isTouchDownOccurred = lc.touchDown(t=p.time,
                                                        sample=p.log_counter,
                                                        contacts_state=p.contact_state)
+
                     if isTouchDownOccurred:
                         fsm_state += 1
-                        p.leg_odom.reset(np.hstack([p.u.linPart(p.basePoseW), p.quaternion, p.q ]))
+                        p.leg_odom.reset(np.hstack([0., 0., lc.L, p.quaternion, p.q ]))
+                        if not control_settings['useIK']:
+                            p.pid.setPDs(0.,0.,0.)
+                        # elif control_settings['useWBC'] and control_settings['useIK']:
+                        #     p.pid.setPDs(15.,0.,1.)
+                        # else use the same gains
+
+                        # save the base position at touch down
+                        W_p_base_TD = p.u.linPart(p.basePoseW)
+                        W_com_TD = p.u.linPart(p.comPoseW)
                     else:
                         # compute landing trajectory + kinematic adjustment
                         lc.flyingDown_phase(p.b_R_w, p.imu_utils.W_lin_vel)
@@ -330,9 +278,7 @@ if __name__ == '__main__':
 
                         tau_ffwd = p.self_weightCompensation()
 
-                        # save the base position at touch down
-                        W_p_base_TD = p.u.linPart(p.basePoseW)
-                        W_com_TD = p.u.linPart(p.comPoseW)
+
 
                 #################################################################
                 # STATE 2 - from TOUCH DOWN to END: use last landing trajectory #
@@ -370,14 +316,15 @@ if __name__ == '__main__':
                                                           update=i ==0)
                             p.u.setLegJointState(i, qd_leg_des, qd_des)
 
+                        if not control_settings['useWBC']:
+                            tau_ffwd = p.gravityCompensation()
 
-                        tau_ffwd = p.projectionWBC(lc.pose_des, lc.twist_des, lc.acc_des)
-                # print('T_feet_task: ', lc.T_feet_task)
-                # print('T_feet_home: ', lc.T_feet_home)
-                # print('B_feet_task: ', lc.B_feet_task)
-                # print('B_feet_home: ', lc.B_feet_home)
-                # print('-'*25)
-                # finally, send commands
+                        if control_settings['useWBC']:
+                            tau_ffwd = p.WBC(lc.pose_des, lc.twist_des, lc.acc_des, type='projection')
+
+
+
+                        # finally, send commands
                 p.send_command(q_des, qd_des, tau_ffwd)
 
                 # save LC references for com, feet, zmp
@@ -391,12 +338,7 @@ if __name__ == '__main__':
                 p.zmp[0] = lc.slip_dyn.zmp_xy[0]
                 p.zmp[1] = lc.slip_dyn.zmp_xy[1]
 
-            # pr.disable()
-            # s = io.StringIO()
-            # sortby = SortKey.CUMULATIVE
-            # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            # ps.print_stats()
-            # print(s.getvalue())
+
             ####################
             # store some plots #
             ####################
@@ -432,15 +374,18 @@ if __name__ == '__main__':
                 plt.savefig(directory_path + '/com.png')
                 plt.close()
                 print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
+            if showPlots:
+                plt.show()
 
             # com velocity
-            # fig = plotCoM('velocity', fig.number+1, time_log=p.time_log.flatten(), basePoseW=p.comTwistW_log,
-            #               des_basePoseW=p.comTwistW_des_log)
-            # fig.set_size_inches([width_inches, height_inches])
-            # if savePlots:
-            #     plt.savefig(directory_path + '/vcom.png')
-            #     plt.close()
-            #     print(colored('Plot ' + directory_path + '/vcom.png saved', color='green'), flush=True)
+            fig = plotCoM('velocity', fig.number+1, time_log=p.time_log.flatten(), baseTwistW=p.comTwistW_log,des_baseTwistW=p.comTwistW_des_log)
+            fig.set_size_inches([width_inches, height_inches])
+            if savePlots:
+                plt.savefig(directory_path + '/vcom.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/vcom.png saved', color='green'), flush=True)
+            if showPlots:
+                plt.show()
 
             # feet position in w-frame and contact flag
             fig = plotFeet(fig.number+1, time_log=p.time_log.flatten(), des_feet=p.W_contacts_des_log, act_feet=p.W_contacts_log, contact_states=p.contact_state_log)
@@ -486,45 +431,46 @@ if __name__ == '__main__':
 
 
             # margins
-            # fig = plt.figure(fig.number+1)
-            # ax = plt.subplots()
-            # X_vals = []
-            # Y_vals = []
-            # T_contacts = p.W_contacts.copy()
-            # for c in T_contacts:
-            #     c[0] -= p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
-            #     c[1] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
-            # T_sp = p.support_poly(T_contacts)
-            # for side in T_sp:
-            #     X_vals.append(T_sp[side]['p0'][0])
-            #     Y_vals.append(T_sp[side]['p0'][1])
-            # X_vals.append(X_vals[0])
-            # Y_vals.append(Y_vals[0])
-            # plt.plot(X_vals, Y_vals)
-            #
-            # eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy = lc.velocity_margin(T_sp)
-            # # for plotting in world, we should add the position as td
-            # ax.add_patch(plt.Circle((lc.slip_dyn.zmp_xy[0], lc.slip_dyn.zmp_xy[1]), 0.005, color='r'))
-            # ax.add_patch(plt.Circle((limit_zmp[0], limit_zmp[1]), 0.005, color='b'))
-            # n = np.linalg.norm(lc.init_vel)
-            # plt.plot([0, lc.init_vel[0]/n], [0, lc.init_vel[1]/n])
-            # plt.plot([0, limit_vx/n], [0,limit_vy/n])
-            #
+            fig = plt.figure(fig.number+1)
+            ax = fig.subplots()
+            X_vals = []
+            Y_vals = []
+            T_contacts = p.W_contacts.copy()
+            for c in T_contacts:
+                c[0] -= p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
+                c[1] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
+            T_sp = p.support_poly(T_contacts)
+            for side in T_sp:
+                X_vals.append(T_sp[side]['p0'][0])
+                Y_vals.append(T_sp[side]['p0'][1])
+            X_vals.append(X_vals[0])
+            Y_vals.append(Y_vals[0])
+            plt.plot(X_vals, Y_vals, lw=6)
+
+            eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy = lc.velocity_margin(T_sp)
+            # for plotting in world, we should add the position as td
+            ax.add_patch(plt.Circle((lc.slip_dyn.zmp_xy[0], lc.slip_dyn.zmp_xy[1]), 0.005, color='r'))
+            ax.add_patch(plt.Circle((limit_zmp[0], limit_zmp[1]), 0.005, color='b'))
+            n = np.linalg.norm(lc.init_vel)
+
+            plt.plot([0, limit_vx/n], [0,limit_vy/n], lw=4)
+            plt.plot([0, lc.init_vel[0]/n], [0, lc.init_vel[1]/n], lw=6)
+
             # p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[ 0, lc.jumping_data_times.touch_down.sample]
             # p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
             # plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:])
-            # ax.set_aspect('equal', adjustable='box')
-            #
-            # plt.legend(["support polygon", "zmp", "limit zmp", "TD velocity normalized", "limit TD velocity 'normalized'", "com reference"])
-            #
-            # if savePlots:
-            #     plt.savefig(directory_path + '/margin.png')
-            #     plt.close()
-            #     print(colored('Plot ' + directory_path + '/margin.png saved', color='green'), flush=True)
-            #
-            # if showPlots:
-            #     plt.show()
-            #
+            ax.set_aspect('equal', adjustable='box')
+
+            plt.legend(["support polygon", "zmp", "limit zmp",  "limit TD velocity 'normalized'", "TD velocity normalized"], fontsize=20)
+
+            if savePlots:
+                plt.savefig(directory_path + '/margin.png')
+                plt.close()
+                print(colored('Plot ' + directory_path + '/margin.png saved', color='green'), flush=True)
+
+            if showPlots:
+                plt.show()
+
 
             # init cond file
             if savePlots:

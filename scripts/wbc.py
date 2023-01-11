@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
 
         # Reset reference to actual value
-        p.pid.setPDs(0.0, 0.0, 0.0)
+        p.pid.setPDs(15.0, 0.0, 0.5)
         time_init = p.time.copy()
         p.x0=p.basePoseW.copy()
         p.x0[3:] = 0.

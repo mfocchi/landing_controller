@@ -83,7 +83,7 @@ class LandingController:
         w_v = 1.
         w_p = 1.
         w_u = 0.
-        max_settling_time = 0.8
+        max_settling_time = 1.2
 
         self.slip_dyn = SLIP_dynamics(  self.dt,
                                         self.L,
@@ -245,6 +245,8 @@ class LandingController:
 
         if expected_lift_off_time is not None:
             self.check_lift_off_time = expected_lift_off_time - clearance
+        else:
+            self.check_lift_off_time = - clearance
 
         if expected_apex_time is not None:
             self.check_apex_time = expected_apex_time - clearance

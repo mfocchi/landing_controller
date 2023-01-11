@@ -132,6 +132,7 @@ SLIP_dynamics::SLIP_dynamics(double dt,
     state_xy_init.setZero();
     zmp_xy.setZero();
 
+    // std::cout<<"LC initializad"<<std::endl;
 }
 
 // compute explicit form of the dynamics
@@ -255,6 +256,20 @@ void SLIP_dynamics::set_init(Eigen::Matrix<double, 3, 1> T_pos_init, Eigen::Matr
        eig_t_arr = eig_z*ctrl_time_arr;
        exp_eig_t_arr = exp(eig_t_arr);
     }
+    /*
+        K = pow(T_vel_init(0,0), 2)+pow(T_vel_init(1,0), 2)+pow(T_vel_init(2,0), 2);
+        K = m*K/pow(0.15, 2);
+        D = 2 * sqrt(m * K);
+        eig_z = -sqrt(K/m);
+
+        A_z(0,0) = - D/m;
+        A_z(0,1) = - K/m;
+        settling_time = -8/eig_z;
+        ctrl_horz = int(settling_time/dt)+1;
+        
+        eig_t_arr = eig_z*ctrl_time_arr;
+        exp_eig_t_arr = exp(eig_t_arr);
+    */
 
 }
 
