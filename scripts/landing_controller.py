@@ -241,8 +241,8 @@ if __name__ == '__main__':
                         p.leg_odom.reset(np.hstack([0., 0., lc.L, p.quaternion, p.q ]))
                         if not control_settings['useIK']:
                             p.pid.setPDs(0.,0.,0.)
-                        # elif control_settings['useWBC'] and control_settings['useIK']:
-                        #     p.pid.setPDs(15.,0.,1.)
+                        elif control_settings['useWBC'] and control_settings['useIK']:
+                            p.pid.setPDs(15.,0.,1.)
                         # else use the same gains
 
                         # save the base position at touch down
