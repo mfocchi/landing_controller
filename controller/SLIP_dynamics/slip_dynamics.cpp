@@ -201,8 +201,8 @@ void SLIP_dynamics::xy_dynamics()
         T_v_com_ref(0, k) = state_xy(0,0);
         T_a_com_ref(0, k) = omega_sq_ref(0, k) * (T_p_com_ref(0, k) - zmp_xy(0));
 
-        T_p_com_ref(1, k) = state_xy(0,1);
-        T_v_com_ref(1, k) = state_xy(1,1);
+        T_p_com_ref(1, k) = state_xy(1,1);
+        T_v_com_ref(1, k) = state_xy(0,1);
         T_a_com_ref(1, k) = omega_sq_ref(0, k) * (T_p_com_ref(1, k) - zmp_xy(1));
 
     }
