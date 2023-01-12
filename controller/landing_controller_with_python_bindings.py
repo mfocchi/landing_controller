@@ -236,7 +236,7 @@ class LandingController:
             self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.slip_dyn.zmp_xy[0]
             self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.slip_dyn.zmp_xy[1]
 
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3])
+            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3]-np.array([0., 0., 0.04]))
 
 
     def setCheckTimings(self, expected_lift_off_time=None, expected_apex_time=None, expected_touch_down_time=None, clearance=None):

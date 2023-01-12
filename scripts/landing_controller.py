@@ -245,9 +245,7 @@ if __name__ == '__main__':
                             p.pid.setPDs(15.,0.,1.)
                         # else use the same gains
 
-                        # save the base position at touch down
-                        W_p_base_TD = p.u.linPart(p.basePoseW)
-                        W_com_TD = p.u.linPart(p.comPoseW)
+
                     else:
                         # compute landing trajectory + kinematic adjustment
                         lc.flyingDown_phase(p.b_R_w, p.imu_utils.W_lin_vel)
@@ -346,29 +344,29 @@ if __name__ == '__main__':
             if savePlots:
                 directory_path=save_path+'/sim'+init_cond['id']
                 os.mkdir(directory_path)
-
-            # joint position
-            fig = plotJoint('position', 0, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log)
-            fig.set_size_inches([width_inches, height_inches])
-            if savePlots:
-                plt.savefig(directory_path + '/q.png')
-                plt.close()
-                print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
-
-            # joint torques
-            plotJoint('torque', 11, time_log=p.time_log.flatten(), tau_ffwd_log=p.tau_ffwd_log, tau_log = p.tau_log,
-                      tau_des_log=p.tau_des_log)
-            fig.set_size_inches([width_inches, height_inches])
-            if savePlots:
-                plt.savefig(directory_path + '/tau.png')
-                plt.close()
-                print(colored('Plot ' + directory_path + '/tau.png saved', color='green'), flush=True)
+            #
+            # # joint position
+            # fig = plotJoint('position', 0, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log)
+            # fig.set_size_inches([width_inches, height_inches])
+            # if savePlots:
+            #     plt.savefig(directory_path + '/q.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/com.png saved', color='green'), flush=True)
+            #
+            # # joint torques
+            # plotJoint('torque', 11, time_log=p.time_log.flatten(), tau_ffwd_log=p.tau_ffwd_log, tau_log = p.tau_log,
+            #           tau_des_log=p.tau_des_log)
+            # fig.set_size_inches([width_inches, height_inches])
+            # if savePlots:
+            #     plt.savefig(directory_path + '/tau.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/tau.png saved', color='green'), flush=True)
 
             # com position
             p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] += p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
             p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] += p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
 
-            fig = plotCoM('position', fig.number+1, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log, des_basePoseW=p.comPoseW_des_log)
+            fig = plotCoM('position', 1, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log, des_basePoseW=p.comPoseW_des_log)
             fig.set_size_inches([width_inches, height_inches])
             if savePlots:
                 plt.savefig(directory_path + '/com.png')
@@ -386,90 +384,90 @@ if __name__ == '__main__':
                 print(colored('Plot ' + directory_path + '/vcom.png saved', color='green'), flush=True)
             if showPlots:
                 plt.show()
-
-            # feet position in w-frame and contact flag
+            #
+            # # feet position in w-frame and contact flag
             fig = plotFeet(fig.number+1, time_log=p.time_log.flatten(), des_feet=p.W_contacts_des_log, act_feet=p.W_contacts_log, contact_states=p.contact_state_log)
-            fig.set_size_inches([width_inches, height_inches])
-            if savePlots:
-                plt.savefig(directory_path + '/Wfeet.png')
-                plt.close()
-                print(colored('Plot ' + directory_path + '/Wfeet.png saved', color='green'), flush=True)
-
-            if showPlots:
-                plt.show()
-
-            # feet position in b-frame and contact flag
-            fig = plotFeet(fig.number+1, time_log=p.time_log.flatten(), des_feet=p.B_contacts_des_log,
-                           act_feet=p.B_contacts_log, contact_states=p.contact_state_log)
-            fig.set_size_inches([width_inches, height_inches])
-            if savePlots:
-                plt.savefig(directory_path + '/Bfeet.png')
-                plt.close()
-                print(colored('Plot ' + directory_path + '/Bfeet.png saved', color='green'), flush=True)
-
-            if showPlots:
-                plt.show()
-
-            # com displacement
-            fig = plt.figure(fig.number+1)
-
-            plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[2, lc.jumping_data_times.touch_down.sample:], color='r')
-            plt.plot(p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_log[2, lc.jumping_data_times.touch_down.sample:], color='b')
-            fig.set_size_inches([width_inches, height_inches])
-
-            plt.legend(["desired com path", "actual com path"])
-
-            plt.grid()
-
-            if savePlots:
-                plt.savefig(directory_path + '/com_path.png')
-                plt.close()
-                print(colored('Plot ' + directory_path + '/com_path.png saved', color='green'), flush=True)
-
-            if showPlots:
-                plt.show()
-
-
-            # margins
-            fig = plt.figure(fig.number+1)
-            ax = fig.subplots()
-            X_vals = []
-            Y_vals = []
-            T_contacts = p.W_contacts.copy()
-            for c in T_contacts:
-                c[0] -= p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
-                c[1] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
-            T_sp = p.support_poly(T_contacts)
-            for side in T_sp:
-                X_vals.append(T_sp[side]['p0'][0])
-                Y_vals.append(T_sp[side]['p0'][1])
-            X_vals.append(X_vals[0])
-            Y_vals.append(Y_vals[0])
-            plt.plot(X_vals, Y_vals, lw=6)
-
-            eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy = lc.velocity_margin(T_sp)
-            # for plotting in world, we should add the position as td
-            ax.add_patch(plt.Circle((lc.slip_dyn.zmp_xy[0], lc.slip_dyn.zmp_xy[1]), 0.005, color='r'))
-            ax.add_patch(plt.Circle((limit_zmp[0], limit_zmp[1]), 0.005, color='b'))
-            n = np.linalg.norm(lc.init_vel)
-
-            plt.plot([0, limit_vx/n], [0,limit_vy/n], lw=4)
-            plt.plot([0, lc.init_vel[0]/n], [0, lc.init_vel[1]/n], lw=6)
-
-            # p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[ 0, lc.jumping_data_times.touch_down.sample]
-            # p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
-            # plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:])
-            ax.set_aspect('equal', adjustable='box')
-
-            plt.legend(["support polygon", "zmp", "limit zmp",  "limit TD velocity 'normalized'", "TD velocity normalized"], fontsize=20)
-
-            if savePlots:
-                plt.savefig(directory_path + '/margin.png')
-                plt.close()
-                print(colored('Plot ' + directory_path + '/margin.png saved', color='green'), flush=True)
-
-            if showPlots:
-                plt.show()
+            # fig.set_size_inches([width_inches, height_inches])
+            # if savePlots:
+            #     plt.savefig(directory_path + '/Wfeet.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/Wfeet.png saved', color='green'), flush=True)
+            #
+            # if showPlots:
+            #     plt.show()
+            #
+            # # feet position in b-frame and contact flag
+            # fig = plotFeet(fig.number+1, time_log=p.time_log.flatten(), des_feet=p.B_contacts_des_log,
+            #                act_feet=p.B_contacts_log, contact_states=p.contact_state_log)
+            # fig.set_size_inches([width_inches, height_inches])
+            # if savePlots:
+            #     plt.savefig(directory_path + '/Bfeet.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/Bfeet.png saved', color='green'), flush=True)
+            #
+            # if showPlots:
+            #     plt.show()
+            #
+            # # com displacement
+            # fig = plt.figure(fig.number+1)
+            #
+            # plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[2, lc.jumping_data_times.touch_down.sample:], color='r')
+            # plt.plot(p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_log[2, lc.jumping_data_times.touch_down.sample:], color='b')
+            # fig.set_size_inches([width_inches, height_inches])
+            #
+            # plt.legend(["desired com path", "actual com path"])
+            #
+            # plt.grid()
+            #
+            # if savePlots:
+            #     plt.savefig(directory_path + '/com_path.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/com_path.png saved', color='green'), flush=True)
+            #
+            # if showPlots:
+            #     plt.show()
+            #
+            #
+            # # margins
+            # fig = plt.figure(fig.number+1)
+            # ax = fig.subplots()
+            # X_vals = []
+            # Y_vals = []
+            # T_contacts = p.W_contacts.copy()
+            # for c in T_contacts:
+            #     c[0] -= p.comPoseW_log[0, lc.jumping_data_times.touch_down.sample]
+            #     c[1] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
+            # T_sp = p.support_poly(T_contacts)
+            # for side in T_sp:
+            #     X_vals.append(T_sp[side]['p0'][0])
+            #     Y_vals.append(T_sp[side]['p0'][1])
+            # X_vals.append(X_vals[0])
+            # Y_vals.append(Y_vals[0])
+            # plt.plot(X_vals, Y_vals, lw=6)
+            #
+            # eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy = lc.velocity_margin(T_sp)
+            # # for plotting in world, we should add the position as td
+            # ax.add_patch(plt.Circle((lc.slip_dyn.zmp_xy[0], lc.slip_dyn.zmp_xy[1]), 0.005, color='r'))
+            # ax.add_patch(plt.Circle((limit_zmp[0], limit_zmp[1]), 0.005, color='b'))
+            # n = np.linalg.norm(lc.init_vel)
+            #
+            # plt.plot([0, limit_vx/n], [0,limit_vy/n], lw=4)
+            # plt.plot([0, lc.init_vel[0]/n], [0, lc.init_vel[1]/n], lw=6)
+            #
+            # # p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[ 0, lc.jumping_data_times.touch_down.sample]
+            # # p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] -= p.comPoseW_log[1, lc.jumping_data_times.touch_down.sample]
+            # # plt.plot(p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:], p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:])
+            # ax.set_aspect('equal', adjustable='box')
+            #
+            # plt.legend(["support polygon", "zmp", "limit zmp",  "limit TD velocity 'normalized'", "TD velocity normalized"], fontsize=20)
+            #
+            # if savePlots:
+            #     plt.savefig(directory_path + '/margin.png')
+            #     plt.close()
+            #     print(colored('Plot ' + directory_path + '/margin.png saved', color='green'), flush=True)
+            #
+            # if showPlots:
+            #     plt.show()
 
 
             # init cond file
