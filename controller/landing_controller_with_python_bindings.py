@@ -77,8 +77,13 @@ class LandingController:
         self._q_neutral = pin.neutral(self.robot.model)
 
 
-        floor2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
-        self.L = floor2base
+        foot2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
+        self._q_neutral[2] = foot2base
+        com_home = self.robot.robotComW(self._q_neutral)
+        self.L = com_home[2]
+
+        self.floor2foot = np.array([0.,0.,0.02])
+
         self.max_spring_compression = 0.5 * self.L
         w_v = 1.
         w_p = 1.
@@ -142,10 +147,10 @@ class LandingController:
         self._q_neutral[7:] = q_j
         pin.forwardKinematics(self.robot.model, self.robot.data, self._q_neutral)
         pin.updateFramePlacements(self.robot.model, self.robot.data)
-        floor2base = 0.
+        foot2base = 0.
         for ee_id in self.robot.getEndEffectorsFrameId:
-            floor2base -= self.robot.data.oMf[ee_id].translation[2].copy()
-        return floor2base/4
+            foot2base -= self.robot.data.oMf[ee_id].translation[2].copy()
+        return foot2base/4
 
 
     def pushing_phase(self):
@@ -236,7 +241,8 @@ class LandingController:
             self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.slip_dyn.zmp_xy[0]
             self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.slip_dyn.zmp_xy[1]
 
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3]-np.array([0., 0., 0.04]))
+            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - (self.pose_des[0:3]+self.floor2foot) )
+
 
 
     def setCheckTimings(self, expected_lift_off_time=None, expected_apex_time=None, expected_touch_down_time=None, clearance=None):
