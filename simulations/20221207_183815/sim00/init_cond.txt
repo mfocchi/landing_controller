@@ -1,8 +1,0 @@
-id: 00
-name: A_high_jump
-base height: 0.65 m
-base pitch: 0.0 deg
-base fw vel: 0.5 m/s
-base lat vel: 0.0 m/s
-t_video: [ 2.10800]
-t_video_speedUpDown: [ 10.54000]

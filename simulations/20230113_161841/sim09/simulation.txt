@@ -1,0 +1,9 @@
+id: 09
+name: E_omega
+base height: 0.6 m
+base pitch: 0.0 deg
+base fw vel: 0.5 m/s
+base lat vel: 0.0 m/s
+base pitch vel: 57.29577951308232 deg/s
+t_video: [ 14.71200]
+t_video_speedUpDown: [ 73.56000]
