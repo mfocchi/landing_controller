@@ -112,10 +112,17 @@ if savePlots:
     save_path = os.environ['HOME'] + '/landing_controller/simulations/'+now_s
     os.mkdir(save_path)
 
+ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
+world_name = 'slow.world'
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
     try:
-        p.startController(world_name='slow.world', additional_args=['gui:=True', 'go0_conf:=standDown'])#, world_name="big_box.world")
+
+        if SETTINGS['PLOTS']['video']:
+            world_name = 'camera_'+world_name
+
+        p.startController(world_name=world_name,
+                          additional_args=['gui:=False', 'go0_conf:=standDown'])
 
         p.startupProcedure()  # overloaded method
 
