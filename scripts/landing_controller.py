@@ -1,6 +1,13 @@
-import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
+from base_controllers.controller_new import Controller
+from controller.landing_controller_with_python_bindings import LandingController
+from controller.settings import SETTINGS
+from controller.utility import initCond2str, manipulateFig
+from base_controllers.utils.common_functions import * #(matplotlib.pyplot, numpy, plots, ros)
+import os
+from termcolor import colored
+
 
 np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
                     floatmode='fixed',  # print fixed numer of digits ...
@@ -8,20 +15,6 @@ np.set_printoptions(linewidth=np.inf,   # number of characters per line before n
                     sign=' ',           # print space if sign is plus
                     suppress=True,      # suppress scientific notation
                     threshold=np.inf)
-
-from base_controllers.controller_new import Controller
-import rospy as ros
-from controller.landing_controller_with_python_bindings import LandingController
-from base_controllers.components.leg_odometry.leg_odometry import LegOdometry
-import pinocchio as pin
-from base_controllers.utils.common_functions import plotJoint, plotCoM, plotGRFs, plotFeet
-import matplotlib.pyplot as plt
-import os
-import datetime
-from screeninfo import get_monitors
-from termcolor import colored
-import scipy
-
 
 
 
