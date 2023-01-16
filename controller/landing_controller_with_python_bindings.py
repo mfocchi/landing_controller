@@ -199,7 +199,7 @@ class LandingController:
             self.slip_dyn.xy_dynamics()
 
             self.euler_TD = euler
-            self.eig_ang = -2 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
+            self.eig_ang = -4 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
             self.landed_phase_flag = True
 
         # lp_counter counts how many times landed_phase has been called. the reference computed by slip_dyn.xy_dynamics()
