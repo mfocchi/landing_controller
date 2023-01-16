@@ -2,12 +2,11 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 
-
-np.set_printoptions(linewidth=np.inf,  # number of characters per line befor new line
+np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
                     floatmode='fixed',  # print fixed numer of digits ...
-                    precision=4,  # ... 4
-                    sign=' ',  # print space if sign is plus
-                    suppress=True,  # suppress scientific notation
+                    precision=4,        # ... 4
+                    sign=' ',           # print space if sign is plus
+                    suppress=True,      # suppress scientific notation
                     threshold=np.inf)
 
 from base_controllers.controller_new import Controller
