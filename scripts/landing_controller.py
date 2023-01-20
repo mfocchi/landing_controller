@@ -157,6 +157,8 @@ if __name__ == '__main__':
                         # save the base position at touch down
                         W_p_base_TD = p.u.linPart(p.basePoseW)
                         W_com_TD = p.u.linPart(p.comPoseW)
+                        p.zmp[0] = lc.slip_dyn.zmp_xy[0] + W_com_TD[0]
+                        p.zmp[1] = lc.slip_dyn.zmp_xy[1] + W_com_TD[1]
                     else:
                         # compute landing trajectory + kinematic adjustment
                         lc.flyingDown_phase(p.b_R_w, p.imu_utils.W_lin_vel)
@@ -241,8 +243,7 @@ if __name__ == '__main__':
                     p.W_contacts_des[leg] = p.u.linPart(p.basePoseW) + p.b_R_w.T @ lc.B_feet_task[leg]
                     p.B_contacts_des[leg] = lc.B_feet_task[leg].copy()
 
-                p.zmp[0] = lc.slip_dyn.zmp_xy[0]
-                p.zmp[1] = lc.slip_dyn.zmp_xy[1]
+
 
             ####################
             # store some plots #
