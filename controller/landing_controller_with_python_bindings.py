@@ -80,15 +80,15 @@ class LandingController:
         foot2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
         self._q_neutral[2] = foot2base
         com_home = self.robot.robotComW(self._q_neutral)
-        self.L = com_home[2]
+        self.L = com_home[2]+0.01
 
-        self.floor2foot = np.array([0.,0.,0.02])
+        self.floor2foot = np.array([0.,0.,0.03])
 
-        self.max_spring_compression = 0.5 * self.L
+        self.max_spring_compression = 0.3 * self.L
         w_v = 1.
         w_p = 1.
         w_u = 0.
-        max_settling_time = 1.2
+        max_settling_time = 0.8
 
         self.slip_dyn = SLIP_dynamics(  self.dt,
                                         self.L,
@@ -192,7 +192,7 @@ class LandingController:
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
 
-    def landed_phase(self, t, euler):
+    def landed_phase(self, t, euler, simplified=False):
         # use the last trajectory computed
         # task for feet in terrain frame
         if not self.landed_phase_flag:
@@ -208,6 +208,21 @@ class LandingController:
         if self.ref_k < self.slip_dyn.ctrl_horz-1:
             if self.lp_counter %2 == 0:
                 self.ref_k += 1
+
+        if simplified:
+            # ---> POSE
+            self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, 0]
+            self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, 0]
+            self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, 0]
+
+            self.pose_des[3:6] = 0.
+
+            # ---> TWIST
+            self.twist_des[:] = 0.
+
+            # ---> ACCELERATION
+            self.acc_des[:] = 0.
+            return
 
 
         # REFERENCES
