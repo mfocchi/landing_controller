@@ -64,7 +64,7 @@ if __name__ == '__main__':
                                                  p.quaternion,
                                                  q_des]))
 
-            lc.setCheckTimings(expected_touch_down_time=np.sqrt(2 * simulation['pose'][2] / 9.81) + p.time, clearance=0.05)
+            lc.setCheckTimings()#expected_touch_down_time=np.sqrt(2 * simulation['pose'][2] / 9.81) + p.time, clearance=0.05)
 
             p.setGravity(-9.81)
             p.pause_physics_client()
@@ -155,10 +155,10 @@ if __name__ == '__main__':
                         #       do not change gains
 
                         # save the base position at touch down
-                        W_p_base_TD = p.u.linPart(p.basePoseW)
-                        W_com_TD = p.u.linPart(p.comPoseW)
-                        p.zmp[0] = lc.slip_dyn.zmp_xy[0] + W_com_TD[0]
-                        p.zmp[1] = lc.slip_dyn.zmp_xy[1] + W_com_TD[1]
+                        # W_p_base_TD = p.u.linPart(p.basePoseW)
+                        # W_com_TD = p.u.linPart(p.comPoseW)
+                        # p.zmp[0] = lc.slip_dyn.zmp_xy[0] + W_com_TD[0]
+                        # p.zmp[1] = lc.slip_dyn.zmp_xy[1] + W_com_TD[1]
                     else:
                         # compute landing trajectory + kinematic adjustment
                         lc.flyingDown_phase(p.b_R_w, p.imu_utils.W_lin_vel)
@@ -229,7 +229,8 @@ if __name__ == '__main__':
                             tau_ffwd = p.gravityCompensation()
 
                         if simulation['useWBC']:
-                            off = np.array([W_com_TD[0], W_com_TD[1], 0, 0, 0, 0])
+                            #off = np.array([W_com_TD[0], W_com_TD[1], 0, 0, 0, 0])
+                            off = np.zeros(6)
                             tau_ffwd = p.WBC(off + lc.pose_des, lc.twist_des, lc.acc_des, type=simulation['typeWBC'])
 
                 # finally, send commands
