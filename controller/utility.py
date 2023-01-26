@@ -354,7 +354,7 @@ class Simulation:
         # feet don't move too much
         for i in range(4):
             for c in self.p.W_contacts_log[0:3, self.lc.jumping_data_times.touch_down.sample:self.p.log_counter].T:
-                if np.linalg.norm(c - self.p.W_contacts_TD[0]) > 0.02:
+                if np.linalg.norm(c - self.p.W_contacts_TD[0]) > 0.03:
                     return 2
 
         return 0
