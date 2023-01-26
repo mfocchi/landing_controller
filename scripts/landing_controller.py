@@ -30,7 +30,8 @@ if __name__ == '__main__':
 
         p.startupProcedure()  # overloaded method
 
-        init_video_frame = p.get_current_frame_file()
+        if SETTINGS['PLOTS']['video']:
+            init_video_frame = p.get_current_frame_file()
 
         sim_counter = -1
         for simulation in SETTINGS['SIMS']:
