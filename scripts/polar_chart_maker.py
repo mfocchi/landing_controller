@@ -18,7 +18,7 @@ np.set_printoptions(linewidth=np.inf,   # number of characters per line before n
 
 ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
 world_name = 'slow.world'
-phase_deg_list = np.arange(-60, 180, 30)
+phase_deg_list = np.arange(-180, 180, 30)
 magnitude_sim_list = []
 
 # these values are close to the limits for h = 0.7 m
@@ -76,92 +76,108 @@ if __name__ == '__main__':
 
 
             else:
-                print('*' * 25)
-                print('* Test height:', np.around(simulation['pose'][2], 2), '[m] *')
-                print('*' * 25)
-                magnitude_list = []
-                for ii, phase_deg in enumerate(phase_deg_list):
-
-                    sim_counter += 1
-                    if sim_counter < 10:
-                        simulation['id'] = '0' + str(sim_counter)
-                    else:
-                        simulation['id'] = str(sim_counter)
-
-
-                    phase = phase_deg * np.pi/180
-                    unit_baseTwist = np.array([np.cos(phase), np.sin(phase), 0., 0., 0., 0.])
-                    magnitude_try = simulation['magnitude_init_list'][ii]
-                    magnitude = 0.
-
-                    inc_mag = True
-                    succ_once = False
-
-                    while True:
-                        simulation_try = {'name': simulation['name'],
-                                          'pose': simulation['pose'],
-                                          'twist': magnitude_try * unit_baseTwist,
-                                          'useWBC': simulation['useIK'],
-                                          'useIK': simulation['useWBC'],
-                                          'typeWBC': simulation['typeWBC'],  # or 'qp' (used only if useWBC is True)
-                                          'id': '',
-                                          't_video': 0.0}
-                        if sim_counter < 10:
-                            simulation_try['id'] = '0' + str(sim_counter)
-                        else:
-                            simulation_try['id'] = str(sim_counter)
-
-
-                        print("Searching maximum magnitude for a touch down velocity having phase: " + str(phase_deg) + " deg", flush=True)
-                        print("--> Testing magnitude: " + str(magnitude_try) + " [m/s]", flush=True)
-
-                        ret = s.succeed(simulation_try['id'],
-                                        simulation_try['pose'],
-                                        simulation_try['twist'],
-                                        simulation_try['useIK'],
-                                        simulation_try['useWBC'],
-                                        simulation_try['typeWBC'],
-                                        simplified=True)
+                for ctrl in ['useWBC']:
+                    print_str = '* Test height: ' + str(np.around(simulation['pose'][2], 2)) + ' [m], controller = ' + ctrl + ' *'
+                    n_stars = len(print_str)
+                    print('*' * n_stars)
+                    print(print_str)
+                    print('*' * n_stars)
+                    magnitude_list = []
+                    for ii, phase_deg in enumerate(phase_deg_list):
 
                         sim_counter += 1
-
-                        if ret==0:
-                            print('    Succeed')
-                            if inc_mag:            # simulation succeed, increase the init vel and restart
-                                succ_once = True
-                                magnitude = magnitude_try
-                                magnitude_try = np.around(magnitude_try+0.1, 1)
-                            else:        # simulation succeed, init vel has been only decreased -> solution found
-                                succ_once = True
-                                magnitude = magnitude_try
-                                break
+                        if sim_counter < 10:
+                            simulation['id'] = '0' + str(sim_counter)
                         else:
-                            print('    Failed')
-                            if ret == 1:
-                                print('    Fault cause: cannot track com', flush=True)
-                            elif ret == 2:
-                                print('    Fault cause: A foot moved', flush = True)
-                            if not succ_once:  # simulation failed and never succeeded before, decrease inc_mag
-                                inc_mag = False
-                                magnitude_try = np.around(magnitude_try-0.1, 1)
-                                if magnitude_try < 0.:
-                                    print('    A solution does not exist', flush=True)
+                            simulation['id'] = str(sim_counter)
+
+                        phase = phase_deg * np.pi/180
+                        unit_baseTwist = np.array([np.cos(phase), np.sin(phase), 0., 0., 0., 0.])
+                        magnitude_try = simulation['magnitude_init_list'][ii]
+                        magnitude = 0.
+
+                        inc_mag = True
+                        succ_once = False
+
+                        while True:
+                            simulation_try = {'name': simulation['name'],
+                                              'pose': simulation['pose'],
+                                              'twist': magnitude_try * unit_baseTwist,
+                                              'useIK': ctrl == 'useIK',
+                                              'useWBC': ctrl == 'useWBC',
+                                              'typeWBC': simulation['typeWBC'],  #'projection' or 'qp' (used only if useWBC is True)
+                                              'id': '',
+                                              't_video': 0.0}
+                            if sim_counter < 10:
+                                simulation_try['id'] = '0' + str(sim_counter)
+                            else:
+                                simulation_try['id'] = str(sim_counter)
+
+
+                            print('sim'+simulation_try['id']+" Searching maximum magnitude for a touch down velocity having phase: " + str(phase_deg) + " deg", flush=True)
+                            print("--> Testing magnitude: " + str(magnitude_try) + " [m/s]", flush=True)
+
+                            ret = s.succeed(simulation_try['id'],
+                                            simulation_try['pose'],
+                                            simulation_try['twist'],
+                                            simulation_try['useIK'],
+                                            simulation_try['useWBC'],
+                                            simulation_try['typeWBC'],
+                                            simplified=False)
+
+                            sim_counter += 1
+
+                            if ret==0:
+                                print('    Succeed')
+                                if inc_mag:            # simulation succeed, increase the init vel and restart
+                                    succ_once = True
+                                    magnitude = magnitude_try
+                                    magnitude_try = np.around(magnitude_try+0.1, 1)
+                                else:        # simulation succeed, init vel has been only decreased -> solution found
+                                    succ_once = True
+                                    magnitude = magnitude_try
                                     break
-                            else:      # simulation succeed, init vel has been only increased -> solution found
-                                break
+                            else:
+                                print('    Failed')
+                                if ret == 1:
+                                    print('    Fault cause: cannot track com', flush=True)
+                                elif ret == 2:
+                                    print('    Fault cause: A foot moved', flush = True)
+                                if not succ_once:  # simulation failed and never succeeded before, decrease inc_mag
+                                    inc_mag = False
+                                    magnitude_try = np.around(magnitude_try-0.1, 1)
+                                    if magnitude_try < 0.:
+                                        print('    A solution does not exist', flush=True)
+                                        break
+                                else:      # simulation succeed, init vel has been only increased -> solution found
+                                    break
 
 
+                        magnitude_list.append(magnitude)
+                        print("\nLimit magnitude for " + str(phase_deg) + " deg: " + str(magnitude) + " [m/s]")
+                        print('-'*60)
+
+                    print('RESULTS for height',np.around(simulation['pose'][2], 2), '[m] with controller', ctrl)
+                    for ii in range(len(phase_deg_list)):
+                        print('phase:', phase_deg_list[ii], 'deg, limit magnitude:', magnitude_list[ii])
+
+                    n_phases = len(phase_deg_list)
+                    print('phase (deg):'+ ' '*11, end='')
+                    for i in range(n_phases):
+                        if i != n_phases-1:
+                            print(str(phase_deg_list[i]) + ', ', end='')
+                        else:
+                            print(str(phase_deg_list[i]))
+
+                    print('limit magnitude (m/s): ', end='')
+                    for i in range(n_phases):
+                        if i != 5:
+                            print(str(magnitude_list[i]) + ', ', end='')
+                        else:
+                            print(str(magnitude_list[i]))
 
 
-                    magnitude_list.append(magnitude)
-                    print("\nLimit magnitude for " + str(phase_deg) + " deg: " + str(magnitude) + " [m/s]")
-                    print('-'*60)
-
-                print('RESULTS for height',np.around(simulation['pose'][2], 2), '[m] ')
-                for ii in range(len(phase_deg_list)):
-                    print('phase:', phase_deg_list[ii], 'deg, limit magnitude:', magnitude_list[ii])
-
-                magnitude_sim_list.append(magnitude_list)
+                    magnitude_sim_list.append(magnitude_list)
 
 
 
