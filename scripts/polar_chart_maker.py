@@ -1,6 +1,6 @@
 import matplotlib
 matplotlib.use('TkAgg')
-from base_controllers.controller_new import Controller
+from base_controllers.quadruped_controller import Controller
 from controller.settings import SETTINGS
 from controller.utility import initCond2str, Simulation
 from base_controllers.utils.common_functions import * #(matplotlib.pyplot, numpy, plots, ros)
