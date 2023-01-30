@@ -1,14 +1,11 @@
+# this is a copy of wbc.py
 import time
 
 from base_controllers.quadruped_controller import Controller
 import rospy as ros
 import numpy as np
-from numpy import nan
-import copy
 
-# L5 Controller specific
-from base_controllers.utils.common_functions import plotCoM, plotGRFs, plotConstraitViolation, plotJoint
-from scipy.linalg import block_diag
+from base_controllers.utils.common_functions import plotCoM, plotJoint
 import matplotlib.pyplot as plt
 import os
 
@@ -21,10 +18,10 @@ robotName = "go1"
 # Configuration #
 #################
 test = {}
-test['duration'] = 3.
-test['stabilize'] = .1
-test['amp']  = np.array([0.0, 0., 0.0, 0., 0., 0.])
-test['freq'] = np.array([0.1, 0., 0.5, 0., 0., 0.])
+test['duration'] = 300.
+test['stabilize'] = 10.
+test['amp']  = np.array([0.0, 0., 0.05, 0., 0., 0.])
+test['freq'] = np.array([0.0, 0., 0.5, 0., 0., 0.])
 test['typeWBC'] = 'projection'
 #test['typeWBC'] = 'qp'
 # if use qp, the following must be set
@@ -43,26 +40,33 @@ if __name__ == '__main__':
     test['pulse2'] = test['pulse']**2
     try:
 
-        p.startController(world_name='slow.world',
-                          use_ground_truth_pose=False, use_ground_truth_contacts=False,
-                          additional_args=['gui:=True', 'go0_conf:=standDown'])
+        #p.startController(world_name='slow.world', additional_args=['gui:=True', 'go0_conf:=standDown'])
+        p.startController(additional_args=['gui:=False', 'go0_conf:=standDown'])
+
         p.startupProcedure()  # overloaded method
-        p.leg_odom.reset(np.hstack([0., 0., 0.259, p.quaternion, p.q]))
+        p.leg_odom.reset(np.hstack([0., 0., p.robot_height, p.quaternion, p.q]))
+        p.w_p_b_legOdom, p.w_v_b_legOdom = p.leg_odom.estimate_base_wrt_world(p.contact_state,
+                                                                              p.quaternion,
+                                                                              p.q,
+                                                                              p.u.angPart(p.baseTwistW),
+                                                                              p.qd)
 
         if test['typeWBC'] == 'qp':
             p.setWBCConstraints(test['normals'], test['friction_coeffs'])
 
         p.updateKinematics()
         # Reset reference to actual value
-        p.pid.setPDs(0.0, 0.0, 0.0)
-        time_init = p.time.copy()
-        p.x0=p.basePoseW.copy()
-        p.x0[2] = 0.24215
-        p.x0[3:] = 0.
-        print('start!')
 
+        time_init = p.time.copy()
+        # p.x0=p.comPoseW.copy()
+        # p.x0[:2] = 0
+        # p.x0[3:] = 0
+        p.x0 = np.zeros(6)
+        p.x0[2] = 0.240
+        print('start!')
+        p.pid.setPDs(0.0, 0.0, 0.0)
         # Control loop
-        while p.time-time_init < test['duration']:
+        while not ros.is_shutdown():
             # p.pr.enable()
             # update the kinematics
             start_time = time.time()
@@ -90,17 +94,17 @@ if __name__ == '__main__':
 
 
             # plot actual (green) and desired (blue) contact forces
-            start_time = time.time()
-            for leg in range(4):
-                p.ros_pub.add_marker(p.W_contacts[leg])
-                p.ros_pub.add_arrow(p.W_contacts[leg],
-                                    p.u.getLegJointState(leg, p.grForcesW / (5 * p.robot.robotMass)),
-                                    "green")
-                p.ros_pub.add_arrow(p.W_contacts[leg],
-                                    p.u.getLegJointState(leg, p.grForcesW_des / (5 * p.robot.robotMass)),
-                                    "blue")
-            p.ros_pub.publishVisual()
-            pub_log[p.log_counter] = time.time() - start_time
+            # start_time = time.time()
+            # for leg in range(4):
+            #     p.ros_pub.add_marker(p.W_contacts[leg])
+            #     p.ros_pub.add_arrow(p.W_contacts[leg],
+            #                         p.u.getLegJointState(leg, p.grForcesW / (5 * p.robot.robotMass)),
+            #                         "green")
+            #     p.ros_pub.add_arrow(p.W_contacts[leg],
+            #                         p.u.getLegJointState(leg, p.grForcesW_des / (5 * p.robot.robotMass)),
+            #                         "blue")
+            # p.ros_pub.publishVisual()
+            # pub_log[p.log_counter] = time.time() - start_time
 
 
 
@@ -109,15 +113,14 @@ if __name__ == '__main__':
 
 
 
-        p.pid.setPDjoints(conf.robot_params[p.robot_name]['kp'], conf.robot_params[p.robot_name]['kd'],
-                          np.zeros(p.robot.na))
+        # p.pid.setPDjoints(conf.robot_params[p.robot_name]['kp'], conf.robot_params[p.robot_name]['kd'],
+        #                   np.zeros(p.robot.na))
 
-
-
-
-    finally:
+    except (ros.ROSInterruptException, ros.service.ServiceException):
         ros.signal_shutdown("killed")
         p.deregister_node()
+
+    finally:
         os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
         if conf.plotting:
@@ -162,10 +165,10 @@ if __name__ == '__main__':
             ax.set_xlabel('iter #')
             ax.set_ylabel('comp time [s]')
 
-            for log in [UK_log, WBC_log, pub_log]:
-                nonzero = UK_log[np.nonzero(log)]
-                avg=np.average(nonzero)
-                std = np.std(nonzero)
+            # for log in [UK_log, WBC_log, pub_log]:
+            #     nonzero = UK_log[np.nonzero(log)]
+            #     avg=np.average(nonzero)
+            #     std = np.std(nonzero)
 
 
 
