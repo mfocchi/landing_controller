@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from screeninfo import get_monitors
 import os
@@ -8,19 +9,20 @@ SETTINGS = {}
 # plot settings #
 #################
 WORKSPACE_SETTINGS={}
-WORKSPACE_SETTINGS['save'] = True
+WORKSPACE_SETTINGS['save'] = False
 SETTINGS['WORKSPACE'] = WORKSPACE_SETTINGS
 
 #################
 # plot settings #
 #################
 PLOT_SETTINGS = {}
-PLOT_SETTINGS['show'] = False
+PLOT_SETTINGS['show'] = True
 PLOT_SETTINGS['save'] = False
-PLOT_SETTINGS['video'] = True
+PLOT_SETTINGS['video'] = False
 PLOT_SETTINGS['speedUpDown'] = 0.2
 
 # do not modify the following
+plt.ioff()
 width_inches = 0.
 height_inches = 0.
 mm2inches = 0.0393701
@@ -60,9 +62,53 @@ SETTINGS['PLOTS'] = PLOT_SETTINGS
 
 DEG2RAD = np.pi / 180
 SIMS_SETTINGS = []
+SIMS_SETTINGS.append({'name': 'A_high_jump',
+                      'pose': np.array([0., 0., .6, 0., 0., 0.]),
+                      'twist': np.array([1.0, 0., 0., 0., 0., 0.]),
+                      'useWBC': True,
+                      'useIK': False,
+                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+                      'id': '',
+                      't_video': 0.0})
+
 # SIMS_SETTINGS.append({'name': 'A_high_jump',
-#                       'pose': np.array([0., 0., .7, 0., 0., 0.]),
-#                       'twist': np.array([2.5, 0., 0., 0., 0., 0.]),
+#                       'pose': np.array([0., 0., .6, 0., -20.*DEG2RAD, 0.]),
+#                       'twist': np.array([1., 0., 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
+#                       'twist': np.array([0., 1.5, 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+#
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
+#                       'twist': np.array([0., -1.5, 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+#
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., 1., 0., 10.*DEG2RAD, 0.]),
+#                       'twist': np.array([1., 0., 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., 1., 0., 0, 0.]),
+#                       'twist': np.array([-1., 0., 0., 0., 0.5, 0.]),
 #                       'useWBC': True,
 #                       'useIK': False,
 #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
@@ -150,42 +196,42 @@ SIMS_SETTINGS = []
 #                       'id': '',
 #                       't_video': 0.0})
 
-SIMS_SETTINGS.append({'name': 'find_limits',
-                      'pose': np.array([0., 0., 0.5, 0., 0., 0.]),
-                      'twist': np.array([0, 0., 0., 0., 0., 0.]),
-                      'magnitude_init_list':  np.array([1.5, 1.4, 1.7, 2.2, 1.9, 2.2, 2.8, 2.2, 1.9, 2.1, 1.7, 1.4]),
-                      'useWBC': True,
-                      'useIK': False,
-                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-                      'id': '',
-                      't_video': 0.0})
-
-SIMS_SETTINGS.append({'name': 'find_limits',
-                      'pose': np.array([0., 0., .7, 0., 0., 0.]),
-                      'twist': np.array([0, 0., 0., 0., 0., 0.]),
-                      'magnitude_init_list': np.array([3.0, 3.3, 2.7, 2.3, 2.1, 2.1, 2.2, 2.1, 2.0, 2.3, 2.7, 3.3]),
-                      'useWBC': True,
-                      'useIK': False,
-                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-                      'id': '',
-                      't_video': 0.0})
-SIMS_SETTINGS.append({'name': 'find_limits',
-                      'pose': np.array([0., 0., 1.2, 0., 0., 0.]),
-                      'twist': np.array([0, 0., 0., 0., 0., 0.]),
-                      'magnitude_init_list': np.array([2.6, 2.2, 1.6, 1.3, 1.7, 1.3, 2.2, 1.1, 1.7, 1.4, 1.6, 2.1]),
-                      'useWBC': True,
-                      'useIK': False,
-                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-                      'id': '',
-                      't_video': 0.0})
-SIMS_SETTINGS.append({'name': 'find_limits',
-                      'pose': np.array([0., 0., 2.0, 0., 0., 0.]),
-                      'twist': np.array([0, 0., 0., 0., 0., 0.]),
-                      'magnitude_init_list': np.array([.80]*12),
-                      'useWBC': True,
-                      'useIK': False,
-                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-                      'id': '',
-                      't_video': 0.0})
+# SIMS_SETTINGS.append({'name': 'find_limits',
+#                       'pose': np.array([0., 0., 0.5, 0., 0., 0.]),
+#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
+#                       'magnitude_init_list':  np.array([1.5, 1.4, 1.7, 2.2, 1.9, 2.2, 2.8, 2.2, 1.9, 2.1, 1.7, 1.4]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+#
+# SIMS_SETTINGS.append({'name': 'find_limits',
+#                       'pose': np.array([0., 0., .7, 0., 0., 0.]),
+#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
+#                       'magnitude_init_list': np.array([3.0, 3.3, 2.7, 2.3, 2.1, 2.1, 2.2, 2.1, 2.0, 2.3, 2.7, 3.3]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+# SIMS_SETTINGS.append({'name': 'find_limits',
+#                       'pose': np.array([0., 0., 1.2, 0., 0., 0.]),
+#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
+#                       'magnitude_init_list': np.array([2.6, 2.2, 1.6, 1.3, 1.7, 1.3, 2.2, 1.1, 1.7, 1.4, 1.6, 2.1]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
+# SIMS_SETTINGS.append({'name': 'find_limits',
+#                       'pose': np.array([0., 0., 2.0, 0., 0., 0.]),
+#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
+#                       'magnitude_init_list': np.array([.80]*12),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       't_video': 0.0})
 
 SETTINGS['SIMS'] = SIMS_SETTINGS

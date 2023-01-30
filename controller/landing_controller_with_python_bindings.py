@@ -80,7 +80,7 @@ class LandingController:
         foot2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
         self._q_neutral[2] = foot2base
         com_home = self.robot.robotComW(self._q_neutral)
-        self.L = com_home[2]+0.01
+        self.L = com_home[2]#+0.01
 
         self.floor2foot = np.array([0.,0.,0.03])
 
@@ -105,7 +105,7 @@ class LandingController:
         self.twist_des = np.zeros(6)
         self.acc_des = np.zeros(6)
 
-
+        self.W_com_TD = np.zeros(6)
 
         self.T_o_B = np.array([0, 0, self.L])
 
@@ -228,8 +228,8 @@ class LandingController:
         # REFERENCES
         # ---> POSE
         # to avoid reshape, use these three lines
-        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k]
-        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k]
+        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_com_TD[0]
+        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_com_TD[1]
         self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
         self.pose_des[3:6] = np.exp(self.eig_ang * (t-self.jumping_data_times.touch_down.t)) * self.euler_TD
@@ -292,7 +292,7 @@ class LandingController:
         return anyLO
 
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
-
+        print(vel_z_pre, vel_z_now)
         if t > self.check_apex_time:
             if vel_z_pre >=0. and vel_z_now < 0.:
                 self.jumping_data_times.apex.set(t, sample)

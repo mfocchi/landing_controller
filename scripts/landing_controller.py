@@ -1,6 +1,8 @@
 import matplotlib
+import numpy as np
+
 matplotlib.use('TkAgg')
-from base_controllers.controller_new import Controller
+from base_controllers.quadruped_controller import Controller
 from controller.landing_controller_with_python_bindings import LandingController
 from controller.settings import SETTINGS
 from controller.utility import initCond2str, manipulateFig
@@ -26,7 +28,8 @@ if __name__ == '__main__':
             world_name = 'camera_'+world_name
 
         p.startController(world_name=world_name,
-                          additional_args=['gui:=False', 'go0_conf:=standDown'])
+                          use_ground_truth_pose=False, use_ground_truth_contacts=False,
+                          additional_args=['gui:=True', 'go0_conf:=standDown'])
 
         p.startupProcedure()  # overloaded method
 
@@ -65,7 +68,7 @@ if __name__ == '__main__':
                                                  p.quaternion,
                                                  q_des]))
 
-            lc.setCheckTimings()#expected_touch_down_time=np.sqrt(2 * simulation['pose'][2] / 9.81) + p.time, clearance=0.05)
+            lc.setCheckTimings(expected_touch_down_time=0.04)#  np.sqrt(2 * simulation['pose'][2] / 9.81) + p.time, clearance=0.05)
 
             p.setGravity(-9.81)
             p.pause_physics_client()
@@ -144,7 +147,12 @@ if __name__ == '__main__':
 
                     if isTouchDownOccurred:
                         fsm_state += 1
-                        p.leg_odom.reset(np.hstack([0., 0., lc.L, p.quaternion, p.q]))
+                        if p.use_ground_truth_pose:
+                            W_base_TD = p.u.linPart(p.basePoseW)
+                        else:
+                            W_base_TD = np.array([0., 0., 0.259])
+                        conf_TD = np.hstack([W_base_TD, p.quaternion, p.q])
+                        p.leg_odom.reset(conf_TD)
                         # if use only ik -> same pid gains
                         # if use ik + wbc -> reduce pid gains
                         # if only wbc -> zero pid gains
@@ -156,10 +164,10 @@ if __name__ == '__main__':
                         #       do not change gains
 
                         # save the base position at touch down
-                        # W_p_base_TD = p.u.linPart(p.basePoseW)
-                        # W_com_TD = p.u.linPart(p.comPoseW)
-                        # p.zmp[0] = lc.slip_dyn.zmp_xy[0] + W_com_TD[0]
-                        # p.zmp[1] = lc.slip_dyn.zmp_xy[1] + W_com_TD[1]
+                        lc.W_com_TD[:3] = p.robot.robotComW(conf_TD)
+                        lc.W_com_TD[3:] = p.u.angPart(p.basePoseW)
+                        p.zmp[0] = lc.slip_dyn.zmp_xy[0] + lc.W_com_TD[0]
+                        p.zmp[1] = lc.slip_dyn.zmp_xy[1] + lc.W_com_TD[1]
                     else:
                         # compute landing trajectory + kinematic adjustment
                         lc.flyingDown_phase(p.b_R_w, p.imu_utils.W_lin_vel)
@@ -230,9 +238,7 @@ if __name__ == '__main__':
                             tau_ffwd = p.gravityCompensation()
 
                         if simulation['useWBC']:
-                            #off = np.array([W_com_TD[0], W_com_TD[1], 0, 0, 0, 0])
-                            off = np.zeros(6)
-                            tau_ffwd = p.WBC(off + lc.pose_des, lc.twist_des, lc.acc_des, type=simulation['typeWBC'])
+                            tau_ffwd = p.WBC(lc.pose_des, lc.twist_des, lc.acc_des, type=simulation['typeWBC'])
 
                 # finally, send commands
                 p.send_command(q_des, qd_des, tau_ffwd)
@@ -266,10 +272,6 @@ if __name__ == '__main__':
             manipulateFig(fig, 'tau', SETTINGS['PLOTS'])
 
             # com position
-            p.comPoseW_des_log[0, lc.jumping_data_times.touch_down.sample:] += p.comPoseW_log[
-                0, lc.jumping_data_times.touch_down.sample]
-            p.comPoseW_des_log[1, lc.jumping_data_times.touch_down.sample:] += p.comPoseW_log[
-                1, lc.jumping_data_times.touch_down.sample]
 
             fig = plotCoM('position', 1, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log,
                           des_basePoseW=p.comPoseW_des_log)
@@ -291,8 +293,8 @@ if __name__ == '__main__':
             # manipulateFig(fig, 'B_feet', SETTINGS['PLOTS'])
 
             # force in world
-            fig = plotGRFs_withContacts(fig.number + 1, time_log=p.time_log.flatten(), des_forces=p.grForcesW_gt_log,
-                                        act_forces=p.grForcesW_des_log, contact_states=p.contact_state_log)
+            fig = plotGRFs_withContacts(fig.number + 1, time_log=p.time_log.flatten(), des_forces=p.grForcesW_des_log,
+                                        act_forces=p.grForcesW_log, contact_states=p.contact_state_log)
             manipulateFig(fig, 'grfs', SETTINGS['PLOTS'])
 
             # margins
