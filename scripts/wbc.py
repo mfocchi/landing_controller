@@ -123,14 +123,14 @@ if __name__ == '__main__':
         if conf.plotting:
 
 
-            plotCoM('position', 10, time_log=p.time_log.flatten(), des_basePoseW=p.comPoseW_des_log,
+            plotCoM('position', 0, time_log=p.time_log.flatten(), des_basePoseW=p.comPoseW_des_log,
                     basePoseW=p.comPoseW_log, des_baseTwistW=p.comTwistW_des_log,
                     baseTwistW=p.comTwistW_log)
-            plotCoM('velocity', 11, time_log=p.time_log.flatten(), des_basePoseW=p.comPoseW_des_log,
+            plotCoM('velocity', 1, time_log=p.time_log.flatten(), des_basePoseW=p.comPoseW_des_log,
                     basePoseW=p.comPoseW_log, des_baseTwistW=p.comTwistW_des_log,
                     baseTwistW=p.comTwistW_log)
             # plotGRFs(2, p.time_log, p.des_forcesW_log, p.grForcesW_log)
-            plotJoint('torque',4, p.time_log.flatten(), p.q_log, p.q_des_log, p.qd_log, p.qd_des_log, None, None, p.tau_log, p.tau_ffwd_log)
+            plotJoint('torque',3, p.time_log.flatten(), p.q_log, p.q_des_log, p.qd_log, p.qd_des_log, None, None, p.tau_log, p.tau_ffwd_log)
 
             plt.figure()
             plt.title('wrench fb')
