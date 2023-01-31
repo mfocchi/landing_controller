@@ -8,7 +8,7 @@ np.set_printoptions(linewidth=np.inf,  # number of characters per line befor new
                     suppress=True,  # suppress scientific notation
                     threshold=np.inf)
 
-from base_controllers.quadruped_controller import Controller
+from base_controllers.controller_new import Controller
 import rospy as ros
 import time
 
@@ -19,7 +19,7 @@ ROBOT_NAME = 'go1'                         # go1, solo, (aliengo)
 
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
-    p.startController(additional_args=['go0_conf:=standDown'])
+    p.startController(real_robot=True)#additional_args=['go0_conf:=standDown'])
     uk_time = np.full(p.time_log.shape, np.nan)
     sc_time = np.full(p.time_log.shape, np.nan)
     p.pid = PidManager(p.joint_names)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
                 start = time.time()
                 p.updateKinematics()
                 tau_ffwdg = p.gravityCompensation()
-                uk_time[p.log_counter] = time.time() - start
+                uk_time[:,p.log_counter] = time.time() - start
 
                 # p.imu_utils.compute_lin_vel(p.W_base_lin_acc, p.loop_time)
                 # p.w_p_b_legOdom, p.w_v_b_legOdom = p.leg_odom.estimate_base_wrt_world(p.contact_state,
@@ -46,7 +46,7 @@ if __name__ == '__main__':
                 #                                                                       p.qd)
                 start = time.time()
                 p.send_command(q_des, qd_des, tau_ffwd)
-                sc_time[p.log_counter] = time.time() - start
+                sc_time[:,p.log_counter] = time.time() - start
             else:
                 ros.signal_shutdown("killed")
                 p.deregister_node()
@@ -74,11 +74,11 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.plot(p.time_log[:p.log_counter - 1], sc_time[:p.log_counter - 1] * 10e3)
-    plt.plot(p.time_log[:p.log_counter - 1], uk_time[:p.log_counter - 1] * 10e3)
+    plt.plot(p.time_log.T[:p.log_counter - 1], sc_time.T[:p.log_counter - 1] * 10e3)
+    plt.plot(p.time_log.T[:p.log_counter - 1], uk_time.T[:p.log_counter - 1] * 10e3)
     plt.legend(['updateKinematics', 'send_command'])
     plt.xlabel('time [s]')
     plt.ylabel('computation time [ms]')
-    plt.title('Desktop PC, in Docker, real robot')
+    plt.title('Desktop PC, in Docker, real robot\n locosim commit 4937d8a7f9372756b9ef9bcfcf')
 
 
