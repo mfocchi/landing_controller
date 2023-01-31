@@ -19,7 +19,7 @@ ROBOT_NAME = 'go1'                         # go1, solo, (aliengo)
 
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
-    p.startController(additional_args=['go0_conf:=standDown'])#, world_name="big_box.world")
+    p.startController(additional_args=['go0_conf:=standDown'])
     p.pid = PidManager(p.joint_names)
     p.pid.setPDjoints(np.zeros(p.robot.na),
                       np.zeros(p.robot.na),
