@@ -14,8 +14,15 @@ import time
 
 from base_controllers.utils.pidManager import PidManager
 
+import cProfile, pstats, io
+from pstats import SortKey
+
 ROBOT_NAME = 'go1'                         # go1, solo, (aliengo)
 
+pr = cProfile.Profile(timeunit=1e-6)
+
+def updateKinematics(p):
+    p.updateKinematics()
 
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
@@ -31,12 +38,16 @@ if __name__ == '__main__':
     tau_ffwd = np.zeros(12)
 
     try:
+        start_time = p.time
         while not ros.is_shutdown():
-            if p.time < 40.:
-                start = time.time()
-                p.updateKinematics()
+            if p.time-start_time < 20.:
+                # start = time.time()
+                cProfile.run('updateKinematics(p)', filename='/home/froscia/ros_ws/src/landing_controller/go1tests/stats_original.cprof')
+                # pr.enable()
+                # p.updateKinematics()
+                # pr.disable()
                 tau_ffwdg = p.gravityCompensation()
-                uk_time[p.log_counter] = time.time() - start
+                # uk_time[p.log_counter] = time.time() - start
 
                 # p.imu_utils.compute_lin_vel(p.W_base_lin_acc, p.loop_time)
                 # p.w_p_b_legOdom, p.w_v_b_legOdom = p.leg_odom.estimate_base_wrt_world(p.contact_state,
@@ -44,9 +55,9 @@ if __name__ == '__main__':
                 #                                                                       p.q,
                 #                                                                       p.u.angPart(p.baseTwistW),
                 #                                                                       p.qd)
-                start = time.time()
+                # start = time.time()
                 p.send_command(q_des, qd_des, tau_ffwd)
-                sc_time[p.log_counter] = time.time() - start
+                # sc_time[p.log_counter] = time.time() - start
             else:
                 ros.signal_shutdown("killed")
                 p.deregister_node()
@@ -74,11 +85,17 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.plot(p.time_log[:p.log_counter - 1], sc_time[:p.log_counter - 1] * 10e3)
-    plt.plot(p.time_log[:p.log_counter - 1], uk_time[:p.log_counter - 1] * 10e3)
-    plt.legend(['updateKinematics', 'send_command'])
+    plt.plot(p.time_log[:p.log_counter - 1], sc_time[:p.log_counter - 1] * 1e3)
+    plt.plot(p.time_log[:p.log_counter - 1], uk_time[:p.log_counter - 1] * 1e3)
+    plt.legend(['send_command', 'updateKinematics'])
     plt.xlabel('time [s]')
     plt.ylabel('computation time [ms]')
     plt.title('Desktop PC, in Docker, real robot')
+
+    # s = io.StringIO()
+    # sortby = SortKey.CUMULATIVE
+    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    # ps.print_stats()
+    # print(s.getvalue())
 
 

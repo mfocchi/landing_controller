@@ -23,7 +23,7 @@ robotName = "go1"
 test = {}
 test['duration'] = 3.
 test['stabilize'] = .1
-test['amp']  = np.array([0.0, 0., 0.0, 0., 0., 0.])
+test['amp']  = np.array([0.0, 0., 0.1, 0., 0., 0.])
 test['freq'] = np.array([0.1, 0., 0.5, 0., 0., 0.])
 test['typeWBC'] = 'projection'
 #test['typeWBC'] = 'qp'
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     try:
 
         p.startController(world_name='slow.world',
-                          use_ground_truth_pose=False, use_ground_truth_contacts=False,
+                          use_ground_truth_pose=True, use_ground_truth_contacts=False,
                           additional_args=['gui:=True', 'go0_conf:=standDown'])
         p.startupProcedure()  # overloaded method
         p.leg_odom.reset(np.hstack([0., 0., 0.259, p.quaternion, p.q]))

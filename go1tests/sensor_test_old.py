@@ -74,8 +74,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.plot(p.time_log.T[:p.log_counter - 1], sc_time.T[:p.log_counter - 1] * 10e3)
-    plt.plot(p.time_log.T[:p.log_counter - 1], uk_time.T[:p.log_counter - 1] * 10e3)
+    plt.plot(p.time_log.T[:p.log_counter - 1], sc_time.T[:p.log_counter - 1] * 1e3)
+    plt.plot(p.time_log.T[:p.log_counter - 1], uk_time.T[:p.log_counter - 1] * 1e3)
     plt.legend(['updateKinematics', 'send_command'])
     plt.xlabel('time [s]')
     plt.ylabel('computation time [ms]')
