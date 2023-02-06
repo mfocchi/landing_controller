@@ -2,7 +2,7 @@ import numpy as np
 import pinocchio as pin
 from base_controllers.utils.utils import Utils
 from controller.SLIP_dynamics.SLIP_dynamics_lib import SLIP_dynamics
-import tabulate
+
 
 from matplotlib import pyplot as plt
 
@@ -29,9 +29,7 @@ class JumpingDataTimes:
         self._list_of_events = [self.lift_off, self.apex, self.touch_down]
         self._headers = ['Event', 'Time (s)', '# Sample']
 
-    def toString(self):
-        l = [[e.name, e.t, e.sample] for e in self._list_of_events]
-        return tabulate.tabulate(l, headers=self._headers)
+
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
