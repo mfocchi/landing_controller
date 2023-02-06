@@ -41,7 +41,7 @@ now_s = now_s.replace('-', '')
 now_s = now_s.replace(' ', '_')
 now_s = now_s.replace(':', '')
 now_s = now_s[: now_s.find('.')]
-PLOT_SETTINGS['save_path'] = os.environ['HOME'] + '/landing_controller/simulations/' + now_s
+PLOT_SETTINGS['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
 os.mkdir(PLOT_SETTINGS['save_path'])
 
 PLOT_SETTINGS['directory_path'] = '' # filled at runtime if PLOT_SETTINGS['save']  is true
