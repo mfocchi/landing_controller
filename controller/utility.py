@@ -49,8 +49,6 @@ class Simulation:
 
         self.p.unpause_physics_client()
 
-
-
         q_des = self.p.qj_0.copy()
         qd_des = np.zeros_like(q_des)
         tau_ffwd = np.zeros_like(q_des)
@@ -355,8 +353,4 @@ class Simulation:
             for c in self.p.W_contacts_log[0:3, self.lc.jumping_data_times.touch_down.sample:self.p.log_counter].T:
                 if np.linalg.norm(c - self.p.W_contacts_TD[0]) > 0.03:
                     return 2
-
         return 0
-
-
-
