@@ -19,15 +19,15 @@ def initCond2str(init_cond, speedUpDown=1.):
     return ICstr
 
 
-
-def manipulateFig(fig, filename, PLOT_SETTINGS):
+def manipulateFig(fig, filename, PLOT_SETTINGS, verbose = False):
     fig.set_size_inches([PLOT_SETTINGS['width_inches'], PLOT_SETTINGS['height_inches']])
 
     if PLOT_SETTINGS['save']:
         plt.savefig(PLOT_SETTINGS['directory_path'] + '/' + filename+ '.png')
         plt.close()
         del fig
-        #print(colored('Plot ' + filename+ '.png saved', color='green'), flush=True)
+        if verbose:
+            print('Plot ' + filename+ '.png saved', flush=True)
 
     if PLOT_SETTINGS['show']:
         plt.show()
