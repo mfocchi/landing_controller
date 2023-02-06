@@ -183,11 +183,11 @@ class LandingController:
         if self.alpha < 1.:
             self.alpha = np.min([np.around(self.alpha+self.smoothing_param, 4), 1.])
 
-
         for leg in range(4):
             self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
             self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
+
 
 
     def landed_phase(self, t, euler, simplified=False):
@@ -290,7 +290,6 @@ class LandingController:
         return anyLO
 
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
-        print(vel_z_pre, vel_z_now)
         if t > self.check_apex_time:
             if vel_z_pre >=0. and vel_z_now < 0.:
                 self.jumping_data_times.apex.set(t, sample)
