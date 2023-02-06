@@ -210,7 +210,7 @@ class Simulation:
 
                     # set references
                     # joints position
-                    for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
+                    for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
                         q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
                                                             self.p.robot.model.getFrameId(leg + '_foot'),
                                                             self.p.legConfig[leg][0],
@@ -221,7 +221,7 @@ class Simulation:
                     # joints velocity
                     W_v_feet = -self.p.u.linPart(self.lc.twist_des)
                     B_v_feet = self.p.b_R_w @ W_v_feet
-                    for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
+                    for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
                         qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
                                                       B_v_foot=B_v_feet,
                                                       foot_idx=self.p.robot.model.getFrameId(leg + '_foot'),
