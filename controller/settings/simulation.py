@@ -1,52 +1,4 @@
-import matplotlib.pyplot as plt
 import numpy as np
-from screeninfo import get_monitors
-import os
-import datetime
-
-SETTINGS = {}
-#################
-# plot settings #
-#################
-WORKSPACE_SETTINGS={}
-WORKSPACE_SETTINGS['save'] = False
-SETTINGS['WORKSPACE'] = WORKSPACE_SETTINGS
-
-#################
-# plot settings #
-#################
-PLOT_SETTINGS = {}
-PLOT_SETTINGS['show'] = True
-PLOT_SETTINGS['save'] = False
-PLOT_SETTINGS['video'] = False
-PLOT_SETTINGS['speedUpDown'] = 0.2
-
-# do not modify the following
-plt.ioff()
-width_inches = 0.
-height_inches = 0.
-mm2inches = 0.0393701
-for m in get_monitors():
-    if m.is_primary:
-        width_inches = m.width_mm * mm2inches
-        height_inches = m.height_mm * mm2inches
-        break
-PLOT_SETTINGS['width_inches'] = width_inches
-PLOT_SETTINGS['height_inches'] = height_inches
-PLOT_SETTINGS['save_path'] = ''
-
-now = datetime.datetime.now()
-now_s = str(now)
-now_s = now_s.replace('-', '')
-now_s = now_s.replace(' ', '_')
-now_s = now_s.replace(':', '')
-now_s = now_s[: now_s.find('.')]
-PLOT_SETTINGS['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
-os.mkdir(PLOT_SETTINGS['save_path'])
-
-PLOT_SETTINGS['directory_path'] = '' # filled at runtime if PLOT_SETTINGS['save']  is true
-
-SETTINGS['PLOTS'] = PLOT_SETTINGS
 #######################
 # Simulation Settings #
 #######################
@@ -59,6 +11,7 @@ SETTINGS['PLOTS'] = PLOT_SETTINGS
 # 'typeWBC' (str):          'projection' or 'qp' (used only if useWBC is True)
 # 'id' (str):               numeric identifier of the simulation, will be filled at run-time
 # 't_video' (float):        start time in the video, will be filled at run-time
+# directory (str):          directory for storing plots, will be filled at run-time
 
 DEG2RAD = np.pi / 180
 SIMS_SETTINGS = []
@@ -69,7 +22,8 @@ SIMS_SETTINGS.append({'name': 'A_high_jump',
                       'useIK': False,
                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
                       'id': '',
-                      't_video': 0.0})
+                      't_video': 0.0,
+                      'directory': ''})
 
 # SIMS_SETTINGS.append({'name': 'A_high_jump',
 #                       'pose': np.array([0., 0., .6, 0., -20.*DEG2RAD, 0.]),
@@ -234,4 +188,4 @@ SIMS_SETTINGS.append({'name': 'A_high_jump',
 #                       'id': '',
 #                       't_video': 0.0})
 
-SETTINGS['SIMS'] = SIMS_SETTINGS
+
