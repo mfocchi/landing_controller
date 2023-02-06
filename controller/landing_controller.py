@@ -3,7 +3,6 @@ import pinocchio as pin
 from base_controllers.utils.utils import Utils
 from controller.SLIP_dynamics.SLIP_dynamics_lib import SLIP_dynamics
 
-
 from matplotlib import pyplot as plt
 
 ###############################
@@ -15,12 +14,14 @@ class Event:
         self.name = name
         self.t = 0.
         self.sample = -1
+        self.detected = False
 
     def set(self, t, sample):
         self.t = t
         self.sample = sample
+        self.detected = True
 
-class JumpingDataTimes:
+class LcEvents:
     def __init__(self):
         self.lift_off = Event('Lift off')
         self.apex = Event('Apex')
@@ -28,8 +29,6 @@ class JumpingDataTimes:
 
         self._list_of_events = [self.lift_off, self.apex, self.touch_down]
         self._headers = ['Event', 'Time (s)', '# Sample']
-
-
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
@@ -54,11 +53,8 @@ class LandingController:
 
         self.dt = dt
 
-
         self.ref_k = -1
         self.lp_counter = -1
-
-
 
         # checking times: setCheckTimings() should be called before run
         self.check_lift_off_time = 0.
@@ -74,15 +70,14 @@ class LandingController:
         # q_neutral[0:7] and v_neutral[0:6] cannot be modified
         self._q_neutral = pin.neutral(self.robot.model)
 
-
         foot2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
-        self._q_neutral[2] = foot2base
+        floor2foot = 0.02
+        floor2base = foot2base + floor2foot
+        self._q_neutral[2] = floor2base
         com_home = self.robot.robotComW(self._q_neutral)
-        self.L = com_home[2]#+0.01
+        self.L = com_home[2]
 
-        self.floor2foot = np.array([0.,0.,0.03])
-
-        self.max_spring_compression = 0.3 * self.L
+        self.max_spring_compression = 0.4 * self.L
         w_v = 1.
         w_p = 1.
         w_u = 0.
@@ -129,15 +124,13 @@ class LandingController:
         self.init_pos = np.zeros([3, 1])
         self.init_vel = np.zeros([3, 1])
 
-
-        self.alpha = 0.
-        self.smoothing_param = 0.015
+        self.alpha = 0.0
+        self.smoothing_param = 0.02
 
         self.euler_final = np.zeros(3)
 
-        self.landed_phase_flag = False
 
-        self.jumping_data_times = JumpingDataTimes()
+        self.lc_events = LcEvents()
 
 
     def base_height(self, q_j):
@@ -165,13 +158,11 @@ class LandingController:
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
 
-
-
     def flyingDown_phase(self, B_R_T, com_vel_W):
         # (re-)compute zmp and move feet plane accordingly
-        self.init_pos[0] = 0.
-        self.init_pos[1] = 0.
-        self.init_pos[2] = self.L
+        # self.init_pos[0] = 0.
+        # self.init_pos[1] = 0.
+        # self.init_pos[2] = self.L
         self.init_vel[0] = com_vel_W[0]
         self.init_vel[1] = com_vel_W[1]
         self.init_vel[2] = com_vel_W[2]
@@ -181,24 +172,20 @@ class LandingController:
 
         # task for feet in terrain frame
         if self.alpha < 1.:
-            self.alpha = np.min([np.around(self.alpha+self.smoothing_param, 4), 1.])
+            self.alpha = np.around(self.alpha+self.smoothing_param, 2)
 
         for leg in range(4):
-            self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
-            self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
+            self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.alpha * self.slip_dyn.zmp_xy
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
+    def landed(self, W_com_pose):
+        self.W_com_TD = W_com_pose
+        self.slip_dyn.xy_dynamics()
+        self.eig_ang = -16 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
 
-
-    def landed_phase(self, t, euler, simplified=False):
+    def landed_phase(self, t, simplified=False):
         # use the last trajectory computed
         # task for feet in terrain frame
-        if not self.landed_phase_flag:
-            self.slip_dyn.xy_dynamics()
-
-            self.euler_TD = euler
-            self.eig_ang = -4 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
-            self.landed_phase_flag = True
 
         # lp_counter counts how many times landed_phase has been called. the reference computed by slip_dyn.xy_dynamics()
         # we apply twice the reference. so ref_k is half of lp_counter, up to its max value
@@ -222,7 +209,6 @@ class LandingController:
             self.acc_des[:] = 0.
             return
 
-
         # REFERENCES
         # ---> POSE
         # to avoid reshape, use these three lines
@@ -230,7 +216,7 @@ class LandingController:
         self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_com_TD[1]
         self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
-        self.pose_des[3:6] = np.exp(self.eig_ang * (t-self.jumping_data_times.touch_down.t)) * self.euler_TD
+        self.pose_des[3:6] = np.exp(self.eig_ang * (t-self.lc_events.touch_down.t)) * self.u.angPart(self.W_com_TD)
 
         B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3:6]).T
 
@@ -251,10 +237,8 @@ class LandingController:
 
         self.T_o_B[2] = self.pose_des[2]
         for leg in range(4):
-            self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.slip_dyn.zmp_xy[0]
-            self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.slip_dyn.zmp_xy[1]
-
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - (self.pose_des[0:3]+self.floor2foot) )
+            self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.slip_dyn.zmp_xy
+            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3])
 
 
 
@@ -286,13 +270,13 @@ class LandingController:
         if t > self.check_lift_off_time:
             anyLO = not any(contact_state)
             if anyLO:
-                self.jumping_data_times.lift_off.set(t, sample)
+                self.lc_events.lift_off.set(t, sample)
         return anyLO
 
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
         if t > self.check_apex_time:
-            if vel_z_pre >=0. and vel_z_now < 0.:
-                self.jumping_data_times.apex.set(t, sample)
+            if (vel_z_pre >=0. and vel_z_now < 0.) or (vel_z_pre <0. and vel_z_now < 0.):
+                self.lc_events.apex.set(t, sample)
                 return True
 
         return False
@@ -301,7 +285,7 @@ class LandingController:
         if t > self.check_touch_down_time:
             anyTD = any(contacts_state)
             if anyTD:
-                self.jumping_data_times.touch_down.set(t, sample)
+                self.lc_events.touch_down.set(t, sample)
             return anyTD
         return False
 
@@ -375,11 +359,6 @@ class LandingController:
         ax.set_aspect('equal', adjustable='box')
 
         plt.show()
-
-
-
-
-
 
     def plot_ref(self, figure_id=None):
         label = 'CoM '
