@@ -37,6 +37,7 @@ if __name__ == '__main__':
             world_name = 'camera_'+world_name
 
         p.startController(world_name=world_name,
+                          use_ground_truth_pose=True, use_ground_truth_contacts=False,
                           additional_args=['gui:=True', 'go0_conf:=standDown'])
 
         p.startupProcedure()  # overloaded method
