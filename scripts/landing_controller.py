@@ -3,7 +3,7 @@ import numpy as np
 
 matplotlib.use('TkAgg')
 from base_controllers.quadruped_controller import Controller
-from controller.landing_controller_with_python_bindings import LandingController
+from controller.landing_controller import LandingController
 from controller.settings import SETTINGS
 from controller.utility import initCond2str, manipulateFig
 from base_controllers.utils.common_functions import * #(matplotlib.pyplot, numpy, plots, ros)
