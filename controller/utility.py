@@ -159,9 +159,9 @@ class Simulation:
 
                     # save the base position at touch down
                     W_p_base_TD = self.p.u.linPart(self.p.basePoseW)
-                    W_com_TD = self.p.u.linPart(self.p.comPoseW)
-                    self.p.zmp[0] = self.lc.slip_dyn.zmp_xy[0] + W_com_TD[0]
-                    self.p.zmp[1] = self.lc.slip_dyn.zmp_xy[1] + W_com_TD[1]
+                    self.lc.W_com_TD = self.p.u.linPart(self.p.comPoseW)
+                    self.p.zmp[0] = self.lc.slip_dyn.zmp_xy[0] + self.lc.W_com_TD[0]
+                    self.p.zmp[1] = self.lc.slip_dyn.zmp_xy[1] + self.lc.W_com_TD[1]
                     self.p.W_contacts_TD = copy.deepcopy(self.p.W_contacts)
                 else:
                     # compute landing trajectory + kinematic adjustment
@@ -233,11 +233,10 @@ class Simulation:
                         tau_ffwd = self.p.gravityCompensation()
 
                     if useWBC:
-                        off = np.array([W_com_TD[0], W_com_TD[1], 0, 0, 0, 0])
-                        tau_ffwd = self.p.WBC(off + self.lc.pose_des, self.lc.twist_des, self.lc.acc_des, type=typeWBC)
+                        tau_ffwd = self.p.WBC(self.lc.pose_des, self.lc.twist_des, self.lc.acc_des, type=typeWBC)
 
                         # save LC references for com, feet, zmp
-                        self.p.comPoseW_des = self.lc.pose_des.copy() + off
+                        self.p.comPoseW_des = self.lc.pose_des.copy()
                         self.p.comTwistW_des = self.lc.twist_des.copy()
 
             # finally, send commands
