@@ -37,7 +37,7 @@ if __name__ == '__main__':
             world_name = 'camera_'+world_name
 
         p.startController(world_name=world_name,
-                          additional_args=['gui:=False', 'go0_conf:=standDown'])
+                          additional_args=['gui:=True', 'go0_conf:=standDown'])
 
         p.startupProcedure()  # overloaded method
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
                           simulation['useIK'],
                           simulation['useWBC'],
                           simulation['typeWBC'],
-                          simplified=True)
+                          simplified=False)
 
 
             else:
