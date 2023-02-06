@@ -113,7 +113,7 @@ class LandingController:
         self.B_feet_task = []
         self.T_feet_task = []
 
-        self.legs = ['lf', 'rf', 'lh', 'rh']
+        self.legs = ['lf', 'lh', 'rf', 'rh']
 
         for leg in self.legs:
             name = leg+'_foot'
