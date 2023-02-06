@@ -107,3 +107,29 @@ def saveWorkspace(path):
             print('ERROR shelving: {0}'.format(key))
     my_shelf.close()
 
+def setId(simulation, sim_counter):
+    if sim_counter < 10:
+        simulation['id'] = '0' + str(sim_counter)
+    else:
+        simulation['id'] = str(sim_counter)
+
+def setVideoTimings(t_start_video, simulation, previous_simulation=None):
+    if previous_simulation is None:
+        simulation['t_video'] = t_start_video
+    else:
+        simulation['t_video'] += SETTINGS['SIMS'][sim_counter - 1]['t_video']
+
+def saveAllInitConds(directory, SIMS, speedUpDown=1., verbose=False):
+    f = open(directory + "/ALL_simulations.txt", "w")
+    for simulation in SIMS:
+        f.write(initCond2str(simulation, speedUpDown) + '\n' + '-' * 10 + '\n')
+    f.close()
+    if verbose:
+        print(directory + '/ALL_simulations.txt saved')
+
+def saveInitConds(directory, simulation, speedUpDown=1., verbose=False):
+    f = open(directory + "/simulations.txt", "w")
+    f.write(initCond2str(simulation, speedUpDown) + '\n' + '-' * 10 + '\n')
+    f.close()
+    if verbose:
+        print(directory + '/simulations.txt saved')
