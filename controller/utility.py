@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from termcolor import colored
+from base_controllers.utils.common_functions import *
 DEG2RAD = np.pi/180
 
 
@@ -33,98 +33,68 @@ def manipulateFig(fig, filename, PLOT_SETTINGS, verbose = False):
         plt.show()
 
 
+def makePlots(p, figures, PLOT_SETTINGS, verbose = False):
+    id = 0
+    for name in figures:
+        if name == 'q' and figures[name]:
             # joint position
-            fig = plotJoint('position', 0, time_log=self.p.time_log.flatten(), q_log=self.p.q_log, q_des_log=self.p.q_des_log)
-            manipulateFig(fig, 'q', PLOT_SETTINGS)
+            fig = plotJoint('position', id, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log)
+            manipulateFig(fig, 'q', PLOT_SETTINGS, verbose = False)
+            id += 1
 
+        elif name == 'qd' and figures[name]:
+            # joint velocity
+            fig = plotJoint('velocity', id, time_log=p.time_log.flatten(), qd_log=p.qd_log,
+                            qd_des_log=p.qd_des_log)
+            manipulateFig(fig, 'qd', PLOT_SETTINGS, verbose = False)
+            id += 1
+
+        elif name == 'tau' and figures[name]:
             # joint torques
-            fig = plotJoint('torque', fig.number + 1, time_log=self.p.time_log.flatten(), tau_ffwd_log=self.p.tau_ffwd_log,
-                            tau_log=self.p.tau_log,
-                            tau_des_log=self.p.tau_des_log)
-            manipulateFig(fig, 'tau', PLOT_SETTINGS)
+            fig = plotJoint('torque', id, time_log=p.time_log.flatten(), tau_ffwd_log=p.tau_ffwd_log,
+                            tau_log=p.tau_log,
+                            tau_des_log=p.tau_des_log)
+            manipulateFig(fig, 'tau', PLOT_SETTINGS, verbose = False)
+            id += 1
 
+        elif name == 'com' and figures[name]:
             # com position
-            # self.p.comPoseW_des_log[0, self.lc.jumping_data_times.touch_down.sample:] += self.p.comPoseW_log[
-            #     0, self.lc.jumping_data_times.touch_down.sample]
-            # self.p.comPoseW_des_log[1, self.lc.jumping_data_times.touch_down.sample:] += self.p.comPoseW_log[
-            #     1, self.lc.jumping_data_times.touch_down.sample]
+            fig = plotCoM('position', 1, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log,
+                          des_basePoseW=p.comPoseW_des_log)
+            manipulateFig(fig, 'com', PLOT_SETTINGS, verbose = False)
+            id += 1
 
-            fig = plotCoM('position', 1, time_log=self.p.time_log.flatten(), basePoseW=self.p.comPoseW_log,
-                          des_basePoseW=self.p.comPoseW_des_log)
-            manipulateFig(fig, 'com', PLOT_SETTINGS)
-
+        elif name == 'vcom' and figures[name]:
             # com velocity
-            fig = plotCoM('velocity', fig.number + 1, time_log=self.p.time_log.flatten(), baseTwistW=self.p.comTwistW_log,
-                          des_baseTwistW=self.p.comTwistW_des_log)
-            manipulateFig(fig, 'vcom', PLOT_SETTINGS)
+            fig = plotCoM('velocity', id, time_log=p.time_log.flatten(), baseTwistW=p.comTwistW_log,
+                          des_baseTwistW=p.comTwistW_des_log)
+            manipulateFig(fig, 'vcom', PLOT_SETTINGS, verbose = False)
+            id += 1
 
-            # # feet position in w-frame and contact flag
-            # fig = plotFeet(fig.number + 1, time_log=self.p.time_log.flatten(), des_feet=self.p.W_contacts_des_log,
-            #                act_feet=self.p.W_contacts_log, contact_states=self.p.contact_state_log)
-            # manipulateFig(fig, 'W_feet', PLOT_SETTINGS)
-            #
-            # # feet position in b-frame and contact flag
-            # fig = plotFeet(fig.number + 1, time_log=self.p.time_log.flatten(), des_feet=self.p.B_contacts_des_log,
-            #                act_feet=self.p.B_contacts_log, contact_states=self.p.contact_state_log)
-            # manipulateFig(fig, 'B_feet', PLOT_SETTINGS)
+        elif name == 'w_contacts' and figures[name]:
+            # feet position in w-frame and contact flag
+            fig = plotFeet(id, time_log=p.time_log.flatten(), des_feet=p.W_contacts_des_log,
+                           act_feet=p.W_contacts_log, contact_states=p.contact_state_log)
+            manipulateFig(fig, 'W_feet', PLOT_SETTINGS, verbose = False)
+            id += 1
 
+        elif name == 'b_contacts' and figures[name]:
+            # feet position in b-frame and contact flag
+            fig = plotFeet(id, time_log=p.time_log.flatten(), des_feet=p.B_contacts_des_log,
+                           act_feet=p.B_contacts_log, contact_states=p.contact_state_log)
+            manipulateFig(fig, 'B_feet', PLOT_SETTINGS, verbose = False)
+            id += 1
+
+        elif name == 'grfs_contacts' and figures[name]:
             # force in world
-            fig = plotGRFs_withContacts(fig.number + 1, time_log=self.p.time_log.flatten(), des_forces=self.p.grForcesW_gt_log,
-                                        act_forces=self.p.grForcesW_des_log, contact_states=self.p.contact_state_log)
-            manipulateFig(fig, 'grfs', PLOT_SETTINGS)
+            fig = plotGRFs_withContacts(id, time_log=p.time_log.flatten(), des_forces=p.grForcesW_des_log,
+                                        act_forces=p.grForcesW_log, contact_states=p.contact_state_log)
+            manipulateFig(fig, 'grfs', PLOT_SETTINGS, verbose = False)
+            id += 1
 
-            # margins
-            # fig = plt.figure(fig.number + 1)
-            # ax = fig.subplots()
-            # X_vals = []
-            # Y_vals = []
-            # T_contacts = self.p.W_contacts.copy()
-            # for c in T_contacts:
-            #     c[0] -= self.p.comPoseW_log[0, self.lc.jumping_data_times.touch_down.sample]
-            #     c[1] -= self.p.comPoseW_log[1, self.lc.jumping_data_times.touch_down.sample]
-            # T_sp = self.p.support_poly(T_contacts)
-            # for side in T_sp:
-            #     X_vals.append(T_sp[side]['p0'][0])
-            #     Y_vals.append(T_sp[side]['p0'][1])
-            # X_vals.append(X_vals[0])
-            # Y_vals.append(Y_vals[0])
-            # plt.plot(X_vals, Y_vals, lw=6)
-            #
-            # eta, limit_zmp, marg_vx, marg_vy, limit_vx, limit_vy = self.lc.velocity_margin(T_sp)
-            # # for plotting in world, we should add the position as td
-            # ax.add_patch(plt.Circle((self.lc.slip_dyn.zmp_xy[0], self.lc.slip_dyn.zmp_xy[1]), 0.005, color='r'))
-            # ax.add_patch(plt.Circle((limit_zmp[0], limit_zmp[1]), 0.005, color='b'))
-            # n = np.linalg.norm(self.lc.init_vel)
-            #
-            # plt.plot([0, limit_vx / n], [0, limit_vy / n], lw=4)
-            # plt.plot([0, self.lc.init_vel[0] / n], [0, self.lc.init_vel[1] / n], lw=6)
-            #
-            # # self.p.comPoseW_des_log[0, self.lc.jumping_data_times.touch_down.sample:] -= self.p.comPoseW_log[ 0, self.lc.jumping_data_times.touch_down.sample]
-            # # self.p.comPoseW_des_log[1, self.lc.jumping_data_times.touch_down.sample:] -= self.p.comPoseW_log[1, self.lc.jumping_data_times.touch_down.sample]
-            # # plt.plot(self.p.comPoseW_des_log[0, self.lc.jumping_data_times.touch_down.sample:], self.p.comPoseW_des_log[1, self.lc.jumping_data_times.touch_down.sample:])
-            # ax.set_aspect('equal', adjustable='box')
-            #
-            # plt.legend(
-            #     ["support polygon", "zmp", "limit zmp", "limit TD velocity 'normalized'", "TD velocity normalized"],
-            #     fontsize=20)
-            #
-            # manipulateFig(fig, 'margins', PLOT_SETTINGS)
-            #
-            # # init cond file
-            # if PLOT_SETTINGS['save']:
-            #     f = open(PLOT_SETTINGS['directory_path'] + "/simulation.txt", "w")
-            #
-            #     f.write(initCond2str(simulation, PLOT_SETTINGS['speedUpDown']))
-            #     f.close()
-            #     print(colored('File ' + PLOT_SETTINGS['directory_path'] + '/simulation.txt saved', color='green'),
-            #           flush=True)
+        else:
+            print('Cannot understand ' + name)
 
-        ######################
-        # success conditions #
-        ######################
-        # com close to des com
-        if np.linalg.norm(self.p.comPoseW_des[0:3]-self.p.comPoseW[0:3]) > 0.1 :
-            return 1
 
         # feet don't move too much
         for i in range(4):
