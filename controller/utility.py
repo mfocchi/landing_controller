@@ -95,10 +95,15 @@ def makePlots(p, figures, PLOT_SETTINGS, verbose = False):
         else:
             print('Cannot understand ' + name)
 
+def saveWorkspace(path):
+    filename = path + '/workspace.out'
+    my_shelf = shelve.open(filename, 'n')  # 'n' for new
 
-        # feet don't move too much
-        for i in range(4):
-            for c in self.p.W_contacts_log[0:3, self.lc.jumping_data_times.touch_down.sample:self.p.log_counter].T:
-                if np.linalg.norm(c - self.p.W_contacts_TD[0]) > 0.03:
-                    return 2
-        return 0
+    for key in dir():
+        try:
+            my_shelf[key] = globals()[key]
+        except TypeError:
+            # __builtins__, my_shelf, and imported modules can not be shelved.
+            print('ERROR shelving: {0}'.format(key))
+    my_shelf.close()
+
