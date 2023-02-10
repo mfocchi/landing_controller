@@ -44,10 +44,6 @@ if __name__ == '__main__':
         if SETTINGS['VIDEO']['save']:
             init_video_frame = p.get_current_frame_file()
 
-        # if not SETTINGS['PLOTS']['show']:
-        #     plt.ioff()
-
-
         lm = LandingManager(p, SETTINGS)
         sim_counter = -1
         if SETTINGS['save_log']:
