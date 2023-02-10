@@ -14,16 +14,3 @@ SETTINGS['INIT_CONDS'] = INIT_CONDS
 SETTINGS['verbose'] = True
 SETTINGS['save_log'] = False
 SETTINGS['save_path'] = ''
-
-if SETTINGS['WORKSPACE']['save'] or \
-   SETTINGS['PLOTS']['save'] or \
-   SETTINGS['save_log'] or \
-   SETTINGS['INIT_CONDS']['save_all']:
-    now = datetime.datetime.now()
-    now_s = str(now)
-    now_s = now_s.replace('-', '')
-    now_s = now_s.replace(' ', '_')
-    now_s = now_s.replace(':', '')
-    now_s = now_s[: now_s.find('.')]
-    SETTINGS['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
-    os.mkdir(SETTINGS['save_path'])

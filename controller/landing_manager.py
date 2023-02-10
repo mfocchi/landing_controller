@@ -11,6 +11,19 @@ class LandingManager:
 
         self.settings = settings
 
+        if self.settings['WORKSPACE']['save'] or \
+                self.settings['PLOTS']['save'] or \
+                self.settings['save_log'] or \
+                self.settings['INIT_CONDS']['save_all']:
+            now = datetime.datetime.now()
+            now_s = str(now)
+            now_s = now_s.replace('-', '')
+            now_s = now_s.replace(' ', '_')
+            now_s = now_s.replace(':', '')
+            now_s = now_s[: now_s.find('.')]
+            SETTINGS['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
+            os.mkdir(SETTINGS['save_path'])
+
     def returnValue(self):
         # com close to des com
         if np.linalg.norm(self.p.comPoseW_des[0:3] - self.p.comPoseW[0:3]) > 0.1:
