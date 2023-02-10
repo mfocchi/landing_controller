@@ -4,19 +4,46 @@ from base_controllers.utils.common_functions import *
 DEG2RAD = np.pi/180
 
 
-def initCond2str(init_cond, speedUpDown=1.):
-    ICstr = ''
-    ICstr += 'id: '   + init_cond['id'] + '\n'
-    ICstr += 'name: ' + init_cond['name'] + '\n'
-    ICstr += 'base height: ' + str(np.round(init_cond['pose'][2], 3)) + ' m\n'
-    ICstr += 'base pitch: ' + str(np.round(init_cond['pose'][4], 3)/DEG2RAD) + ' deg\n'
-    ICstr += 'base fw vel: ' + str(np.round(init_cond['twist'][0], 3)) + ' m/s\n'
-    ICstr += 'base lat vel: ' + str(np.round(init_cond['twist'][1], 3)) + ' m/s\n'
-    ICstr += 'base pitch vel: ' + str(np.round(init_cond['twist'][4], 3)/DEG2RAD) + ' deg/s\n'
-    ICstr += 't_video: ' + str(init_cond['t_video']) + '\n'
-    if speedUpDown > 0. and speedUpDown != 1.:
-        ICstr += 't_video_speedUpDown: ' + str(init_cond['t_video']/speedUpDown) + '\n'
-    return ICstr
+def initCond2str(simulation, printVideo=True, speedUpDown=1.):
+    SIMstr = ''
+    SIMstr += 'id: '   + simulation['id'] + '\n'
+    SIMstr += 'name: ' + simulation['name'] + '\n'
+    SIMstr += 'base height: ' + str(np.round(simulation['pose'][2], 3)) + ' m\n'
+    SIMstr += 'base orientation: ' + str(np.round(simulation['pose'][3:], 3)/DEG2RAD) + ' deg\n'
+    SIMstr += 'base lin vel: ' + str(np.round(simulation['twist'][:3], 3)) + ' m/s\n'
+    SIMstr += 'base ang vel: ' + str(np.round(simulation['twist'][3:], 3)/DEG2RAD) + ' deg/s\n'
+    SIMstr += 'useWBC: ' +  str(simulation['useWBC']) + '\n'
+    SIMstr += 'useIK: ' + str(simulation['useIK'])
+    if printVideo and speedUpDown>0:
+        SIMstr += '\nt_video: ' + str(simulation['t_video']) + '\n'
+        SIMstr += 't_video_speedUpDown: ' + str(simulation['t_video']/speedUpDown) + '\n'
+    return SIMstr
+
+def findLimitsInitCond2str(simulation):
+    s0 = ' FIND LIMITS \n'
+    s0 += '\n'
+    s0 += ' base height: ' + str(np.round(simulation['pose'][2], 3)) + ' m \n'
+    s0 += ' base orientation: ' + str(np.round(simulation['pose'][3:], 3) / DEG2RAD) + ' deg \n'
+    s0 += ' base ang vel: ' + str(np.round(simulation['twist'][3:], 3) / DEG2RAD) + ' deg/s \n'
+    s0 += ' useWBC: ' + str(simulation['useWBC']) + ' \n'
+    s0 += ' useIK: ' + str(simulation['useIK']) + ' '
+
+    max_row = max(len(row) for row in s0.split('\n'))
+
+    s1 = ''
+    for row in s0.split('\n'):
+        l = len(row)
+        row = '*' + row
+        if l == 0:
+            row += '*' * max_row
+        elif 0<l < max_row:
+            row += ' ' * (max_row - l)
+        row += '*\n'
+        s1 += row
+    s1 = s1[:-1] # remove the last \n
+    n_char = max(len(row) for row in s1.split('\n'))
+    sim_str = '*'*n_char + '\n' +  s1 + '\n' + '*'*n_char
+    return sim_str
 
 
 def manipulateFig(fig, filename, PLOT_SETTINGS, verbose = False):
@@ -122,14 +149,14 @@ def setVideoTimings(t_start_video, simulation, previous_simulation=None):
 def saveAllInitConds(directory, SIMS, speedUpDown=1., verbose=False):
     f = open(directory + "/ALL_simulations.txt", "w")
     for simulation in SIMS:
-        f.write(initCond2str(simulation, speedUpDown) + '\n' + '-' * 10 + '\n')
+        f.write(initCond2str(simulation, speedUpDown=speedUpDown) + '\n' + '-' * 10 + '\n')
     f.close()
     if verbose:
         print(directory + '/ALL_simulations.txt saved')
 
 def saveInitConds(directory, simulation, speedUpDown=1., verbose=False):
     f = open(directory + "/simulations.txt", "w")
-    f.write(initCond2str(simulation, speedUpDown) + '\n' + '-' * 10 + '\n')
+    f.write(initCond2str(simulation, speedUpDown=speedUpDown) + '\n' + '-' * 10 + '\n')
     f.close()
     if verbose:
         print(directory + '/simulations.txt saved')
