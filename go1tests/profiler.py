@@ -16,6 +16,7 @@ from base_controllers.utils.pidManager import PidManager
 
 import cProfile, pstats, io
 from pstats import SortKey
+pr = cProfile.Profile()
 
 ROBOT_NAME = 'go1'                         # go1, solo, (aliengo)
 
@@ -40,13 +41,20 @@ if __name__ == '__main__':
     tau_ffwd = np.zeros(12)
 
     try:
-        cProfile.run('updateKinematics(p)', filename='/home/froscia/ros_ws/src/landing_controller/go1tests/stats_new1.cprof')
-        #p.updateKinematics()
+        #cProfile.run('updateKinematics(p)', filename='/home/froscia/ros_ws/src/landing_controller/go1tests/stats_new1.cprof')
+        pr.enable()
+        p.updateKinematics()
+        pr.disable()
         ros.signal_shutdown("killed")
         p.deregister_node()
     except (ros.ROSInterruptException, ros.service.ServiceException):
         ros.signal_shutdown("killed")
         p.deregister_node()
+
+    ps = pstats.Stats(pr)
+    ps.dump_stats('/home/froscia/ros_ws/src/landing_controller/go1tests/stats_new1.cprof')
+    # then go in go1test with the terminal and run
+    # pyprof2calltree -k -i stats_new.cprof
 
 
 
