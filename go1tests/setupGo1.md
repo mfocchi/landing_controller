@@ -1,5 +1,3 @@
-
-
 # Setup Unitree Go1 robot to work with Locosim
 
 Locosim supports many robots in simulation: UR5, HyQ, Aliengo, Solo, Go1. Recently I managed to interface also two real platforms: Aliengo and Go1. Here I will show you the step to interface Go1 and make it run with Locosim.
