@@ -39,19 +39,6 @@ if __name__ == '__main__':
 
     from base_controllers.utils.common_functions import *
 
-    # plotJoint('position', 0, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log, qd_log=p.qd_log,
-    #           qd_des_log=p.qd_des_log, tau_ffwd_log=p.tau_ffwd_log, tau_log=p.tau_log)
-    # plotJoint('velocity', 1, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log, qd_log=p.qd_log,
-    #            qd_des_log=p.qd_des_log, tau_ffwd_log=p.tau_ffwd_log, tau_log=p.tau_log)
-    # plotJoint('torque', 2, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log, qd_log=p.qd_log,
-    #           qd_des_log=p.qd_des_log, tau_ffwd_log=p.tau_ffwd_log, tau_log=p.tau_log, tau_des_log=p.tau_des_log)
-    plotCoM('position', 3, time_log=p.time_log.flatten(), basePoseW=p.basePoseW_log)
-    plotCoM('velocity', 4, time_log=p.time_log.flatten(), baseTwistW=p.baseTwistW_log)
-    # plotGRFs(6, time_log=p.time_log.flatten(), des_forces=p.grForcesW_des_log, act_forces=p.grForcesW_log)
-
-    plotCoMLinear('velocity', 5, time_log=p.time_log, plot_var_des_log=p.baseTwistW_legOdom_log, plot_var_log=p.u.linPart(p.baseTwistW_log))
-
-    plotCoMLinear('position', 6, time_log=p.time_log, plot_var_log=p.basePoseW_legOdom_log)
-
-
-
+    plotJoint('position', 5, p.time_log, q_log=p.q_log, q_des_log=p.q_des_log)
+    plotJoint('velocity', 6, p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log)
+    plotJoint('torque',7, p.time_log, tau_log=p.tau_log, tau_ffwd_log = p.tau_ffwd_log, tau_des_log=p.tau_fb_log)
