@@ -25,19 +25,19 @@ robotName = "go1"
 # Configuration #
 #################
 test = {}
-test['duration'] = 8.
-test['stabilize'] = 5.
-test['usePid'] = 5.
-test['amp']  = np.array([0.00, 0., 0.0, 0.0, 0.0, 0.1])
+test['duration'] = 5000.
+test['stabilize'] = 1.
+test['usePid'] = 1.
+test['amp']  = np.array([0.05, 0., 0.03, 0., 0.0, -0.15])
 test['phase']  = np.array([0., 0., np.pi/2, 0., 0, 0.])
-test['delta']  = np.array([0.00, 0., 0.0, 0., 0.0, 0.])
-test['freq'] = 1/8
+test['delta']  = np.array([0.0, 0., 0.03, 0., 0.0, 0.])
+test['freq'] = 0.3
 test['typeWBC'] = 'projection'
 # test['typeWBC'] = 'qp'
 # if use qp, the following must be set
 test['normals'] = [np.array([0.,0.,1.])]*4
 test['friction_coeffs'] = [0.8]*4
- 
+
 
 if __name__ == '__main__':
     p = Controller(robotName)
@@ -61,16 +61,6 @@ if __name__ == '__main__':
         p.comAccW_des = np.zeros(6)
 
         ####
-        # end of sinusoid - start of polynomial
-        time_change = test['duration'] - (1 / 4) * (1 / test['freq'])
-        comPoseW_des = p.x0 + test['amp'] * np.sin(test['pulse'] * time_change + test['phase']) - test['delta']
-        comTwistW_des = test['pulse'] * test['amp'] * np.cos(test['pulse'] * time_change + test['phase'])
-        comAccW_des = -test['pulse2'] * test['amp'] * np.sin(test['pulse'] * time_change + test['phase'])
-
-        pos, vel, acc = polynomialRef(comPoseW_des, p.x0,
-                                      comTwistW_des, np.zeros(6),
-                                      comAccW_des, np.zeros(6),
-                                      (1 / 4) * (1 / test['freq']))
 
         print('start!')
 
@@ -89,15 +79,7 @@ if __name__ == '__main__':
                 else:
                     state += 1
                     p.x0 = p.comPoseW.copy()
-                    # p.pid.setPDjoints(conf.robot_params[self.robot_name]['kd_real_wbc'],
-                    #                   conf.robot_params[self.robot_name]['kp_real_wbc'],
-                    #                   np.zeros(self.robot.na))
-                    p.pid.setPDjoints(np.ones(p.robot.na)*5,
-                                      np.ones(p.robot.na)*0.02,
-                                      np.zeros(p.robot.na))
-                    # p.pid.setPDjoints(np.ones(p.robot.na) * 0.,
-                    #                   np.ones(p.robot.na) * 0.,
-                    #                   np.zeros(p.robot.na))
+                    p.pid.setPDjoints(p.kp_wbc_j, p.kd_wbc_j, p.ki_wbc_j)
                     time_stabilize = p.time.copy()
 
                     p.W_contacts_des = p.W_contacts.copy()
@@ -105,8 +87,8 @@ if __name__ == '__main__':
                     print('starting wbc ' + str(p.time) + " [s]")
             elif state == 1:
                 if p.time - time_stabilize < test['stabilize']:
-
-                    p.comPoseW_des = p.x0
+                    sigma = (p.time - time_stabilize)/test['stabilize']
+                    p.comPoseW_des = p.x0.copy()
                     p.comTwistW_des[:] = 0.
                     p.comAccW_des[:] = 0.
 
@@ -139,6 +121,11 @@ if __name__ == '__main__':
                 else:
                     time_safe_stop = p.time
                     print('safe stop ' + str(p.time) + " [s]")
+
+                    pos, vel, acc = polynomialRef(p.comPoseW_des, p.x0,
+                                                  p.comTwistW_des, np.zeros(6),
+                                                  p.comAccW_des, np.zeros(6),
+                                                  (1 / 4) * (1 / test['freq']))
                     state += 1
 
             elif state == 3:
@@ -158,9 +145,8 @@ if __name__ == '__main__':
 
                 else:
                     state += 1
-                    p.pid.setPDjoints(conf.robot_params[p.robot_name]['kp'],
-                                      conf.robot_params[p.robot_name]['kd'],
-                                      conf.robot_params[p.robot_name]['ki'])
+
+                    p.pid.setPDjoints(p.kp_j, p.kd_j, p.ki_j)
                     p.q_des = p.q.copy()
                     p.qd_des[:] = 0.
                     print('restore PDs ' + str(p.time) +" [s]")
@@ -184,14 +170,16 @@ if __name__ == '__main__':
 
         if conf.plotting:
             plotCoM('position', 0, time_log=p.time_log, des_basePoseW=p.comPoseW_des_log,
-                    basePoseW=p.comPoseW_log)
+                    basePoseW=p.comPoseW_log, title = 'CoM')
             plotCoM('velocity', 1, time_log=p.time_log, des_baseTwistW=p.comTwistW_des_log,
-                    baseTwistW=p.comTwistW_log)
+                    baseTwistW=p.comTwistW_log, title = 'CoM')
             plotCoM('position', 2, time_log=p.time_log, des_basePoseW=p.basePoseW_des_log,
-                    basePoseW=p.basePoseW_log)
-            plotCoM('velocity', 3, time_log=p.time_log, des_baseTwistW=p.comTwistW_des_log,
-                    baseTwistW=p.comTwistW_log)
-            plotGRFs(4, p.time_log, p.grForcesW_log, p.grForcesW_des_log)
+                    basePoseW=p.basePoseW_log, title = 'base')
+            plotCoM('velocity', 3, time_log=p.time_log, des_baseTwistW=p.baseTwistW_des_log,
+                    baseTwistW=p.baseTwistW_log, title = 'base')
+            plotGRFs(4, p.time_log, p.grForcesW_log, p.grForcesW_des_log, title = 'world')
+            plotGRFs_withContacts(4, p.time_log,  p.grForcesW_wbc_log, p.grForcesW_log, p.contact_state_log)
+
             plotJoint('position', 5, p.time_log, q_log=p.q_log, q_des_log=p.q_des_log)
             plotJoint('velocity', 6, p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log)
             plotJoint('torque',7, p.time_log, tau_log=p.tau_log, tau_ffwd_log = p.tau_ffwd_log, tau_des_log=p.tau_fb_log)
@@ -203,7 +191,9 @@ if __name__ == '__main__':
             plotWBC_fb('fb wrench and com', 11, p.time_log, wrench_fb_log=p.wrench_fbW_log, comPose_des_log=p.comPoseW_des_log, comPose_log=p.comPoseW_log,
                        comTwist_des_log=p.comTwistW_des_log, comTwist_log=p.comTwistW_log)
 
-            plotFeet(12, p.time_log, des_feet=p.B_contacts_des_log, act_feet=p.B_contacts_log)
+            plotFeet(12, p.time_log, des_feet=p.B_contacts_des_log, act_feet=p.B_contacts_log, contact_states=p.contact_state_log)
 
+            plotCoMLinear('leg odom: base', 13, p.time_log, plot_var_log=p.basePoseW_legOdom_log)
 
+            plotSingleJoint('torque',14,7, p.time_log, tau_log=p.tau_log, tau_ffwd_log = p.tau_ffwd_log, tau_des_log=p.tau_fb_log)
 
