@@ -14,9 +14,9 @@ import pinocchio as pin
 
 import base_controllers.params as conf
 
-import cProfile, pstats, io
-from pstats import SortKey
-pr = cProfile.Profile()
+# import cProfile, pstats, io
+# from pstats import SortKey
+# pr = cProfile.Profile()
 
 robotName = "go1"
 
@@ -28,7 +28,7 @@ test = {}
 test['duration'] = 5000.
 test['stabilize'] = 1.
 test['usePid'] = 1.
-test['amp']  = np.array([0.05, 0., 0.03, 0., 0.0, -0.15])
+test['amp']  = np.array([0.03, 0., 0.03, 0., 0.0, 0])
 test['phase']  = np.array([0., 0., np.pi/2, 0., 0, 0.])
 test['delta']  = np.array([0.0, 0., 0.03, 0., 0.0, 0.])
 test['freq'] = 0.3
@@ -165,6 +165,8 @@ if __name__ == '__main__':
         p.deregister_node()
 
     finally:
+        ros.signal_shutdown("killed")
+        p.deregister_node()
         os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
 
@@ -197,3 +199,5 @@ if __name__ == '__main__':
 
             plotSingleJoint('torque',14,7, p.time_log, tau_log=p.tau_log, tau_ffwd_log = p.tau_ffwd_log, tau_des_log=p.tau_fb_log)
 
+            plotCoMLinear('imu acceleration', 15, p.time_log, plot_var_log=p.baseLinAccW_log)
+            plotCoMLinear('imu vel est', 16, p.time_log, plot_var_des_log=p.baseTwistW_log[:3, :], plot_var_log=p.W_lin_vel_log)
