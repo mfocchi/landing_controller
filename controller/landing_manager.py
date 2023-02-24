@@ -2,6 +2,8 @@ import numpy as np
 from .landing_controller import LandingController
 from .utility import makePlots, saveInitConds
 import copy
+import datetime
+import os
 
 
 class LandingManager:
@@ -21,8 +23,8 @@ class LandingManager:
             now_s = now_s.replace(' ', '_')
             now_s = now_s.replace(':', '')
             now_s = now_s[: now_s.find('.')]
-            SETTINGS['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
-            os.mkdir(SETTINGS['save_path'])
+            self.settings['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
+            os.mkdir( self.settings['save_path'])
 
     def returnValue(self):
         # com close to des com
