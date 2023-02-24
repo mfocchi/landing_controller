@@ -1,3 +1,4 @@
+# deprecated
 import matplotlib
 matplotlib.use('TkAgg')
 from base_controllers.quadruped_controller import Controller
