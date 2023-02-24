@@ -153,7 +153,7 @@ class LandingManager:
 
                 else:
                     # compute landing trajectory + kinematic adjustment
-                    self.lc.flyingDown_phase(self.p.b_R_w, self.p.imu_utils.W_lin_vel)
+                    self.lc.flyingDown_phase(self.p.b_R_w, self.p.imu_utils.baseLinTwistImuW)
 
                     # set references
                     # joints position
