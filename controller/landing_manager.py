@@ -86,8 +86,6 @@ class LandingManager:
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics()
-            # update estimate on linear velocity
-            self.p.imu_utils.compute_lin_vel(self.p.W_base_lin_acc, self.p.loop_time)
 
             # self.p.visualizeContacts()
 
@@ -189,13 +187,6 @@ class LandingManager:
                 if self.lc.lp_counter > 2 * self.lc.ref_k + 100:  # take a bit before quitting
                     fsm_state = 3
                 else:
-                    self.p.w_p_b_legOdom, self.p.w_v_b_legOdom = self.p.leg_odom.base_in_world(self.p.contact_state,
-                                                                                               self.p.W_contacts,
-                                                                                               self.p.wJ,
-                                                                                               self.p.u.angPart(
-                                                                                                   self.p.baseTwistW),
-                                                                                               self.p.qd)
-
                     # use last computed trajectories
                     self.lc.landed_phase(self.p.time, simplified)
 
