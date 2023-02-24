@@ -221,8 +221,7 @@ class LandingManager:
                         self.p.comTwistW_des = self.lc.twist_des.copy()
 
             for leg in range(4):
-                self.p.W_contacts_des[leg] = self.p.u.linPart(self.p.basePoseW) + self.p.b_R_w.T @ self.lc.B_feet_task[
-                    leg]
+                self.p.W_contacts_des[leg] = self.p.u.linPart(self.p.basePoseW) + self.p.b_R_w.T @ self.lc.B_feet_task[leg]
                 self.p.B_contacts_des[leg] = self.lc.B_feet_task[leg].copy()
 
             # finally, send commands
