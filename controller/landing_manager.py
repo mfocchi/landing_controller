@@ -103,7 +103,8 @@ class LandingManager:
 
                 if self.lc.lc_events.apex.detected:
                     fsm_state += 1
-                    self.p.contact_state[:] = False  # to be sure that contact state is false when flying down
+                    for elem in self.p.contact_state:
+                        elem = False  # to be sure that contact state is false when flying down
                 else:
                     # # kinematic adjustment
                     # self.lc.flyingUp_phase(self.p.b_R_w)
