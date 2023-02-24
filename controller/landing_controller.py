@@ -21,6 +21,9 @@ class Event:
         self.sample = sample
         self.detected = True
 
+    def __repr__(self):
+        return f"(t: {self.t} [s], sample: {self.sample}, detected: {self.detected})"
+
 class LcEvents:
     def __init__(self):
         self.lift_off = Event('Lift off')
@@ -29,6 +32,9 @@ class LcEvents:
 
         self._list_of_events = [self.lift_off, self.apex, self.touch_down]
         self._headers = ['Event', 'Time (s)', '# Sample']
+
+    def __repr__(self):
+        return f"Landing controller events \n  lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down: \t {self.touch_down}"
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
