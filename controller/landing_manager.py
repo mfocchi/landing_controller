@@ -159,7 +159,7 @@ class LandingManager:
                     # joints position
                     for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
                         q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
-                                                                 self.p.robot.model.getFrameId(leg + '_foot'),
+                                                                 leg,
                                                                  self.p.legConfig[leg][0],
                                                                  self.p.legConfig[leg][1])
                         if isFeasible:
@@ -173,8 +173,7 @@ class LandingManager:
                         B_vel_contact_des = kv * B_contact_err
                         qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
                                                            B_v_foot=B_vel_contact_des,
-                                                           foot_idx=self.p.robot.model.getFrameId(leg + '_foot'),
-                                                           damp=1e-6,  # same for all the diag
+                                                           leg=leg,  # same for all the diag
                                                            update=i == 0)  # update Jacobians only with the first leg
 
                         self.p.u.setLegJointState(i, qd_leg_des, qd_des)
@@ -195,7 +194,7 @@ class LandingManager:
                     # joints position
                     for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
                         q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
-                                                                 self.p.robot.model.getFrameId(leg + '_foot'),
+                                                                 leg,
                                                                  self.p.legConfig[leg][0],
                                                                  self.p.legConfig[leg][1])
                         if isFeasible:
@@ -207,8 +206,7 @@ class LandingManager:
                     for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
                         qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
                                                            B_v_foot=B_v_feet,
-                                                           foot_idx=self.p.robot.model.getFrameId(leg + '_foot'),
-                                                           damp=1e-6,
+                                                           leg=leg,
                                                            update=i == 0)
                         self.p.u.setLegJointState(i, qd_leg_des, qd_des)
 
