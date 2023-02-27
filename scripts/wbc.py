@@ -45,7 +45,7 @@ if __name__ == '__main__':
     test['pulse2'] = test['pulse']**2
     try:
 
-        p.startController(world_name='fast.world', use_ground_truth_contacts=False, additional_args=['gui:=False', 'go0_conf:=standDown'])
+        p.startController(world_name='fast.world', use_ground_truth_contacts=False, additional_args=['gui:=true', 'go0_conf:=standDown', 'pid_discrete_implementation:=true'])
         # p.startController(use_ground_truth_contacts=False,
         #                   additional_args=['gui:=True', 'go0_conf:=standDown'])
         # p.startController(additional_args=['gui:=False', 'go0_conf:=standDown'])
@@ -200,4 +200,4 @@ if __name__ == '__main__':
             plotSingleJoint('torque',14,7, p.time_log, tau_log=p.tau_log, tau_ffwd_log = p.tau_ffwd_log, tau_des_log=p.tau_fb_log)
 
             plotCoMLinear('imu acceleration', 15, p.time_log, plot_var_log=p.baseLinAccW_log)
-            plotCoMLinear('imu vel est', 16, p.time_log, plot_var_des_log=p.baseTwistW_log[:3, :], plot_var_log=p.W_lin_vel_log)
+            plotCoMLinear('imu vel est', 16, p.time_log, plot_var_des_log=p.baseTwistW_log[:3, :], plot_var_log=p.baseLinTwistImuW_log)
