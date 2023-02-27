@@ -50,19 +50,30 @@ class LandingManager:
         #########
         # reset #
         #########
-        self.p.reset(basePoseW=basePose_init,
-                     baseTwistW=baseTwist_init,
-                     resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
+        if self.p.real_robot:
+            self.lc = LandingController(robot=self.p.robot,
+                                        dt=2 * self.p.dt,
+                                        q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
+                                                      self.p.quaternion,
+                                                      q_des]))
 
-        self.lc = LandingController(robot=self.p.robot,
-                                    dt=2 * self.p.dt,
-                                    q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
-                                                  self.p.quaternion,
-                                                  q_des]))
+            self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.2, clearance=0.05)
 
-        self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.1, clearance=0.05)
+        else:
+            self.p.unpause_physics_client()
+            self.p.reset(basePoseW=basePose_init,
+                             baseTwistW=baseTwist_init,
+                             resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
 
-        self.p.setGravity(-9.81)
+            self.lc = LandingController(robot=self.p.robot,
+                                        dt=2 * self.p.dt,
+                                        q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
+                                                      self.p.quaternion,
+                                                      q_des]))
+
+            self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.2, clearance=0.05)
+
+            self.p.setGravity(-9.81)
 
         ###############################
         #### FINITE STATE MACHINE #####
@@ -227,7 +238,8 @@ class LandingManager:
             # finally, send commands
             self.p.send_command(q_des, qd_des, tau_ffwd)
 
-        self.p.pause_physics_client()
+        if not self.p.real_robot:
+            self.p.pause_physics_client()
 
         if self.settings['PLOTS']['save']:
             self.settings['SIMS'][simulation_id]['directory'] = self.settings['save_path']+'/sim' + simulation_id
