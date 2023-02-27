@@ -4,6 +4,7 @@ from .utility import makePlots, saveInitConds
 import copy
 import datetime
 import os
+import  rospy as ros
 
 
 class LandingManager:
@@ -92,8 +93,9 @@ class LandingManager:
         # variables to be defined
         vcom_z_now = 0.
         vcom_z_pre = 0.
-
-        while fsm_state < 3:
+        start_time = self.p.time
+        flag5s = False
+        while not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics()
