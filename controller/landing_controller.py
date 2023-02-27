@@ -279,6 +279,16 @@ class LandingController:
                 self.lc_events.lift_off.set(t, sample)
         return anyLO
 
+    def apexReachedReal(self, t, sample, baseLinAccW_log, window=1, threshold=-5):
+       if baseLinAccW_log[2, sample]<threshold:
+           self.lc_events.apex.set(t, sample)
+           return True
+       else:
+           return False
+
+
+
+
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
         if t > self.check_apex_time:
             if (vel_z_pre >=0. and vel_z_now < 0.) or (vel_z_pre <0. and vel_z_now < 0.):
