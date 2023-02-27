@@ -105,12 +105,18 @@ class LandingManager:
             ###############################################
             if fsm_state == 0:
                 # check if apex is reached
-                vcom_z_now = self.p.comTwistW[2]
-                isApexReached = self.lc.apexReached(t=self.p.time,
-                                                    sample=self.p.log_counter,
-                                                    vel_z_pre=vcom_z_pre,
-                                                    vel_z_now=vcom_z_now)
-                vcom_z_pre = vcom_z_now
+                if self.p.real_robot:
+                    if self.p.time-start_time > 5:
+                        if flag5s == False:
+                            print("You can drop the robot now")
+                            flag5s = True
+                        isApexReached = self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
+                                        baseLinAccW_log=self.p.baseLinAccW_log, window=1, threshold=-5)
+                else:
+                    isApexReached = self.lc.apexReached(t=self.p.time,
+                                                        sample=self.p.log_counter,
+                                                        vel_z_pre=self.p.comTwistW[2],
+                                                        vel_z_now=self.p.comTwistW_log[2, self.p.log_counter])
 
                 if self.lc.lc_events.apex.detected:
                     fsm_state += 1
