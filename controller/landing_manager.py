@@ -145,7 +145,12 @@ class LandingManager:
 
             if fsm_state == 1:
                 # check if touch down is occurred
-                self.lc.touchDown(t=self.p.time,
+                if self.p.real_robot:
+                    self.lc.touchDownReal(t=self.p.time,
+                                  sample=self.p.log_counter,
+                                  contacts_state=self.p.contact_state)
+                else:
+                    self.lc.touchDown(t=self.p.time,
                                   sample=self.p.log_counter,
                                   contacts_state=self.p.contact_state)
 
