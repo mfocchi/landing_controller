@@ -29,13 +29,12 @@ class LcEvents:
         self.lift_off = Event('Lift off')
         self.apex = Event('Apex')
         self.touch_down = Event('Touch down')
-        self.touch_down_all = Event('Touch down')
 
         self._list_of_events = [self.lift_off, self.apex, self.touch_down]
         self._headers = ['Event', 'Time (s)', '# Sample']
 
     def __repr__(self):
-        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down any: \t {self.touch_down} \n touch down all: \t {self.touch_down_all}"
+        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down any: \t {self.touch_down}"
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
@@ -296,13 +295,9 @@ class LandingController:
         return False
 
     def touchDownReal(self, t, sample, contacts_state):
-        anyTD = any(contacts_state)
-        if anyTD and self.lc_events.touch_down.detected == False:
-            self.lc_events.touch_down.set(t, sample)
-
         allTD = all(contacts_state)
         if allTD:
-            self.lc_events.touch_down_all.set(t, sample)
+            self.lc_events.touch_down.set(t, sample)
 
         return allTD
 
@@ -310,10 +305,6 @@ class LandingController:
         anyTD = any(contacts_state)
         if anyTD and self.lc_events.touch_down.detected == False:
             self.lc_events.touch_down.set(t, sample)
-
-        allTD = all(contacts_state)
-        if allTD:
-            self.lc_events.touch_down_all.set(t, sample)
 
         return anyTD
 

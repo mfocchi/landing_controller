@@ -154,8 +154,10 @@ class LandingManager:
                                   sample=self.p.log_counter,
                                   contacts_state=self.p.contact_state)
 
-                    fsm_state += 1
-                if self.lc.lc_events.touch_down_all.detected:
+                if self.lc.lc_events.touch_down.detected:
+                    fsm_state += 1 # comment this for first tests
+
+
                     self.p.leg_odom.reset(np.hstack([0., 0., self.lc.L, self.p.quaternion, self.p.q]))
                     # if use only ik -> same pid gains
                     # if use ik + wbc -> reduce pid gains
