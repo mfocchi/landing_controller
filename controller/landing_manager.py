@@ -43,27 +43,40 @@ class LandingManager:
 
     def run(self, simulation_id, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', simplified=False):
 
-        q_des = self.p.qj_0.copy()
-        qd_des = np.zeros_like(q_des)
-        tau_ffwd = np.zeros_like(q_des)
 
         #########
         # reset #
         #########
-        self.p.reset(basePoseW=basePose_init,
-                     baseTwistW=baseTwist_init,
-                     resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
+        if self.p.real_robot:
+            q_des = self.p.q.copy()
+            qd_des = np.zeros_like(q_des)
+            tau_ffwd = np.zeros_like(q_des)
 
-        q_des = self.p.q.copy()
-        self.lc = LandingController(robot=self.p.robot,
-                                    dt=2 * self.p.dt,
-                                    q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
-                                                  self.p.quaternion,
-                                                  q_des]))
+            self.lc = LandingController(robot=self.p.robot,
+                                        dt=2 * self.p.dt,
+                                        q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
+                                                      self.p.quaternion,
+                                                      q_des]))
 
-        self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.2, clearance=0.05)
+        else:
+            q_des = self.p.qj_0.copy()
+            qd_des = np.zeros_like(q_des)
+            tau_ffwd = np.zeros_like(q_des)
+            self.p.unpause_physics_client()
+            self.p.reset(basePoseW=basePose_init,
+                         baseTwistW=baseTwist_init,
+                         resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
 
-        self.p.setGravity(-9.81)
+            q_des = self.p.q.copy()
+            self.lc = LandingController(robot=self.p.robot,
+                                        dt=2 * self.p.dt,
+                                        q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
+                                                      self.p.quaternion,
+                                                      q_des]))
+
+            self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.2, clearance=0.05)
+
+            self.p.setGravity(-9.81)
 
         ###############################
         #### FINITE STATE MACHINE #####
@@ -83,7 +96,9 @@ class LandingManager:
         vcom_z_now = 0.
         vcom_z_pre = 0.
 
-        while fsm_state < 3:# or not ros.is_shutdown():
+        start_time = self.p.time
+        flag5s = False
+        while not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics()
@@ -95,12 +110,19 @@ class LandingManager:
             ###############################################
             if fsm_state == 0:
                 # check if apex is reached
-                vcom_z_now = self.p.comTwistW[2]
-                isApexReached = self.lc.apexReached(t=self.p.time,
-                                                    sample=self.p.log_counter,
-                                                    vel_z_pre=vcom_z_pre,
-                                                    vel_z_now=vcom_z_now)
-                vcom_z_pre = vcom_z_now
+                if self.p.real_robot:
+                    if self.p.time - start_time > 5:
+                        if flag5s == False:
+                            print("You can drop the robot now")
+                            flag5s = True
+                        isApexReached = self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
+                                                                baseLinAccW=self.p.baseLinAccW, window=1,
+                                                                threshold=-5)
+                else:
+                    isApexReached = self.lc.apexReached(t=self.p.time,
+                                                        sample=self.p.log_counter,
+                                                        vel_z_pre=self.p.comTwistW_log[2, self.p.log_counter - 1],
+                                                        vel_z_now=self.p.comTwistW[2])
 
                 if self.lc.lc_events.apex.detected:
                     fsm_state += 1
@@ -127,9 +149,14 @@ class LandingManager:
 
             if fsm_state == 1:
                 # check if touch down is occurred
-                self.lc.touchDown(t=self.p.time,
-                                  sample=self.p.log_counter,
-                                  contacts_state=self.p.contact_state)
+                if self.p.real_robot:
+                    self.lc.touchDownReal(t=self.p.time,
+                                          sample=self.p.log_counter,
+                                          contacts_state=self.p.contact_state)
+                else:
+                    self.lc.touchDown(t=self.p.time,
+                                      sample=self.p.log_counter,
+                                      contacts_state=self.p.contact_state)
 
                 if self.lc.lc_events.touch_down.detected:
                     fsm_state += 1
@@ -188,6 +215,7 @@ class LandingManager:
             if fsm_state == 2:
                 if self.lc.lp_counter > 2 * self.lc.ref_k + 100:  # take a bit before quitting
                     fsm_state = 3
+                    break
                 else:
                     # use last computed trajectories
                     self.lc.landed_phase(self.p.time, simplified)
@@ -229,7 +257,8 @@ class LandingManager:
             # finally, send commands
             self.p.send_command(q_des, qd_des, tau_ffwd)
 
-        self.p.pause_physics_client()
+        if not self.p.real_robot:
+            self.p.pause_physics_client()
 
         if self.settings['PLOTS']['save']:
             self.settings['SIMS'][simulation_id]['directory'] = self.settings['save_path']+'/sim' + simulation_id
