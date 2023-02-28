@@ -90,5 +90,5 @@ if __name__ == '__main__':
             plotSingleJoint('torque', 14, 7, p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
                             tau_des_log=p.tau_fb_log)
 
-            plotCoMLinear('imu acceleration', 15, p.time_log, plot_var_log=p.W_base_lin_acc_log)
-            plotCoMLinear('imu vel est', 15, p.time_log, plot_var_log=p.W_lin_vel_log)
+            # plotCoMLinear('imu acceleration', 15, p.time_log, plot_var_log=p.W_base_lin_acc_log)
+            # plotCoMLinear('imu vel est', 15, p.time_log, plot_var_log=p.W_lin_vel_log)
