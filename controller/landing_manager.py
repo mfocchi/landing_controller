@@ -117,8 +117,8 @@ class LandingManager:
                 else:
                     isApexReached = self.lc.apexReached(t=self.p.time,
                                                         sample=self.p.log_counter,
-                                                        vel_z_pre=self.p.comTwistW[2],
-                                                        vel_z_now=self.p.comTwistW_log[2, self.p.log_counter])
+                                                        vel_z_pre=self.p.comTwistW_log[2, self.p.log_counter-1],
+                                                        vel_z_now=self.p.comTwistW[2])
 
                 if self.lc.lc_events.apex.detected:
                     fsm_state += 1
