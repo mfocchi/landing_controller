@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 # plot settings #
 #################
 PLOT_SETTINGS = {}
-PLOT_SETTINGS['show'] = True
+PLOT_SETTINGS['show'] = False
 PLOT_SETTINGS['save'] = False
 
 # do not modify the following
-plt.ioff()
+plt.ion()
 width_inches = 0.
 height_inches = 0.
 mm2inches = 0.0393701
