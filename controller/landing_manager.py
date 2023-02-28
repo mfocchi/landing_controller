@@ -41,7 +41,7 @@ class LandingManager:
         return 0
 
 
-    def run(self, simulation_id, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', simplified=False):
+    def run(self, simulation_id, basePose_init=None, baseTwist_init=None, useIK=True, useWBC=True, typeWBC='projection', simplified=False):
 
 
         q_des = self.p.q.copy()
