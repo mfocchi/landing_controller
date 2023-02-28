@@ -113,7 +113,7 @@ class LandingManager:
                             print("You can drop the robot now")
                             flag5s = True
                         isApexReached = self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
-                                        baseLinAccW_log=self.p.baseLinAccW_log, window=1, threshold=-5)
+                                        baseLinAccW=self.p.baseLinAccW, window=1, threshold=-5)
                 else:
                     isApexReached = self.lc.apexReached(t=self.p.time,
                                                         sample=self.p.log_counter,
