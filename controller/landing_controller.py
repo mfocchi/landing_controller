@@ -29,13 +29,13 @@ class LcEvents:
         self.lift_off = Event('Lift off')
         self.apex = Event('Apex')
         self.touch_down = Event('Touch down')
-        self.touch_down_all = Event('Touch down')
+
 
         self._list_of_events = [self.lift_off, self.apex, self.touch_down]
         self._headers = ['Event', 'Time (s)', '# Sample']
 
     def __repr__(self):
-        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down any: \t {self.touch_down} \n touch down all: \t {self.touch_down_all}"
+        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down any: \t {self.touch_down} \n"
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
@@ -297,12 +297,12 @@ class LandingController:
                 self.lc_events.lift_off.set(t, sample)
         return anyLO
 
-    def apexReachedReal(self, t, sample, baseLinAccW_log, window=1, threshold=-5):
-       if baseLinAccW_log[2, sample]<threshold:
-           self.lc_events.apex.set(t, sample)
-           return True
-       else:
-           return False
+    def apexReachedReal(self, t, sample, baseLinAccW, window=1, threshold=-5):
+        if baseLinAccW[2]<threshold:
+            self.lc_events.apex.set(t, sample)
+            return True
+        else:
+            return False
 
 
 
@@ -316,23 +316,19 @@ class LandingController:
         return False
 
     def touchDownReal(self, t, sample, contacts_state):
-        anyTD = any(contacts_state)
-        if anyTD and self.lc_events.touch_down.detected == False:
-            self.lc_events.touch_down.set(t, sample)
-
         allTD = all(contacts_state)
         if allTD:
-            self.lc_events.touch_down_all.set(t, sample)
+            self.lc_events.touch_down.set(t, sample)
 
         return allTD
 
     def touchDown(self, t, sample, contacts_state):
-        if t > self.check_touch_down_time:
-            anyTD = any(contacts_state)
-            if anyTD:
-                self.lc_events.touch_down.set(t, sample)
-            return anyTD
-        return False
+        anyTD = any(contacts_state)
+        if anyTD and self.lc_events.touch_down.detected == False:
+            self.lc_events.touch_down.set(t, sample)
+
+
+        return anyTD
 
 
     def velocity_margin(self, sp):
