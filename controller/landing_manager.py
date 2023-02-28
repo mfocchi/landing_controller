@@ -55,6 +55,7 @@ class LandingManager:
                      baseTwistW=baseTwist_init,
                      resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
 
+        q_des = self.p.q.copy()
         self.lc = LandingController(robot=self.p.robot,
                                     dt=2 * self.p.dt,
                                     q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
