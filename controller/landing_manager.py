@@ -146,10 +146,10 @@ class LandingManager:
                     #       do not change gains
 
                     # save the  position at touch down
-                    self.lc.landed(self.p.comPoseW)
+                    self.lc.landed(self.p.comPoseW, self.p.comTwistW)
 
-                    self.p.zmp[0] = self.lc.slip_dyn.zmp_xy[0] + self.lc.W_com_TD[0]
-                    self.p.zmp[1] = self.lc.slip_dyn.zmp_xy[1] + self.lc.W_com_TD[1]
+                    self.p.zmp[0] = self.lc.slip_dyn.zmp_xy[0] + self.lc.W_comPose_TD[0]
+                    self.p.zmp[1] = self.lc.slip_dyn.zmp_xy[1] + self.lc.W_comPose_TD[1]
 
                     self.p.W_contacts_TD = copy.deepcopy(self.p.W_contacts)
 
