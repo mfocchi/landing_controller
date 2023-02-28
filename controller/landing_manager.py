@@ -61,7 +61,7 @@ class LandingManager:
                                                   self.p.quaternion,
                                                   q_des]))
 
-        self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.1, clearance=0.05)
+        self.lc.setCheckTimings(expected_touch_down_time=self.p.time + 0.2, clearance=0.05)
 
         self.p.setGravity(-9.81)
 
