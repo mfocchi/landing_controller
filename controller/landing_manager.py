@@ -4,7 +4,7 @@ from .utility import makePlots, saveInitConds
 import copy
 import datetime
 import os
-
+import pinocchio as pin
 import rospy as ros
 
 class LandingManager:
@@ -231,13 +231,20 @@ class LandingManager:
                             self.p.u.setLegJointState(i, q_des_leg, q_des)
 
                     # joints velocity
-                    W_v_feet = -self.p.u.linPart(self.lc.twist_des)
-                    B_v_feet = self.p.b_R_w @ W_v_feet
+                    # W_v_feet = -self.p.u.linPart(self.lc.twist_des)
+                    # B_v_feet = self.p.b_R_w @ W_v_feet
+
+                    b_R_w_des = pin.rpy.rpyToMatrix(self.p.u.angPart(self.lc.pose_des)).T
+                    omega_skew = pin.skew(b_R_w_des @ self.p.u.angPart(self.lc.pose_des))
+                    # feet ref in B
+
                     for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
+
+                        self.p.B_vel_contact_des[i] = omega_skew.T @ self.lc.B_feet_task[i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
                         qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
-                                                           B_v_foot=B_v_feet,
+                                                           B_v_foot=self.p.B_vel_contact_des[i],
                                                            leg=leg,
-                                                           update=i == 0)
+                                                           update= i == 0)
                         self.p.u.setLegJointState(i, qd_leg_des, qd_des)
 
                     if not useWBC:
