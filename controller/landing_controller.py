@@ -307,12 +307,15 @@ class LandingController:
         return allTD
 
     def touchDown(self, t, sample, contacts_state):
-        if t > self.check_touch_down_time:
-            anyTD = any(contacts_state)
-            if anyTD:
-                self.lc_events.touch_down.set(t, sample)
-            return anyTD
-        return False
+        anyTD = any(contacts_state)
+        if anyTD and self.lc_events.touch_down.detected == False:
+            self.lc_events.touch_down.set(t, sample)
+
+        allTD = all(contacts_state)
+        if allTD:
+            self.lc_events.touch_down_all.set(t, sample)
+
+        return anyTD
 
 
     def velocity_margin(self, sp):
