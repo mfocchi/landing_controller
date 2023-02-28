@@ -1,7 +1,7 @@
 import numpy as np
 import pinocchio as pin
 from base_controllers.utils.utils import Utils
-from controller.SLIP_dynamics.SLIP_dynamics_lib import SLIP_dynamics
+from lib.SLIP_dynamics_lib import SLIP_dynamics
 
 from matplotlib import pyplot as plt
 
@@ -104,7 +104,8 @@ class LandingController:
         self.twist_des = np.zeros(6)
         self.acc_des = np.zeros(6)
 
-        self.W_com_TD = np.zeros(6)
+        self.W_comPose_TD = np.zeros(6)
+        self.W_comTwist_TD = np.zeros(6)
 
         self.T_o_B = np.array([0, 0, self.L])
 
@@ -184,10 +185,17 @@ class LandingController:
             self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.alpha * self.slip_dyn.zmp_xy
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
-    def landed(self, W_com_pose):
-        self.W_com_TD = W_com_pose
+    def landed(self, W_comPose, W_comTwist):
+        self.W_comPose_TD = W_comPose.copy()
+        self.W_comTwist_TD = W_comTwist.copy()
         self.slip_dyn.xy_dynamics()
-        self.eig_ang = -16 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
+        self.eig_ang = -np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
+
+        self.pose_des[3:] = self.W_comPose_TD[3:]
+        self.twist_des[3:] = self.W_comTwist_TD[3:]
+
+        self.MAT_ANG = np.eye(2) + np.array([[- self.slip_dyn.D / self.slip_dyn.m,  -self.slip_dyn.K / self.slip_dyn.m], [1, 0]]) * self.dt
+
 
     def landed_phase(self, t, simplified=False):
         # use the last trajectory computed
@@ -216,13 +224,20 @@ class LandingController:
             return
 
         # REFERENCES
+
+        Rdyn = self.MAT_ANG @ np.vstack([self.twist_des[3], self.pose_des[3]])
+        Pdyn = self.MAT_ANG @ np.vstack([self.twist_des[4], self.pose_des[4]])
+        Ydyn = self.MAT_ANG @ np.vstack([self.twist_des[5], self.pose_des[5]])
         # ---> POSE
         # to avoid reshape, use these three lines
-        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_com_TD[0]
-        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_com_TD[1]
+        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_comPose_TD[0]
+        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_comPose_TD[1]
         self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
-        self.pose_des[3:6] = np.exp(self.eig_ang * (t-self.lc_events.touch_down.t)) * self.u.angPart(self.W_com_TD)
+
+        self.pose_des[3] = Rdyn[1]
+        self.pose_des[4] = Pdyn[1]
+        self.pose_des[5] = Ydyn[1]
 
         B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3:6]).T
 
@@ -231,20 +246,22 @@ class LandingController:
         self.twist_des[1] = self.slip_dyn.T_v_com_ref[1, self.ref_k]
         self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
 
-        self.twist_des[3:6] = self.eig_ang * self.pose_des[3:6]
+        self.twist_des[3] = Rdyn[0]
+        self.twist_des[4] = Pdyn[0]
+        self.twist_des[5] = Ydyn[0]
 
         # ---> ACCELERATION
         self.acc_des[0] = self.slip_dyn.T_a_com_ref[0, self.ref_k]
         self.acc_des[1] = self.slip_dyn.T_a_com_ref[1, self.ref_k]
         self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
 
-        self.acc_des[3:6] = self.eig_ang * self.twist_des[3:6]
+        self.acc_des[3:6] = -self.slip_dyn.D / self.slip_dyn.m * self.twist_des[3:] - self.slip_dyn.K / self.slip_dyn.m * self.pose_des[3:]
 
 
         self.T_o_B[2] = self.pose_des[2]
         for leg in range(4):
             self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.slip_dyn.zmp_xy
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3])
+            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
 
 
 
