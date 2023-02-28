@@ -84,7 +84,7 @@ class LandingManager:
         vcom_z_now = 0.
         vcom_z_pre = 0.
 
-        while fsm_state < 3:
+        while fsm_state < 3:# or not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics()
@@ -141,7 +141,8 @@ class LandingManager:
                     if not useIK:
                         self.p.pid.setPDs(0., 0., 0.)
                     elif useWBC and useIK:
-                        self.p.pid.setPDjoints(p.kp_wbc_j, p.kd_wbc_j, p.ki_wbc_j)
+                        pass
+                        #self.p.pid.setPDjoints(self.kp_wbc_j, self.kd_wbc_j, self.ki_wbc_j)
                     # elif not simulation['useWBC'] and simulation['useIK'] :
                     #       do not change gains
 

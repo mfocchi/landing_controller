@@ -3,6 +3,7 @@ matplotlib.use('TkAgg')
 import numpy as np
 import rospy as ros
 import sys
+sys.path.append('../')
 import os
 from base_controllers.quadruped_controller import Controller
 from controller.landing_manager import LandingManager
@@ -37,7 +38,8 @@ if __name__ == '__main__':
                           use_ground_truth_pose=True,
                           use_ground_truth_contacts=False,
                           additional_args=['gui:='+str(use_gui),
-                                           'go0_conf:=standDown'])
+                                           'go0_conf:=standDown',
+                                           'pid_discrete_implementation:=false'])
 
         p.startupProcedure()
 
