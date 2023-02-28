@@ -5,6 +5,7 @@ import copy
 import datetime
 import os
 
+import rospy as ros
 
 class LandingManager:
     def __init__(self, p, settings):
@@ -23,7 +24,7 @@ class LandingManager:
             now_s = now_s.replace(' ', '_')
             now_s = now_s.replace(':', '')
             now_s = now_s[: now_s.find('.')]
-            self.settings['save_path'] = os.environ['LC_DIR'] + '/simulations/' + now_s
+            self.settings['save_path'] = os.environ['LOCOSIM_DIR']+'/landing_controller/simulations/' + now_s
             os.mkdir( self.settings['save_path'])
 
     def returnValue(self):
