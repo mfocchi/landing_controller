@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
         lm = LandingManager(p, SETTINGS)
 
-        ret = lm.run(0, useIK=True, useWBC=False)
+        ret = lm.run(0, useIK=True, useWBC=True)
         # while not ros.is_shutdown():
         #     p.send_command(p.q_des, p.qd_des, p.gravityCompensation())
 
