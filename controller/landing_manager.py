@@ -253,8 +253,8 @@ class LandingManager:
                         tau_ffwd = self.p.WBC(self.lc.pose_des, self.lc.twist_des, self.lc.acc_des, type=typeWBC)
 
                         # save LC references for com, feet, zmp
-                        self.p.comPoseW_des = self.lc.pose_des.copy()
-                        self.p.comTwistW_des = self.lc.twist_des.copy()
+                    self.p.comPoseW_des = self.lc.pose_des.copy()
+                    self.p.comTwistW_des = self.lc.twist_des.copy()
 
             for leg in range(4):
                 self.p.W_contacts_des[leg] = self.p.u.linPart(self.p.basePoseW) + self.p.b_R_w.T @ self.lc.B_feet_task[leg]
