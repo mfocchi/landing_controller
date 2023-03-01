@@ -111,6 +111,9 @@ if __name__ == '__main__':
                   qd_log=p.qd_log[:, lm.lc.lc_events.apex.sample:],
                   qd_des_log=p.qd_des_log[:, lm.lc.lc_events.apex.sample:])
 
+        plotJoint('torque', 7, p.time_log[lm.lc.lc_events.apex.sample:], tau_log=p.tau_log[:, lm.lc.lc_events.apex.sample:],
+                  tau_ffwd_log=p.tau_ffwd_log[:, lm.lc.lc_events.apex.sample:], tau_des_log=p.tau_fb_log[:, lm.lc.lc_events.apex.sample:])
+
         plotWrenches('fb', 8, p.time_log[lm.lc.lc_events.apex.sample:],
                      wrench_fb_log=p.wrench_fbW_log[:, lm.lc.lc_events.apex.sample:])
         plotWrenches('ffwd', 9, p.time_log[lm.lc.lc_events.apex.sample:],

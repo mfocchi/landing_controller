@@ -301,7 +301,7 @@ class LandingController:
                 self.lc_events.lift_off.set(t, sample)
         return anyLO
 
-    def apexReachedReal(self, t, sample, baseLinAccW, window=1, threshold=-5):
+    def apexReachedReal(self, t, sample, baseLinAccW, window=1, threshold=-2.):
         if baseLinAccW[2]<threshold:
             self.lc_events.apex.set(t, sample)
             return True
