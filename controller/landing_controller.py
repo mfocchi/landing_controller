@@ -35,7 +35,7 @@ class LcEvents:
         self._headers = ['Event', 'Time (s)', '# Sample']
 
     def __repr__(self):
-        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down any: \t {self.touch_down} \n"
+        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down: \t {self.touch_down} \n"
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
