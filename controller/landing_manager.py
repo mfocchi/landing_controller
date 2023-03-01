@@ -164,9 +164,13 @@ class LandingManager:
                     # if use only ik -> same pid gains
                     # if use ik + wbc -> reduce pid gains
                     # if only wbc -> zero pid gains
-                    if not useIK:
-                        self.p.pid.setPDs(0., 0., 0.)
-                    elif useWBC and useIK:
+                    # if not useIK:
+                    #     self.p.pid.setPDs(0., 0., 0.)
+                    # elif useWBC and useIK:
+                    #     self.p.pid.setPDjoints(self.p.kp_wbc_j, self.p.kd_wbc_j, self.p.ki_wbc_j)
+
+
+                    if useIK:
                         self.p.pid.setPDjoints(self.p.kp_wbc_j, self.p.kd_wbc_j, self.p.ki_wbc_j)
                     # elif not simulation['useWBC'] and simulation['useIK'] :
                     #       do not change gains
