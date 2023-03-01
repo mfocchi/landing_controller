@@ -6,9 +6,9 @@ import sys
 sys.path.append('../')
 import os
 from base_controllers.quadruped_controller import Controller
-from controller.landing_manager import LandingManager
-from controller import SETTINGS
-from controller.utility import *
+from landing_controller.controller.landing_manager import LandingManager
+from landing_controller.controller import SETTINGS
+from landing_controller.controller.utility import *
 
 
 np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
