@@ -10,10 +10,11 @@ import numpy as np
 import rospy as ros
 import sys
 import os
+sys.path.append('../')
 from base_controllers.quadruped_controller import Controller
-from controller.landing_manager import LandingManager
-from controller import SETTINGS
-from controller.utility import *
+from landing_controller.controller.landing_manager import LandingManager
+from landing_controller.controller import SETTINGS
+from landing_controller.controller.utility import *
 
 
 np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
@@ -50,7 +51,7 @@ if __name__ == '__main__':
 
         lm = LandingManager(p, SETTINGS)
 
-        ret = lm.run(0)
+        ret = lm.run(0, useIK=True, useWBC=False)
         # while not ros.is_shutdown():
         #     p.send_command(p.q_des, p.qd_des, p.gravityCompensation())
 
@@ -62,12 +63,12 @@ if __name__ == '__main__':
             sys.stdout = stdout
         print(e)
     finally:
-        if SETTINGS['save_log']:
-            logfile.close()
-            sys.stdout = stdout
-        ros.signal_shutdown("killed")
-        p.deregister_node()
-        os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
+        # if SETTINGS['save_log']:
+        #     logfile.close()
+        #     sys.stdout = stdout
+        # ros.signal_shutdown("killed")
+        # p.deregister_node()
+        # os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
         # save all for later analysis
         if not p.real_robot:
