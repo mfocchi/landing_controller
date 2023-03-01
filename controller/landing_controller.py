@@ -197,6 +197,10 @@ class LandingController:
 
         self.MAT_ANG = np.eye(2) + np.array([[- self.slip_dyn.D / self.slip_dyn.m,  -self.slip_dyn.K / self.slip_dyn.m], [1, 0]]) * self.dt
 
+        self.Rdyn = np.vstack([self.twist_des[3], self.pose_des[3]])
+        self.Pdyn = np.vstack([self.twist_des[4], self.pose_des[4]])
+        self.Ydyn = np.vstack([self.twist_des[5], self.pose_des[5]])
+
 
     def landed_phase(self, t, simplified=False):
         # use the last trajectory computed
@@ -226,9 +230,9 @@ class LandingController:
 
         # REFERENCES
 
-        Rdyn = self.MAT_ANG @ np.vstack([self.twist_des[3], self.pose_des[3]])
-        Pdyn = self.MAT_ANG @ np.vstack([self.twist_des[4], self.pose_des[4]])
-        Ydyn = self.MAT_ANG @ np.vstack([self.twist_des[5], self.pose_des[5]])
+        self.Rdyn = self.MAT_ANG @ self.Rdyn
+        self.Pdyn = self.MAT_ANG @ self.Pdyn
+        self.Ydyn = self.MAT_ANG @ self.Ydyn  # <-- no need to impose a dynamics on yaw, instead the yaw must be kept constant, otherwise the robot will rotate
         # ---> POSE
         # to avoid reshape, use these three lines
         self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_comPose_TD[0]
