@@ -83,3 +83,37 @@ if __name__ == '__main__':
             if SETTINGS['VIDEO']['save']:
                 # save the video
                 p.save_video(SETTINGS['save_path'], start_file=init_video_frame, speedUpDown=SETTINGS['VIDEO']['speedUpDown'])
+
+        plotCoM('position', 0, time_log=p.time_log[lm.lc.lc_events.apex.sample:],
+                des_basePoseW=p.comPoseW_des_log[:, lm.lc.lc_events.apex.sample:],
+                basePoseW=p.comPoseW_log[:, lm.lc.lc_events.apex.sample:], title='CoM')
+
+        plotCoM('velocity', 1, time_log=p.time_log[lm.lc.lc_events.apex.sample:],
+                des_baseTwistW=p.comTwistW_des_log[:, lm.lc.lc_events.apex.sample:],
+                baseTwistW=p.comTwistW_log[:, lm.lc.lc_events.apex.sample:], title='CoM')
+
+        plotCoMLinear('imu vel est', 2, p.time_log[lm.lc.lc_events.apex.sample:],
+                      plot_var_des_log=p.baseTwistW_legOdom_log[:3, lm.lc.lc_events.apex.sample:],
+                      plot_var_log=p.baseLinTwistImuW_log[:, lm.lc.lc_events.apex.sample:])
+        plotJoint('position', 3, p.time_log[lm.lc.lc_events.apex.sample:],
+                  q_log=p.q_log[:, lm.lc.lc_events.apex.sample:],
+                  q_des_log=p.q_des_log[:, lm.lc.lc_events.apex.sample:])
+
+        # plotGRFs(4, time_log=p.time_log[lm.lc.lc_events.apex.sample:], act_forces = p.grForcesW_log[:, lm.lc.lc_events.apex.sample:],
+        #          des_forces=p.grForcesW_des_log[:, lm.lc.lc_events.apex.sample:], title='world')
+
+        plotGRFs_withContacts(5, time_log=p.time_log[lm.lc.lc_events.apex.sample:],
+                 act_forces=p.grForcesW_log[:, lm.lc.lc_events.apex.sample:],
+                 des_forces=p.grForcesW_des_log[:, lm.lc.lc_events.apex.sample:],
+                              contact_states=p.contact_state_log[:, lm.lc.lc_events.apex.sample:])
+
+        plotJoint('velocity', 6, p.time_log[lm.lc.lc_events.apex.sample:],
+                  qd_log=p.qd_log[:, lm.lc.lc_events.apex.sample:],
+                  qd_des_log=p.qd_des_log[:, lm.lc.lc_events.apex.sample:])
+
+        plotWrenches('fb', 8, p.time_log[lm.lc.lc_events.apex.sample:],
+                     wrench_fb_log=p.wrench_fbW_log[:, lm.lc.lc_events.apex.sample:])
+        plotWrenches('ffwd', 9, p.time_log[lm.lc.lc_events.apex.sample:],
+                     wrench_ffwd_log=p.wrench_ffW_log[:, lm.lc.lc_events.apex.sample:])
+        plotWrenches('g', 10, p.time_log[lm.lc.lc_events.apex.sample:],
+                     wrench_g_log=p.wrench_gW_log[:, lm.lc.lc_events.apex.sample:])
