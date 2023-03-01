@@ -240,9 +240,9 @@ class LandingController:
         self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
 
-        self.pose_des[3] = Rdyn[1]
-        self.pose_des[4] = Pdyn[1]
-        self.pose_des[5] = Ydyn[1]
+        self.pose_des[4] = self.Pdyn[1]
+        self.pose_des[3] = self.Rdyn[1]
+        self.pose_des[5] = self.W_comPose_TD[5]
 
         B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3:6]).T
 
@@ -251,9 +251,9 @@ class LandingController:
         self.twist_des[1] = self.slip_dyn.T_v_com_ref[1, self.ref_k]
         self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
 
-        self.twist_des[3] = Rdyn[0]
-        self.twist_des[4] = Pdyn[0]
-        self.twist_des[5] = Ydyn[0]
+        self.twist_des[3] = self.Rdyn[0]
+        self.twist_des[4] = self.Pdyn[0]
+        self.twist_des[5] = self.Ydyn[0]
 
         # ---> ACCELERATION
         self.acc_des[0] = self.slip_dyn.T_a_com_ref[0, self.ref_k]
