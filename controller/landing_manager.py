@@ -101,7 +101,7 @@ class LandingManager:
         while not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
-            self.p.updateKinematics()
+            self.p.updateKinematics(update_legOdom=self.lc.lc_events.touch_down.detected)
 
             # self.p.visualizeContacts()
 
