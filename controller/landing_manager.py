@@ -197,25 +197,12 @@ class LandingManager:
                         if isFeasible:
                             self.p.u.setLegJointState(i, q_des_leg, q_des)
 
+                        # joints velocity
                         B_contact_err = self.lc.B_feet_task[i] - self.p.B_contacts[i]
                         kv = .01 / self.p.dt
                         self.p.B_vel_contact_des[i] = kv * B_contact_err
                         qd_des_leg = self.p.J_inv[i] @ self.p.B_vel_contact_des[i]
                         self.p.u.setLegJointState(i, qd_des_leg, qd_des)
-
-
-                    # joints velocity
-                    # do not merge this for loop with the previous one: I need full q_des
-                    # for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
-                    #     B_contact_err = self.lc.B_feet_task[i] - self.p.B_contacts[i]
-                    #     kv = .01 / self.p.dt
-                    #     self.p.B_vel_contact_des[i] = kv * B_contact_err
-                    #     qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
-                    #                                        B_v_foot=self.p.B_vel_contact_des[i],
-                    #                                        leg=leg,  # same for all the diag
-                    #                                        update=i == 0)  # update Jacobians only with the first leg
-                    #
-                    #     self.p.u.setLegJointState(i, qd_leg_des, qd_des)
 
                     tau_ffwd = self.p.self_weightCompensation()
 
@@ -240,21 +227,10 @@ class LandingManager:
                         if isFeasible:
                             self.p.u.setLegJointState(i, q_des_leg, q_des)
 
-                    # joints velocity
-                    # W_v_feet = -self.p.u.linPart(self.lc.twist_des)
-                    # B_v_feet = self.p.b_R_w @ W_v_feet
-
-                    b_R_w_des = pin.rpy.rpyToMatrix(self.p.u.angPart(self.lc.pose_des)).T
-                    omega_skew = pin.skew(b_R_w_des @ self.p.u.angPart(self.lc.pose_des))
-                    # feet ref in B
-
-                    for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
-
-                        self.p.B_vel_contact_des[i] = omega_skew.T @ self.lc.B_feet_task[i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
-                        qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
-                                                           B_v_foot=self.p.B_vel_contact_des[i],
-                                                           leg=leg,
-                                                           update= i == 0)
+                        # joints velocity
+                        self.p.B_vel_contact_des[i] = omega_des_skew.T @ self.lc.B_feet_task[
+                            i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
+                        qd_leg_des = self.p.J_inv[i] @ self.p.B_vel_contact_des[i]
                         self.p.u.setLegJointState(i, qd_leg_des, qd_des)
 
                     if not useWBC:
