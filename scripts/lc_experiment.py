@@ -84,39 +84,38 @@ if __name__ == '__main__':
                 # save the video
                 p.save_video(SETTINGS['save_path'], start_file=init_video_frame, speedUpDown=SETTINGS['VIDEO']['speedUpDown'])
 
-        plotCoM('position', 0, time_log=p.time_log[lm.lc.lc_events.apex.sample:],
-                des_basePoseW=p.comPoseW_des_log[:, lm.lc.lc_events.apex.sample:],
-                basePoseW=p.comPoseW_log[:, lm.lc.lc_events.apex.sample:], title='CoM')
+        plotFrame('position', time_log=p.time_log, des_Pose_log=p.comPoseW_des_log, Pose_log=p.comPoseW_log,
+                  title='CoM', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.comTwistW_des_log, Twist_log=p.comTwistW_log,
+                  title='CoM', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotFrame('position', time_log=p.time_log, des_Pose_log=p.basePoseW_des_log, Pose_log=p.basePoseW_log,
+                  title='base', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_des_log, Twist_log=p.baseTwistW_log,
+                  title='base', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
 
-        plotCoM('velocity', 1, time_log=p.time_log[lm.lc.lc_events.apex.sample:],
-                des_baseTwistW=p.comTwistW_des_log[:, lm.lc.lc_events.apex.sample:],
-                baseTwistW=p.comTwistW_log[:, lm.lc.lc_events.apex.sample:], title='CoM')
+        plotContacts('position', time_log=p.time_log, des_LinPose_log=p.B_contacts_des_log,
+                     LinPose_log=p.B_contacts_log,
+                     contact_states=p.contact_state_log, frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
 
-        plotCoMLinear('imu vel est', 2, p.time_log[lm.lc.lc_events.apex.sample-100:],
-                      plot_var_des_log=p.baseTwistW_legOdom_log[:3, lm.lc.lc_events.apex.sample-100:],
-                      plot_var_log=p.baseLinTwistImuW_log[:, lm.lc.lc_events.apex.sample-100:])
-        plotJoint('position', 3, p.time_log[lm.lc.lc_events.apex.sample:],
-                  q_log=p.q_log[:, lm.lc.lc_events.apex.sample:],
-                  q_des_log=p.q_des_log[:, lm.lc.lc_events.apex.sample:])
+        # plotContacts('velocity', time_log=p.time_log,  des_LinTwist_log=p.B_vel_contacts_des_log,
+        #               frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
 
-        # plotGRFs(4, time_log=p.time_log[lm.lc.lc_events.apex.sample:], act_forces = p.grForcesW_log[:, lm.lc.lc_events.apex.sample:],
-        #          des_forces=p.grForcesW_des_log[:, lm.lc.lc_events.apex.sample:], title='world')
+        plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
+                     Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
+                     sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
 
-        plotGRFs_withContacts(5, time_log=p.time_log[lm.lc.lc_events.apex.sample:],
-                 act_forces=p.grForcesW_log[:, lm.lc.lc_events.apex.sample:],
-                 des_forces=p.grForcesW_des_log[:, lm.lc.lc_events.apex.sample:],
-                              contact_states=p.contact_state_log[:, lm.lc.lc_events.apex.sample:])
+        plotJoint('position', time_log=p.time_log, q_log=p.q_log, q_des_log=p.q_des_log, sharex=True, sharey=False,
+                  start=lm.lc.lc_events.apex.sample, end=-1)
+        plotJoint('velocity', time_log=p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log, sharex=True,
+                  sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotJoint('torque', time_log=p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
+                  tau_des_log=p.tau_fb_log, sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
 
-        plotJoint('velocity', 6, p.time_log[lm.lc.lc_events.apex.sample:],
-                  qd_log=p.qd_log[:, lm.lc.lc_events.apex.sample:],
-                  qd_des_log=p.qd_des_log[:, lm.lc.lc_events.apex.sample:])
+        plotWrenches('fb', 8, p.time_log, wrench_fb_log=p.wrench_fbW_log)
+        plotWrenches('ffwd', 9, p.time_log, wrench_ffwd_log=p.wrench_ffW_log)
+        plotWrenches('g', 10, p.time_log, wrench_g_log=p.wrench_gW_log)
 
-        plotJoint('torque', 7, p.time_log[lm.lc.lc_events.apex.sample:], tau_log=p.tau_log[:, lm.lc.lc_events.apex.sample:],
-                  tau_ffwd_log=p.tau_ffwd_log[:, lm.lc.lc_events.apex.sample:], tau_des_log=p.tau_fb_log[:, lm.lc.lc_events.apex.sample:])
-
-        plotWrenches('fb', 8, p.time_log[lm.lc.lc_events.apex.sample:],
-                     wrench_fb_log=p.wrench_fbW_log[:, lm.lc.lc_events.apex.sample:])
-        plotWrenches('ffwd', 9, p.time_log[lm.lc.lc_events.apex.sample:],
-                     wrench_ffwd_log=p.wrench_ffW_log[:, lm.lc.lc_events.apex.sample:])
-        plotWrenches('g', 10, p.time_log[lm.lc.lc_events.apex.sample:],
-                     wrench_g_log=p.wrench_gW_log[:, lm.lc.lc_events.apex.sample:])
+        plotFrameLinear('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_legOdom_log,
+                        Twist_log=p.baseLinTwistImuW_log, title='Base velocity estimate', frame='W', sharex=True,
+                        sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        

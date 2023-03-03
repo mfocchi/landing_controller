@@ -65,57 +65,60 @@ def makePlots(p, figures, PLOT_SETTINGS, verbose = False):
     for name in figures:
         if name == 'q' and figures[name]:
             # joint position
-            fig = plotJoint('position', id, time_log=p.time_log.flatten(), q_log=p.q_log, q_des_log=p.q_des_log)
+            fig = plotJoint('position', time_log=p.time_log, q_log=p.q_log, q_des_log=p.q_des_log, sharex=True, sharey=False,
+                  start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'q', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'qd' and figures[name]:
             # joint velocity
-            fig = plotJoint('velocity', id, time_log=p.time_log.flatten(), qd_log=p.qd_log,
-                            qd_des_log=p.qd_des_log)
+            fig = plotJoint('velocity', time_log=p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log, sharex=True,
+                  sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'qd', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'tau' and figures[name]:
             # joint torques
-            fig = plotJoint('torque', id, time_log=p.time_log.flatten(), tau_ffwd_log=p.tau_ffwd_log,
-                            tau_log=p.tau_log,
-                            tau_des_log=p.tau_des_log)
+            fig = plotJoint('torque', time_log=p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
+                  tau_des_log=p.tau_fb_log, sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'tau', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'com' and figures[name]:
             # com position
-            fig = plotCoM('position', 1, time_log=p.time_log.flatten(), basePoseW=p.comPoseW_log,
-                          des_basePoseW=p.comPoseW_des_log)
+            fig = plotFrame('position', time_log=p.time_log, des_Pose_log=p.comPoseW_des_log, Pose_log=p.comPoseW_log,
+                  title='CoM', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'com', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'vcom' and figures[name]:
             # com velocity
-            fig = plotCoM('velocity', id, time_log=p.time_log.flatten(), baseTwistW=p.comTwistW_log,
-                          des_baseTwistW=p.comTwistW_des_log)
+            fig = plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.comTwistW_des_log, Twist_log=p.comTwistW_log,
+                  title='CoM', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'vcom', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'w_contacts' and figures[name]:
             # feet position in w-frame and contact flag
-            fig = plotFeet(id, time_log=p.time_log.flatten(), des_feet=p.W_contacts_des_log,
-                           act_feet=p.W_contacts_log, contact_states=p.contact_state_log)
+            fig =  plotContacts('position', time_log=p.time_log, des_LinPose_log=p.W_contacts_des_log,
+                     LinPose_log=p.W_contacts_log,
+                     contact_states=p.contact_state_log, frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'W_feet', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'b_contacts' and figures[name]:
             # feet position in b-frame and contact flag
-            fig = plotFeet(id, time_log=p.time_log.flatten(), des_feet=p.B_contacts_des_log,
-                           act_feet=p.B_contacts_log, contact_states=p.contact_state_log)
+            fig = plotContacts('position', time_log=p.time_log, des_LinPose_log=p.B_contacts_des_log,
+                     LinPose_log=p.B_contacts_log,
+                     contact_states=p.contact_state_log, frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'B_feet', PLOT_SETTINGS, verbose = False)
             id += 1
 
         elif name == 'grfs_contacts' and figures[name]:
             # force in world
-            fig = plotGRFs_withContacts(id, time_log=p.time_log.flatten(), des_forces=p.grForcesW_des_log,
-                                        act_forces=p.grForcesW_log, contact_states=p.contact_state_log)
+            fig = plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
+                     Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
+                     sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
             manipulateFig(fig, 'grfs', PLOT_SETTINGS, verbose = False)
             id += 1
 
