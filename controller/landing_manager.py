@@ -202,9 +202,9 @@ class LandingManager:
                     for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
                         B_contact_err = self.lc.B_feet_task[i] - self.p.B_contacts[i]
                         kv = .01 / self.p.dt
-                        B_vel_contact_des = kv * B_contact_err
+                        self.p.B_vel_contact_des[i] = kv * B_contact_err
                         qd_leg_des = self.p.IK.diff_ik_leg(q_des=q_des,
-                                                           B_v_foot=B_vel_contact_des,
+                                                           B_v_foot=self.p.B_vel_contact_des[i],
                                                            leg=leg,  # same for all the diag
                                                            update=i == 0)  # update Jacobians only with the first leg
 
