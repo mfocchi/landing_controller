@@ -92,9 +92,9 @@ if __name__ == '__main__':
                 des_baseTwistW=p.comTwistW_des_log[:, lm.lc.lc_events.apex.sample:],
                 baseTwistW=p.comTwistW_log[:, lm.lc.lc_events.apex.sample:], title='CoM')
 
-        plotCoMLinear('imu vel est', 2, p.time_log[lm.lc.lc_events.apex.sample:],
-                      plot_var_des_log=p.baseTwistW_legOdom_log[:3, lm.lc.lc_events.apex.sample:],
-                      plot_var_log=p.baseLinTwistImuW_log[:, lm.lc.lc_events.apex.sample:])
+        plotCoMLinear('imu vel est', 2, p.time_log[lm.lc.lc_events.apex.sample-100:],
+                      plot_var_des_log=p.baseTwistW_legOdom_log[:3, lm.lc.lc_events.apex.sample-100:],
+                      plot_var_log=p.baseLinTwistImuW_log[:, lm.lc.lc_events.apex.sample-100:])
         plotJoint('position', 3, p.time_log[lm.lc.lc_events.apex.sample:],
                   q_log=p.q_log[:, lm.lc.lc_events.apex.sample:],
                   q_des_log=p.q_des_log[:, lm.lc.lc_events.apex.sample:])
