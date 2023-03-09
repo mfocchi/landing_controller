@@ -1,7 +1,7 @@
 import numpy as np
 import pinocchio as pin
 from base_controllers.utils.utils import Utils
-from controller.SLIP_dynamics.SLIP_dynamics_lib import SLIP_dynamics
+from lib.SLIP_dynamics_lib import SLIP_dynamics
 
 from matplotlib import pyplot as plt
 
@@ -30,11 +30,12 @@ class LcEvents:
         self.apex = Event('Apex')
         self.touch_down = Event('Touch down')
 
+
         self._list_of_events = [self.lift_off, self.apex, self.touch_down]
         self._headers = ['Event', 'Time (s)', '# Sample']
 
     def __repr__(self):
-        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down any: \t {self.touch_down}"
+        return f"Landing controller events \n lift off: \t {self.lift_off} \n  apex: \t\t {self.apex} \n  touch down: \t {self.touch_down} \n"
 
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
@@ -87,7 +88,7 @@ class LandingController:
         w_v = 1.
         w_p = 1.
         w_u = 0.
-        max_settling_time = 0.8
+        max_settling_time = 1.5
 
         self.slip_dyn = SLIP_dynamics(  self.dt,
                                         self.L,
@@ -104,7 +105,8 @@ class LandingController:
         self.twist_des = np.zeros(6)
         self.acc_des = np.zeros(6)
 
-        self.W_com_TD = np.zeros(6)
+        self.W_comPose_TD = np.zeros(6)
+        self.W_comTwist_TD = np.zeros(6)
 
         self.T_o_B = np.array([0, 0, self.L])
 
@@ -184,10 +186,21 @@ class LandingController:
             self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.alpha * self.slip_dyn.zmp_xy
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
-    def landed(self, W_com_pose):
-        self.W_com_TD = W_com_pose
+    def landed(self, W_comPose, W_comTwist):
+        self.W_comPose_TD = W_comPose.copy()
+        self.W_comTwist_TD = W_comTwist.copy()
         self.slip_dyn.xy_dynamics()
-        self.eig_ang = -16 * np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
+        self.eig_ang = -np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
+
+        self.pose_des[3:] = self.W_comPose_TD[3:]
+        self.twist_des[3:] = self.W_comTwist_TD[3:]
+
+        self.MAT_ANG = np.eye(2) + np.array([[- self.slip_dyn.D / self.slip_dyn.m,  -self.slip_dyn.K / self.slip_dyn.m], [1, 0]]) * self.dt
+
+        self.Rdyn = np.vstack([self.twist_des[3], self.pose_des[3]])
+        self.Pdyn = np.vstack([self.twist_des[4], self.pose_des[4]])
+        self.Ydyn = np.vstack([self.twist_des[5], self.pose_des[5]])
+
 
     def landed_phase(self, t, simplified=False):
         # use the last trajectory computed
@@ -216,13 +229,20 @@ class LandingController:
             return
 
         # REFERENCES
+
+        self.Rdyn = self.MAT_ANG @ self.Rdyn
+        self.Pdyn = self.MAT_ANG @ self.Pdyn
+        self.Ydyn = self.MAT_ANG @ self.Ydyn  # <-- no need to impose a dynamics on yaw, instead the yaw must be kept constant, otherwise the robot will rotate
         # ---> POSE
         # to avoid reshape, use these three lines
-        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_com_TD[0]
-        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_com_TD[1]
+        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_comPose_TD[0]
+        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_comPose_TD[1]
         self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
-        self.pose_des[3:6] = np.exp(self.eig_ang * (t-self.lc_events.touch_down.t)) * self.u.angPart(self.W_com_TD)
+
+        self.pose_des[4] = self.Pdyn[1]
+        self.pose_des[3] = self.Rdyn[1]
+        self.pose_des[5] = self.W_comPose_TD[5]
 
         B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3:6]).T
 
@@ -231,20 +251,22 @@ class LandingController:
         self.twist_des[1] = self.slip_dyn.T_v_com_ref[1, self.ref_k]
         self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
 
-        self.twist_des[3:6] = self.eig_ang * self.pose_des[3:6]
+        self.twist_des[3] = self.Rdyn[0]
+        self.twist_des[4] = self.Pdyn[0]
+        self.twist_des[5] = self.Ydyn[0]
 
         # ---> ACCELERATION
         self.acc_des[0] = self.slip_dyn.T_a_com_ref[0, self.ref_k]
         self.acc_des[1] = self.slip_dyn.T_a_com_ref[1, self.ref_k]
         self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
 
-        self.acc_des[3:6] = self.eig_ang * self.twist_des[3:6]
+        self.acc_des[3:6] = -self.slip_dyn.D / self.slip_dyn.m * self.twist_des[3:] - self.slip_dyn.K / self.slip_dyn.m * self.pose_des[3:]
 
 
         self.T_o_B[2] = self.pose_des[2]
         for leg in range(4):
             self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.slip_dyn.zmp_xy
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[0:3])
+            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
 
 
 
@@ -279,12 +301,15 @@ class LandingController:
                 self.lc_events.lift_off.set(t, sample)
         return anyLO
 
-    def apexReachedReal(self, t, sample, baseLinAccW, window=1, threshold=-5):
+    def apexReachedReal(self, t, sample, baseLinAccW, window=1, threshold=-1.5):
         if baseLinAccW[2]<threshold:
             self.lc_events.apex.set(t, sample)
             return True
         else:
             return False
+
+
+
 
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
         if t > self.check_apex_time:
@@ -305,6 +330,7 @@ class LandingController:
         anyTD = any(contacts_state)
         if anyTD and self.lc_events.touch_down.detected == False:
             self.lc_events.touch_down.set(t, sample)
+
 
         return anyTD
 

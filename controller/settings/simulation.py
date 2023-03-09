@@ -19,7 +19,7 @@ SIMS_SETTINGS.append({'name': 'A_high_jump',
                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
                       'twist': np.array([1.0, 0., 0., 0., 0., 0.]),
                       'useWBC': True,
-                      'useIK': False,
+                      'useIK': True,
                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
                       'id': '',
                       't_video': 0.0,

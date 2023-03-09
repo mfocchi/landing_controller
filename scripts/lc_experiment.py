@@ -10,10 +10,11 @@ import numpy as np
 import rospy as ros
 import sys
 import os
+sys.path.append('../')
 from base_controllers.quadruped_controller import Controller
-from controller.landing_manager import LandingManager
-from controller import SETTINGS
-from controller.utility import *
+from landing_controller.controller.landing_manager import LandingManager
+from landing_controller.controller import SETTINGS
+from landing_controller.controller.utility import *
 
 
 np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
@@ -50,7 +51,7 @@ if __name__ == '__main__':
 
         lm = LandingManager(p, SETTINGS)
 
-        ret = lm.run(0)
+        ret = lm.run(0, useIK=True, useWBC=True)
         # while not ros.is_shutdown():
         #     p.send_command(p.q_des, p.qd_des, p.gravityCompensation())
 
@@ -62,12 +63,12 @@ if __name__ == '__main__':
             sys.stdout = stdout
         print(e)
     finally:
-        if SETTINGS['save_log']:
-            logfile.close()
-            sys.stdout = stdout
-        ros.signal_shutdown("killed")
-        p.deregister_node()
-        os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
+        # if SETTINGS['save_log']:
+        #     logfile.close()
+        #     sys.stdout = stdout
+        # ros.signal_shutdown("killed")
+        # p.deregister_node()
+        # os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
         # save all for later analysis
         if not p.real_robot:
@@ -82,3 +83,39 @@ if __name__ == '__main__':
             if SETTINGS['VIDEO']['save']:
                 # save the video
                 p.save_video(SETTINGS['save_path'], start_file=init_video_frame, speedUpDown=SETTINGS['VIDEO']['speedUpDown'])
+
+        plotFrame('position', time_log=p.time_log, des_Pose_log=p.comPoseW_des_log, Pose_log=p.comPoseW_log,
+                  title='CoM', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.comTwistW_des_log, Twist_log=p.comTwistW_log,
+                  title='CoM', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotFrame('position', time_log=p.time_log, des_Pose_log=p.basePoseW_des_log, Pose_log=p.basePoseW_log,
+                  title='base', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_des_log, Twist_log=p.baseTwistW_log,
+                  title='base', frame='W', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+
+        plotContacts('position', time_log=p.time_log, des_LinPose_log=p.B_contacts_des_log,
+                     LinPose_log=p.B_contacts_log,
+                     contact_states=p.contact_state_log, frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+
+        # plotContacts('velocity', time_log=p.time_log,  des_LinTwist_log=p.B_vel_contacts_des_log,
+        #               frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+
+        plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
+                     Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
+                     sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+
+        plotJoint('position', time_log=p.time_log, q_log=p.q_log, q_des_log=p.q_des_log, sharex=True, sharey=False,
+                  start=lm.lc.lc_events.apex.sample, end=-1)
+        plotJoint('velocity', time_log=p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log, sharex=True,
+                  sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        plotJoint('torque', time_log=p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
+                  tau_des_log=p.tau_fb_log, sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+
+        plotWrenches('fb', 8, p.time_log, wrench_fb_log=p.wrench_fbW_log)
+        plotWrenches('ffwd', 9, p.time_log, wrench_ffwd_log=p.wrench_ffW_log)
+        plotWrenches('g', 10, p.time_log, wrench_g_log=p.wrench_gW_log)
+
+        plotFrameLinear('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_legOdom_log,
+                        Twist_log=p.baseLinTwistImuW_log, title='Base velocity estimate', frame='W', sharex=True,
+                        sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
+        
