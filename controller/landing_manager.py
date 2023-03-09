@@ -200,8 +200,8 @@ class LandingManager:
                         # joints velocity
                         B_contact_err = self.lc.B_feet_task[i] - self.p.B_contacts[i]
                         kv = .01 / self.p.dt
-                        self.p.B_vel_contact_des[i] = kv * B_contact_err
-                        qd_des_leg = self.p.J_inv[i] @ self.p.B_vel_contact_des[i]
+                        self.p.B_vel_contacts_des[i] = kv * B_contact_err
+                        qd_des_leg = self.p.J_inv[i] @ self.p.B_vel_contacts_des[i]
                         self.p.u.setLegJointState(i, qd_des_leg, qd_des)
 
                     tau_ffwd = self.p.self_weightCompensation()
@@ -218,6 +218,8 @@ class LandingManager:
                     self.lc.landed_phase(self.p.time, simplified)
 
                     # set references
+                    b_R_w_des = pin.rpy.rpyToMatrix(self.p.u.angPart(self.lc.pose_des)).T
+                    omega_des_skew = pin.skew(b_R_w_des @ self.p.u.angPart(self.lc.pose_des))
                     # joints position
                     for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
                         q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
@@ -228,9 +230,9 @@ class LandingManager:
                             self.p.u.setLegJointState(i, q_des_leg, q_des)
 
                         # joints velocity
-                        self.p.B_vel_contact_des[i] = omega_des_skew.T @ self.lc.B_feet_task[
+                        self.p.B_vel_contacts_des[i] = omega_des_skew.T @ self.lc.B_feet_task[
                             i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
-                        qd_leg_des = self.p.J_inv[i] @ self.p.B_vel_contact_des[i]
+                        qd_leg_des = self.p.J_inv[i] @ self.p.B_vel_contacts_des[i]
                         self.p.u.setLegJointState(i, qd_leg_des, qd_des)
 
                     if not useWBC:
