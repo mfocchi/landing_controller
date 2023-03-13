@@ -14,9 +14,8 @@ import pinocchio as pin
 
 import base_controllers.params as conf
 
-# import cProfile, pstats, io
-# from pstats import SortKey
-# pr = cProfile.Profile()
+import cProfile, pstats, io
+from pstats import SortKey
 
 robotName = "go1"
 
@@ -38,9 +37,14 @@ test['typeWBC'] = 'projection'
 test['normals'] = [np.array([0.,0.,1.])]*4
 test['friction_coeffs'] = [0.8]*4
 
+test['profile'] = True
+
 
 if __name__ == '__main__':
     p = Controller(robotName)
+    if test['profile']:
+        pr = cProfile.Profile()
+
     test['pulse'] = 2*np.pi*test['freq']
     test['pulse2'] = test['pulse']**2
     try:
@@ -87,6 +91,8 @@ if __name__ == '__main__':
                     print('starting wbc ' + str(p.time) + " [s]")
             elif state == 1:
                 if p.time - time_stabilize < test['stabilize']:
+                    if test['profile']:
+                        pr.enable()
                     p.comPoseW_des = p.Hframe2World(p.x0)
                     p.comTwistW_des[:] = 0.
                     p.comAccW_des[:] = 0.
@@ -98,6 +104,8 @@ if __name__ == '__main__':
                           p.comAccW_des,
                           comControlled=True,
                           type=test['typeWBC'])
+                    if test['profile']:
+                        pr.disable()
                 else:
                     time_sinusoid = p.time.copy()
                     print('starting sinusoid ' + str(p.time) + " [s]")
@@ -106,6 +114,8 @@ if __name__ == '__main__':
             elif state == 2:
                 if p.time - time_sinusoid < test['duration']-(1/4)*(1/test['freq']):
                     # com ref
+                    if test['profile']:
+                        pr.enable()
                     comPoseHF_des = p.x0 + test['amp'] * np.sin( test['pulse']*(p.time - time_sinusoid) + test['phase']) -  test['delta']
                     comTwistHF_des =  test['pulse'] * test['amp'] * np.cos( test['pulse']*(p.time - time_sinusoid) + test['phase'] )
                     comAccHF_des  = -test['pulse2'] * test['amp'] * np.sin( test['pulse']*(p.time - time_sinusoid) + test['phase'] )
@@ -119,6 +129,8 @@ if __name__ == '__main__':
                           p.comAccW_des,
                           comControlled=True,
                           type=test['typeWBC'])
+                    if test['profile']:
+                        pr.disable()
                 else:
                     time_safe_stop = p.time
                     print('safe stop ' + str(p.time) + " [s]")
@@ -131,6 +143,8 @@ if __name__ == '__main__':
 
             elif state == 3:
                 if p.time - time_safe_stop < (1/4)*(1/test['freq']):
+                    if test['profile']:
+                        pr.enable()
                     time = p.time - time_safe_stop
                     p.comPoseW_des, p.comTwistW_des, p.comAccW_des = p.Hframe2World(pos(time), vel(time), acc(time))
 
@@ -141,6 +155,8 @@ if __name__ == '__main__':
                           p.comAccW_des,
                           comControlled=True,
                           type=test['typeWBC'])
+                    if test['profile']:
+                        pr.disable()
 
                 else:
                     state += 1
@@ -167,6 +183,11 @@ if __name__ == '__main__':
         p.deregister_node()
         os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
+        if test['profile']:
+            ps = pstats.Stats(pr)
+            ps.dump_stats(os.environ['LOCOSIM_DIR'] + '/landing_controller/go1tests/stats_wbc.cprof')
+            # then go in go1test with the terminal and run
+            # pyprof2calltree -k -i stats_wbc.cprof
 
         if conf.plotting:
             plotFrame('position', time_log=p.time_log, des_Pose_log=p.comPoseW_des_log, Pose_log=p.comPoseW_log,
