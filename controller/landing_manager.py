@@ -92,10 +92,6 @@ class LandingManager:
         # iff isTouchDownOccurred == True, fsm_state: 1 -> 2
 
 
-        # variables to be defined
-        vcom_z_now = 0.
-        vcom_z_pre = 0.
-
         start_time = self.p.time
         flag5s = False
         while not ros.is_shutdown():
@@ -115,14 +111,14 @@ class LandingManager:
                         if flag5s == False:
                             print("You can drop the robot now")
                             flag5s = True
-                        isApexReached = self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
-                                                                baseLinAccW=self.p.baseLinAccW, window=1,
-                                                                threshold=-5)
+                        self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
+                                                baseLinAccW=self.p.baseLinAccW, window=1,
+                                                threshold=-5)
                 else:
-                    isApexReached = self.lc.apexReached(t=self.p.time,
-                                                        sample=self.p.log_counter,
-                                                        vel_z_pre=self.p.comTwistW_log[2, self.p.log_counter - 1],
-                                                        vel_z_now=self.p.comTwistW[2])
+                    self.lc.apexReached(t=self.p.time,
+                                        sample=self.p.log_counter,
+                                        vel_z_pre=self.p.comTwistW_log[2, self.p.log_counter - 1],
+                                        vel_z_now=self.p.comTwistW[2])
 
                 if self.lc.lc_events.apex.detected:
                     fsm_state += 1
@@ -164,13 +160,9 @@ class LandingManager:
                     # if use only ik -> same pid gains
                     # if use ik + wbc -> reduce pid gains
                     # if only wbc -> zero pid gains
-                    # if not useIK:
-                    #     self.p.pid.setPDs(0., 0., 0.)
-                    # elif useWBC and useIK:
-                    #     self.p.pid.setPDjoints(self.p.kp_wbc_j, self.p.kd_wbc_j, self.p.ki_wbc_j)
-
-
-                    if useIK:
+                    if not useIK:
+                        self.p.pid.setPDs(0., 0., 0.)
+                    elif useWBC and useIK:
                         self.p.pid.setPDjoints(self.p.kp_wbc_j, self.p.kd_wbc_j, self.p.ki_wbc_j)
                     # elif not simulation['useWBC'] and simulation['useIK'] :
                     #       do not change gains
