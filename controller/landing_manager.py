@@ -176,16 +176,17 @@ class LandingManager:
                     #       do not change gains
 
                     # save the  position at touch down
-                    self.lc.landed(self.p.comPoseW, self.p.comTwistW)
-
-                    self.p.zmp[0] = self.lc.slip_dyn.zmp_xy[0] + self.lc.W_comPose_TD[0]
-                    self.p.zmp[1] = self.lc.slip_dyn.zmp_xy[1] + self.lc.W_comPose_TD[1]
+                    comPoseH, comRateH = self.p.World2Hframe(self.p.comPoseW, self.p.comTwistW)
+                    self.lc.landed(comPoseH, comRateH)
 
                     self.p.W_contacts_TD = copy.deepcopy(self.p.W_contacts)
 
                 else:
                     # compute landing trajectory + kinematic adjustment
-                    self.lc.flyingDown_phase(self.p.b_R_w, self.p.imu_utils.baseLinTwistImuW)
+                    w_R_hf = pin.rpy.rpyToMatrix(0, 0, self.p.u.angPart(self.p.basePoseW)[2])
+
+
+                    self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.p.u.linPart(self.p.baseTwistW))
 
                     # set references
                     # joints position
@@ -238,12 +239,16 @@ class LandingManager:
                     if not useWBC:
                         tau_ffwd = self.p.gravityCompensation()
 
-                    if useWBC:
-                        tau_ffwd = self.p.WBC(self.lc.pose_des, self.lc.twist_des, self.lc.acc_des, type=typeWBC)
+                    # save LC references for com, feet, zmp
+                    self.p.comPoseW_des, self.p.comTwistW_des, comAccW_des = self.p.Hframe2World(self.lc.pose_des,
+                                                                                                 self.lc.twist_des,
+                                                                                                 self.lc.acc_des)
 
-                        # save LC references for com, feet, zmp
-                    self.p.comPoseW_des = self.lc.pose_des.copy()
-                    self.p.comTwistW_des = self.lc.twist_des.copy()
+                    if useWBC:
+
+                        tau_ffwd = self.p.WBC(self.p.comPoseW_des, self.p.comTwistW_des, comAccW_des, type=typeWBC)
+
+
 
             for leg in range(4):
                 self.p.W_contacts_des[leg] = self.p.u.linPart(self.p.basePoseW) + self.p.b_R_w.T @ self.lc.B_feet_task[leg]

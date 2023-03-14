@@ -105,8 +105,8 @@ class LandingController:
         self.twist_des = np.zeros(6)
         self.acc_des = np.zeros(6)
 
-        self.W_comPose_TD = np.zeros(6)
-        self.W_comTwist_TD = np.zeros(6)
+        self.T_comPose_TD = np.zeros(6)
+        self.T_comTwist_TD = np.zeros(6)
 
         self.T_o_B = np.array([0, 0, self.L])
 
@@ -166,17 +166,16 @@ class LandingController:
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
 
-    def flyingDown_phase(self, B_R_T, com_vel_W):
+    def flyingDown_phase(self, B_R_T, com_vel_T):
         # (re-)compute zmp and move feet plane accordingly
         # self.init_pos[0] = 0.
         # self.init_pos[1] = 0.
         # self.init_pos[2] = self.L
-        self.init_vel[0] = com_vel_W[0]
-        self.init_vel[1] = com_vel_W[1]
-        self.init_vel[2] = com_vel_W[2]
+        self.init_vel[0] = com_vel_T[0]
+        self.init_vel[1] = com_vel_T[1]
+        self.init_vel[2] = com_vel_T[2]
 
         self.slip_dyn.def_and_solveOCP(self.init_pos, self.init_vel)
-
 
         # task for feet in terrain frame
         if self.alpha < 1.:
@@ -186,14 +185,16 @@ class LandingController:
             self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.alpha * self.slip_dyn.zmp_xy
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
-    def landed(self, W_comPose, W_comTwist):
-        self.W_comPose_TD = W_comPose.copy()
-        self.W_comTwist_TD = W_comTwist.copy()
+
+    def landed(self, T_comPose, T_comTwist):
+        self.T_comPose_TD = T_comPose.copy()
+        self.T_comTwist_TD = T_comTwist.copy()
         self.slip_dyn.xy_dynamics()
         self.eig_ang = -np.sqrt(self.slip_dyn.K / self.slip_dyn.m)
 
-        self.pose_des[3:] = self.W_comPose_TD[3:]
-        self.twist_des[3:] = self.W_comTwist_TD[3:]
+        self.pose_des[3:5] = self.T_comPose_TD[3:5]
+        self.pose_des[5] = 0.
+        self.twist_des[3:] = self.T_comTwist_TD[3:]
 
         self.MAT_ANG = np.eye(2) + np.array([[- self.slip_dyn.D / self.slip_dyn.m,  -self.slip_dyn.K / self.slip_dyn.m], [1, 0]]) * self.dt
 
@@ -235,16 +236,16 @@ class LandingController:
         self.Ydyn = self.MAT_ANG @ self.Ydyn  # <-- no need to impose a dynamics on yaw, instead the yaw must be kept constant, otherwise the robot will rotate
         # ---> POSE
         # to avoid reshape, use these three lines
-        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.W_comPose_TD[0]
-        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.W_comPose_TD[1]
+        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.T_comPose_TD[0]
+        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.T_comPose_TD[1]
         self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
 
-        self.pose_des[4] = self.Pdyn[1]
         self.pose_des[3] = self.Rdyn[1]
-        self.pose_des[5] = self.W_comPose_TD[5]
+        self.pose_des[4] = self.Pdyn[1]
+        self.pose_des[5] = self.Ydyn[1] + self.T_comPose_TD[5]
 
-        B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3:6]).T
+        B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3], self.pose_des[4], 0).T
 
         # ---> TWIST
         self.twist_des[0] = self.slip_dyn.T_v_com_ref[0, self.ref_k]
@@ -260,14 +261,19 @@ class LandingController:
         self.acc_des[1] = self.slip_dyn.T_a_com_ref[1, self.ref_k]
         self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
 
-        self.acc_des[3:6] = -self.slip_dyn.D / self.slip_dyn.m * self.twist_des[3:] - self.slip_dyn.K / self.slip_dyn.m * self.pose_des[3:]
+        Dm = self.slip_dyn.D / self.slip_dyn.m
+        Km = self.slip_dyn.K / self.slip_dyn.m
+        self.acc_des[3] = -Dm * self.Rdyn[0] - Km * self.Rdyn[1]
+        self.acc_des[4] = -Dm * self.Pdyn[0] - Km * self.Pdyn[1]
+        self.acc_des[5] = -Dm * self.Ydyn[0] - Km * self.Ydyn[1]
+
 
 
         self.T_o_B[2] = self.pose_des[2]
+
         for leg in range(4):
             self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.slip_dyn.zmp_xy
             self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
-
 
 
     def setCheckTimings(self, expected_lift_off_time=None, expected_apex_time=None, expected_touch_down_time=None, clearance=None):
