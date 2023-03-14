@@ -30,6 +30,7 @@ test['usePid'] = 1.
 test['amp']  = np.array([0.03, 0., 0.03, 0., 0.0, 0])
 test['phase']  = np.array([0., 0., np.pi/2, 0., 0, 0.])
 test['delta']  = np.array([0.0, 0., 0.03, 0., 0.0, 0.])
+test['delta']  = test['amp'] * np.sin(test['phase'] )
 test['freq'] = 0.3
 test['typeWBC'] = 'projection'
 # test['typeWBC'] = 'qp'
