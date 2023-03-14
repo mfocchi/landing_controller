@@ -117,11 +117,11 @@ if __name__ == '__main__':
                     # com ref
                     if test['profile']:
                         pr.enable()
-                    comPoseHF_des = p.x0 + test['amp'] * np.sin( test['pulse']*(p.time - time_sinusoid) + test['phase']) -  test['delta']
-                    comTwistHF_des =  test['pulse'] * test['amp'] * np.cos( test['pulse']*(p.time - time_sinusoid) + test['phase'] )
-                    comAccHF_des  = -test['pulse2'] * test['amp'] * np.sin( test['pulse']*(p.time - time_sinusoid) + test['phase'] )
+                    comPoseH_des   = p.x0 + test['amp'] * np.sin( test['pulse']*(p.time - time_sinusoid) + test['phase']) -  test['delta']
+                    dcomPoseH_des  =  test['pulse'] * test['amp'] * np.cos( test['pulse']*(p.time - time_sinusoid) + test['phase'] )
+                    ddcomPoseH_des = -test['pulse2'] * test['amp'] * np.sin( test['pulse']*(p.time - time_sinusoid) + test['phase'] )
 
-                    p.comPoseW_des, p.comTwistW_des, p.comAccW_des = p.Hframe2World(comPoseHF_des, comTwistHF_des, comAccHF_des)
+                    p.comPoseW_des, p.comTwistW_des, p.comAccW_des = p.Hframe2World(comPoseH_des, dcomPoseH_des, ddcomPoseH_des)
 
                     p.Wcom2Joints_des()
                     
