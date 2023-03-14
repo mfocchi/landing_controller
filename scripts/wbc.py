@@ -207,8 +207,8 @@ if __name__ == '__main__':
                          LinPose_log=p.W_contacts_log,
                          contact_states=p.contact_state_log, frame='W', sharex=True, sharey=False, start=0, end=-1)
 
-            # plotContacts('velocity', time_log=p.time_log,  des_LinTwist_log=p.B_vel_contacts_des_log,
-            #               frame='B', sharex=True, sharey=False, start=0, end=-1)
+            plotContacts('velocity', time_log=p.time_log,  des_LinTwist_log=p.B_vel_contacts_des_log,
+                          frame='B', sharex=True, sharey=False, start=0, end=-1)
 
             plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
                          Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
