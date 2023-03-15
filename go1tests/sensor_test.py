@@ -21,7 +21,11 @@ ROBOT_NAME = 'go1'                         # go1, solo, (aliengo)
 
 if __name__ == '__main__':
     p = Controller(ROBOT_NAME)
-    p.startController(use_ground_truth_pose=False, use_ground_truth_contacts=False)
+    p.startController(use_ground_truth_pose=True,
+                      use_ground_truth_contacts=False,
+                      additional_args=['gui:=false',
+                                       'go0_conf:=standDown',
+                                       'pid_discrete_implementation:=true'])
     p.pid = PidManager(p.joint_names)
     p.pid.setPDjoints(np.zeros(p.robot.na),
                       np.zeros(p.robot.na),
@@ -59,36 +63,45 @@ if __name__ == '__main__':
         os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
         if conf.plotting:
-            plotCoM('position', 0, time_log=p.time_log, des_basePoseW=p.comPoseW_des_log,
-                    basePoseW=p.comPoseW_log, title='CoM')
-            plotCoM('velocity', 1, time_log=p.time_log, des_baseTwistW=p.comTwistW_des_log,
-                    baseTwistW=p.comTwistW_log, title='CoM')
-            plotCoM('position', 2, time_log=p.time_log, des_basePoseW=p.basePoseW_des_log,
-                    basePoseW=p.basePoseW_log, title='base')
-            plotCoM('velocity', 3, time_log=p.time_log, des_baseTwistW=p.baseTwistW_des_log,
-                    baseTwistW=p.baseTwistW_log, title='base')
-            plotGRFs(4, p.time_log, p.grForcesW_log, p.grForcesW_des_log, title='world')
-            plotGRFs_withContacts(4, p.time_log, p.grForcesW_wbc_log, p.grForcesW_log, p.contact_state_log)
+            plotFrame('position', time_log=p.time_log, des_Pose_log=p.comPoseW_des_log, Pose_log=p.comPoseW_log,
+                      title='CoM', frame='W', sharex=True, sharey=False, start=0, end=-1)
+            plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.comTwistW_des_log, Twist_log=p.comTwistW_log,
+                      title='CoM', frame='W', sharex=True, sharey=False, start=0, end=-1)
+            plotFrame('position', time_log=p.time_log, des_Pose_log=p.basePoseW_des_log, Pose_log=p.basePoseW_log,
+                      title='base', frame='W', sharex=True, sharey=False, start=0, end=-1)
+            plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_des_log, Twist_log=p.baseTwistW_log,
+                      title='base', frame='W', sharex=True, sharey=False, start=0, end=-1)
 
-            plotJoint('position', 5, p.time_log, q_log=p.q_log, q_des_log=p.q_des_log)
-            plotJoint('velocity', 6, p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log)
-            plotJoint('torque', 7, p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log, tau_des_log=p.tau_fb_log)
+            plotContacts('position', time_log=p.time_log, des_LinPose_log=p.B_contacts_des_log,
+                         LinPose_log=p.B_contacts_log,
+                         contact_states=p.contact_state_log, frame='B', sharex=True, sharey=False, start=0, end=-1)
 
-            plotWrenches('fb', 8, p.time_log, wrench_fb_log=p.wrench_fbW_log)
-            plotWrenches('ffwd', 9, p.time_log, wrench_ffwd_log=p.wrench_ffW_log)
-            plotWrenches('g', 10, p.time_log, wrench_g_log=p.wrench_gW_log)
+            plotContacts('position', time_log=p.time_log, des_LinPose_log=p.W_contacts_des_log,
+                         LinPose_log=p.W_contacts_log,
+                         contact_states=p.contact_state_log, frame='W', sharex=True, sharey=False, start=0, end=-1)
 
-            plotWBC_fb('fb wrench and com', 11, p.time_log, wrench_fb_log=p.wrench_fbW_log,
-                       comPose_des_log=p.comPoseW_des_log, comPose_log=p.comPoseW_log,
-                       comTwist_des_log=p.comTwistW_des_log, comTwist_log=p.comTwistW_log)
+            plotContacts('velocity', time_log=p.time_log, des_LinTwist_log=p.B_vel_contacts_des_log,
+                         frame='B', sharex=True, sharey=False, start=0, end=-1)
 
-            plotFeet(12, p.time_log, des_feet=p.B_contacts_des_log, act_feet=p.B_contacts_log,
-                     contact_states=p.contact_state_log)
+            plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
+                         Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
+                         sharex=True, sharey=False, start=0, end=-1)
 
-            plotCoMLinear('leg odom: base', 13, p.time_log, plot_var_log=p.basePoseW_legOdom_log)
+            plotJoint('position', time_log=p.time_log, q_log=p.q_log, q_des_log=p.q_des_log, sharex=True, sharey=False,
+                      start=0, end=-1)
+            plotJoint('velocity', time_log=p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log, sharex=True,
+                      sharey=False, start=0, end=-1)
+            plotJoint('torque', time_log=p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
+                      tau_des_log=p.tau_fb_log, sharex=True, sharey=False, start=0, end=-1)
 
-            plotSingleJoint('torque', 14, 7, p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
-                            tau_des_log=p.tau_fb_log)
+            plotWrenches('fb', 8, p.time_log, des_Wrench_fb_log=p.wrench_fbW_log)
+            plotWrenches('ffwd', 9, p.time_log, des_Wrench_ffwd_log=p.wrench_ffW_log)
+            plotWrenches('g', 10, p.time_log, des_Wrench_g_log=p.wrench_gW_log)
 
-            # plotCoMLinear('imu acceleration', 15, p.time_log, plot_var_log=p.W_base_lin_acc_log)
-            # plotCoMLinear('imu vel est', 15, p.time_log, plot_var_log=p.W_lin_vel_log)
+            plotFrameLinear('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_legOdom_log,
+                            Twist_log=p.baseLinTwistImuW_log, title='Base velocity estimate', frame='W', sharex=True,
+                            sharey=False, start=0, end=-1)
+
+            plotFrameLinear('velocity', time_log=p.time_log,
+                            Twist_log=p.baseLinAccB_log, title='accelerometer', frame='B', sharex=True,
+                            sharey=False, start=0, end=-1)
