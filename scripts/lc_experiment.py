@@ -16,7 +16,7 @@ from landing_controller.controller.landing_manager import LandingManager
 from landing_controller.controller import SETTINGS
 from landing_controller.controller.utility import *
 import base_controllers.params as conf
-
+import datetime
 
 np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
                     floatmode='fixed',  # print fixed number of digits ...
@@ -32,14 +32,8 @@ use_gui = True
 
 
 if __name__ == '__main__':
-    # if SETTINGS['save_log']:
-    #     stdout = sys.stdout
-    #     logfile = open(SETTINGS['save_path'] + "/log.txt", "w")
-
     try:
         p = Controller(ROBOT_NAME)
-        # p.startController(world_name='fast.world', use_ground_truth_contacts=False,
-        #                   additional_args=['gui:=true', 'go0_conf:=standDown', 'pid_discrete_implementation:=true'])
 
         p.startController(world_name=world_name,
                           use_ground_truth_pose=True,
@@ -100,9 +94,6 @@ if __name__ == '__main__':
                          LinPose_log=p.B_contacts_log,
                          contact_states=p.contact_state_log, frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
 
-            # plotContacts('velocity', time_log=p.time_log,  des_LinTwist_log=p.B_vel_contacts_des_log,
-            #               frame='B', sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
-
             plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
                          Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
                          sharex=True, sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
@@ -121,4 +112,14 @@ if __name__ == '__main__':
             plotFrameLinear('velocity', time_log=p.time_log, des_Twist_log=p.baseTwistW_legOdom_log,
                             Twist_log=p.baseLinTwistImuW_log, title='Base velocity estimate', frame='W', sharex=True,
                             sharey=False, start=lm.lc.lc_events.apex.sample, end=-1)
-        
+
+        if input('Do you want to save plots? [y/n]')=='y':
+            now = datetime.datetime.now()
+            now_s = str(now)
+            now_s = now_s.replace('-', '')
+            now_s = now_s.replace(' ', '_')
+            now_s = now_s.replace(':', '')
+            now_s = now_s[: now_s.find('.')]
+            SETTINGS['PLOTS']['directory_path'] = os.environ['LOCOSIM_DIR'] + '/landing_controller/experiments/' + now_s
+            os.mkdir(SETTINGS['PLOTS']['directory_path'])
+            makePlots(p, SETTINGS['FIGURES'], SETTINGS['PLOTS'], start=lm.lc.lc_events.apex.sample, end=-1, verbose = True)
