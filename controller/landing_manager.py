@@ -110,6 +110,7 @@ class LandingManager:
                     if self.p.time - start_time > 5:
                         if flag5s == False:
                             print("You can drop the robot now")
+                            self.p.imu_utils.baseLinTwistImuW[:] = 0.
                             flag5s = True
                         self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
                                                 baseLinAccW=self.p.baseLinAccW, window=1,
