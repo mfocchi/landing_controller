@@ -113,7 +113,7 @@ class LandingManager:
                             flag5s = True
                         self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
                                                 baseLinAccW=self.p.baseLinAccW, window=1,
-                                                threshold=-5)
+                                                threshold=-3)
                 else:
                     self.lc.apexReached(t=self.p.time,
                                         sample=self.p.log_counter,
