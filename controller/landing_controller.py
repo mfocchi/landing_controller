@@ -182,7 +182,8 @@ class LandingController:
             self.alpha = np.around(self.alpha+self.smoothing_param, 2)
 
         for leg in range(4):
-            self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.alpha * self.slip_dyn.zmp_xy
+            self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
+            self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
             self.B_feet_task[leg] = B_R_T @ (self.T_feet_task[leg] - self.T_o_B)
 
 
@@ -272,7 +273,8 @@ class LandingController:
         self.T_o_B[2] = self.pose_des[2]
 
         for leg in range(4):
-            self.T_feet_task[leg][:2] = self.T_feet_home[leg][:2] + self.slip_dyn.zmp_xy
+            self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
+            self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
             self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
 
 
