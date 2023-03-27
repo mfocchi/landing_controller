@@ -133,7 +133,7 @@ class LandingController:
         self.init_vel = np.zeros([3, 1])
 
         self.alpha = 0.0
-        self.smoothing_param = 0.02
+        self.smoothing_param = 0.005
 
         self.euler_final = np.zeros(3)
 
