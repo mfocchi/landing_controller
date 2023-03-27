@@ -157,7 +157,11 @@ class LandingManager:
 
                 if self.lc.lc_events.touch_down.detected:
                     fsm_state += 1
-                    self.p.leg_odom.reset(np.hstack([0., 0., self.lc.L, self.p.quaternion, self.p.q]))
+                    height = 0.
+                    for leg in range(4):
+                        height -= self.p.B_contacts[leg][2]
+                    height /= 4
+                    self.p.leg_odom.reset(np.hstack([0., 0., height, self.p.quaternion, self.p.q]))
                     # if use only ik -> same pid gains
                     # if use ik + wbc -> reduce pid gains
                     # if only wbc -> zero pid gains
