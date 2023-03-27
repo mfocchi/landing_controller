@@ -88,7 +88,7 @@ class LandingController:
         w_v = 1.
         w_p = 1.
         w_u = 0.
-        max_settling_time = 1.5
+        max_settling_time = 1.8
 
         self.slip_dyn = SLIP_dynamics(  self.dt,
                                         self.L,
