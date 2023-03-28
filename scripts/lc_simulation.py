@@ -1,10 +1,7 @@
 import matplotlib
 matplotlib.use('TkAgg')
-import numpy as np
-import rospy as ros
 import sys
 sys.path.append('../')
-import os
 from base_controllers.quadruped_controller import Controller
 from landing_controller.controller.landing_manager import LandingManager
 from landing_controller.controller import SETTINGS
@@ -45,9 +42,6 @@ if __name__ == '__main__':
 
         p.startupProcedure()
 
-        if SETTINGS['VIDEO']['save']:
-            init_video_frame = p.get_current_frame_file()
-
         lm = LandingManager(p, SETTINGS)
         sim_counter = -1
         if SETTINGS['save_log']:
@@ -61,14 +55,10 @@ if __name__ == '__main__':
             else:
                 sim_counter += 1
                 setId(simulation, sim_counter)
-                if SETTINGS['VIDEO']['save']:
-                    if sim_counter == 0:
-                        setVideoTimings(p.time, simulation)
-                    else:
-                        setVideoTimings(p.time, simulation, SETTINGS['SIMS'][sim_counter - 1])
+
                 if SETTINGS['verbose']:
                     print("Starting simulation " + simulation['id'] + ': ' + simulation['name'])
-                ret = lm.run(simulation['id'],
+                ret = lm.run(sim_counter,
                        simulation['pose'],
                        simulation['twist'],
                        simulation['useIK'],
@@ -93,17 +83,8 @@ if __name__ == '__main__':
         p.deregister_node()
         os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
 
-        # save all for later analysis
-        if SETTINGS['WORKSPACE']['save']:
-            saveWorkspace(SETTINGS['save_path'])
+
 
         # store all the init conds
         if SETTINGS['INIT_CONDS']['save_all']:
             saveAllInitConds(SETTINGS['save_path'], SETTINGS['SIMS'], SETTINGS['VIDEO']['speedUpDown'], SETTINGS['verbose'])
-
-
-        if SETTINGS['VIDEO']['save']:
-            # save the video
-            p.save_video(SETTINGS['save_path'], start_file=init_video_frame, speedUpDown=SETTINGS['VIDEO']['speedUpDown'])
-
-
