@@ -20,7 +20,7 @@ np.set_printoptions(linewidth=np.inf,   # number of characters per line before n
 
 ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
 world_name = 'slow.world'
-use_gui = True
+use_gui = False
 
 phase_deg_list = np.arange(-180, 180, 30)
 magnitude_init_list = [2.8, 2.9, 2.4, 2., 1.9, 1.8, 1.7, 1.8, 1.9, 2., 2.4, 2.9] # these values are close to the limits for h = 0.7 m
@@ -40,8 +40,9 @@ if __name__ == '__main__':
         p.startController(world_name=world_name,
                           use_ground_truth_pose=True,
                           use_ground_truth_contacts=False,
-                          additional_args=['gui:='+str(use_gui),
-                                           'go0_conf:=standDown'])
+                          additional_args=['gui:=true',
+                                           'go0_conf:=standDown',
+                                           'pid_discrete_implementation:=false'])
 
         p.startupProcedure()
 

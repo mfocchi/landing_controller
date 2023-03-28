@@ -27,8 +27,6 @@ np.set_printoptions(linewidth=np.inf,   # number of characters per line before n
 
 
 ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
-world_name = 'slow.world'
-use_gui = True
 
 
 if __name__ == '__main__':
@@ -40,21 +38,14 @@ if __name__ == '__main__':
     try:
         p = Controller(ROBOT_NAME)
 
-        p.startController(world_name=world_name,
-                          use_ground_truth_pose=True,
-                          use_ground_truth_contacts=False,
-                          additional_args=['gui:='+str(use_gui),
-                                           'go0_conf:=standDown',
+        p.startController(additional_args=['go0_conf:=standDown',
                                            'pid_discrete_implementation:=true'])
 
         p.startupProcedure()
 
-
         lm = LandingManager(p, SETTINGS)
 
         ret = lm.run(0, useIK=True, useWBC=True)
-        # while not ros.is_shutdown():
-        #     p.send_command(p.q_des, p.qd_des, p.gravityCompensation())
 
 
 

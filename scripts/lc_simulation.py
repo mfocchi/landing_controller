@@ -39,7 +39,7 @@ if __name__ == '__main__':
         p.startController(world_name=world_name,
                           use_ground_truth_pose=True,
                           use_ground_truth_contacts=False,
-                          additional_args=['gui:='+str(use_gui),
+                          additional_args=['gui:=true',
                                            'go0_conf:=standDown',
                                            'pid_discrete_implementation:=false'])
 
