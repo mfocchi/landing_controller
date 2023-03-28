@@ -265,9 +265,12 @@ class LandingManager:
             # save all for later analysis
             if self.settings['WORKSPACE']['save']:
                 EXTRADATA = {}
-                EXTRADATA["lift_off"] = self.lc.lc_events.lift_off
-                EXTRADATA["apex"] = self.lc.lc_events.apex
-                EXTRADATA["touch_down"] = self.lc.lc_events.touch_down
+                EXTRADATA["lift_off_sample"] = self.lc.lc_events.lift_off.sample
+                EXTRADATA["lift_off_t"] = self.lc.lc_events.lift_off.t
+                EXTRADATA["apex_sample"] = self.lc.lc_events.apex.sample
+                EXTRADATA["apex_t"] = self.lc.lc_events.apex.t
+                EXTRADATA["touch_down_sample"] = self.lc.lc_events.touch_down.sample
+                EXTRADATA["touch_down_t"] = self.lc.lc_events.touch_down.t
                 self.p.saveData(self.settings['SIMS'][simulation_counter]['directory'], EXTRADATA=EXTRADATA,
                                 start=self.lc.lc_events.apex.sample, stop=self.p.log_counter,
                                 verbose = self.settings['verbose'])
