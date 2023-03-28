@@ -26,6 +26,8 @@ phase_deg_list = np.arange(-180, 180, 30)
 magnitude_init_list = [2.8, 2.9, 2.4, 2., 1.9, 1.8, 1.7, 1.8, 1.9, 2., 2.4, 2.9] # these values are close to the limits for h = 0.7 m
 
 if __name__ == '__main__':
+    setSavePath(SETTINGS, 'simulations')
+
     if SETTINGS['save_log']:
         stdout = sys.stdout
         logfile = open(SETTINGS['save_path'] + "/log.txt", "w")

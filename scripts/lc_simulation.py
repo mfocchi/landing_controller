@@ -25,6 +25,8 @@ use_gui = True
 
 
 if __name__ == '__main__':
+    setSavePath(SETTINGS, 'simulations')
+
     if SETTINGS['save_log']:
         stdout = sys.stdout
         logfile = open(SETTINGS['save_path'] + "/log.txt", "w")

@@ -8,24 +8,12 @@ import pinocchio as pin
 import rospy as ros
 
 class LandingManager:
-    def __init__(self, p, settings):
+    def __init__(self, p, settings = None):
         self.p = p
         self.lc = None
 
         self.settings = settings
 
-        if self.settings['WORKSPACE']['save'] or \
-                self.settings['PLOTS']['save'] or \
-                self.settings['save_log'] or \
-                self.settings['INIT_CONDS']['save_all']:
-            now = datetime.datetime.now()
-            now_s = str(now)
-            now_s = now_s.replace('-', '')
-            now_s = now_s.replace(' ', '_')
-            now_s = now_s.replace(':', '')
-            now_s = now_s[: now_s.find('.')]
-            self.settings['save_path'] = os.environ['LOCOSIM_DIR']+'/landing_controller/simulations/' + now_s
-            os.mkdir( self.settings['save_path'])
 
     def returnValue(self):
         # com close to des com
