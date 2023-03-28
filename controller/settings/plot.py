@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 #################
 PLOT_SETTINGS = {}
 PLOT_SETTINGS['show'] = False
-PLOT_SETTINGS['save'] = False
+PLOT_SETTINGS['save'] = True
 
 # do not modify the following
 plt.ion()

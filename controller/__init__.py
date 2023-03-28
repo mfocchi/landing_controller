@@ -1,16 +1,17 @@
-import os
-import datetime
-from controller.settings import *
+from .settings import SETTINGS
 
+# modificable settings (all the settings can be modified, but it's very likely that you will not need it)
 
-SETTINGS = {}
-SETTINGS['WORKSPACE'] = WORKSPACE_SETTINGS
-SETTINGS['FIGURES'] = FIG_LIST
-SETTINGS['PLOTS'] = PLOT_SETTINGS
-SETTINGS['SIMS'] = SIMS_SETTINGS
-SETTINGS['VIDEO'] = VIDEO
-SETTINGS['INIT_CONDS'] = INIT_CONDS
+# general
+SETTINGS['verbose'] = False
+SETTINGS['save_log'] = True
 
-SETTINGS['verbose'] = True
-SETTINGS['save_log'] = False
-SETTINGS['save_path'] = ''
+# plot
+SETTINGS['PLOTS'] ['show'] = False
+SETTINGS['PLOTS'] ['save'] = True
+
+# video
+SETTINGS['VIDEO']['save'] = True
+
+# workspace
+SETTINGS['WORKSPACE']['save'] = True
