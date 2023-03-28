@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import datetime
 from base_controllers.utils.common_functions import *
 DEG2RAD = np.pi/180
 
@@ -142,3 +143,18 @@ def saveInitConds(directory, simulation, speedUpDown=1., verbose=False):
     f.close()
     if verbose:
         print(directory + '/simulations.txt saved')
+
+def setSavePath(SETTINGS, directory='simulation'):
+    if SETTINGS['WORKSPACE']['save'] or SETTINGS['PLOTS']['save'] or SETTINGS['save_log'] or SETTINGS['INIT_CONDS']['save_all']:
+        now = datetime.datetime.now()
+        now_s = str(now)
+        now_s = now_s.replace('-', '')
+        now_s = now_s.replace(' ', '_')
+        now_s = now_s.replace(':', '')
+        now_s = now_s[: now_s.find('.')]
+        try:
+            os.mkdir(os.environ['LOCOSIM_DIR'] + '/landing_controller/'+directory)
+        except OSError as error:
+            pass
+        SETTINGS['save_path'] = os.environ['LOCOSIM_DIR'] + '/landing_controller/simulations/' + now_s
+        os.mkdir(SETTINGS['save_path'])
