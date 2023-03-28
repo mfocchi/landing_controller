@@ -43,11 +43,11 @@ def findLimitsInitCond2str(simulation):
     return sim_str
 
 
-def manipulateFig(fig, filename, PLOT_SETTINGS, verbose = False):
+def manipulateFig(fig, filename, PLOT_SETTINGS, directory,  verbose = False):
     fig.set_size_inches([PLOT_SETTINGS['width_inches'], PLOT_SETTINGS['height_inches']])
 
     if PLOT_SETTINGS['save']:
-        plt.savefig(PLOT_SETTINGS['directory_path'] + '/' + filename+ '.png')
+        plt.savefig(directory + '/' + filename+ '.png')
         plt.close()
         del fig
         if verbose:
@@ -57,42 +57,42 @@ def manipulateFig(fig, filename, PLOT_SETTINGS, verbose = False):
         plt.show()
 
 
-def makePlots(p, figures, PLOT_SETTINGS, start=0, end=-1, verbose = False):
+def makePlots(p, figures, PLOT_SETTINGS, directory, start=0, end=-1, verbose = False):
     id = 0
     for name in figures:
         if name == 'q' and figures[name]:
             # joint position
             fig = plotJoint('position', time_log=p.time_log, q_log=p.q_log, q_des_log=p.q_des_log, sharex=True, sharey=False,
                   start=start, end=end)
-            manipulateFig(fig, 'q', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'q', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'qd' and figures[name]:
             # joint velocity
             fig = plotJoint('velocity', time_log=p.time_log, qd_log=p.qd_log, qd_des_log=p.qd_des_log, sharex=True,
                   sharey=False, start=start, end=end)
-            manipulateFig(fig, 'qd', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'qd', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'tau' and figures[name]:
             # joint torques
             fig = plotJoint('torque', time_log=p.time_log, tau_log=p.tau_log, tau_ffwd_log=p.tau_ffwd_log,
                   tau_des_log=p.tau_fb_log, sharex=True, sharey=False, start=start, end=end)
-            manipulateFig(fig, 'tau', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'tau', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'com' and figures[name]:
             # com position
             fig = plotFrame('position', time_log=p.time_log, des_Pose_log=p.comPoseW_des_log, Pose_log=p.comPoseW_log,
                   title='CoM', frame='W', sharex=True, sharey=False, start=start, end=end)
-            manipulateFig(fig, 'com', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'com', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'vcom' and figures[name]:
             # com velocity
             fig = plotFrame('velocity', time_log=p.time_log, des_Twist_log=p.comTwistW_des_log, Twist_log=p.comTwistW_log,
                   title='CoM', frame='W', sharex=True, sharey=False, start=start, end=end)
-            manipulateFig(fig, 'vcom', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'vcom', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'w_contacts' and figures[name]:
@@ -100,7 +100,7 @@ def makePlots(p, figures, PLOT_SETTINGS, start=0, end=-1, verbose = False):
             fig =  plotContacts('position', time_log=p.time_log, des_LinPose_log=p.W_contacts_des_log,
                      LinPose_log=p.W_contacts_log,
                      contact_states=p.contact_state_log, frame='W', sharex=True, sharey=False, start=start, end=end)
-            manipulateFig(fig, 'W_feet', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'W_feet', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'b_contacts' and figures[name]:
@@ -108,7 +108,7 @@ def makePlots(p, figures, PLOT_SETTINGS, start=0, end=-1, verbose = False):
             fig = plotContacts('position', time_log=p.time_log, des_LinPose_log=p.B_contacts_des_log,
                      LinPose_log=p.B_contacts_log,
                      contact_states=p.contact_state_log, frame='B', sharex=True, sharey=False, start=start, end=end)
-            manipulateFig(fig, 'B_feet', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'B_feet', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         elif name == 'grfs_contacts' and figures[name]:
@@ -116,7 +116,7 @@ def makePlots(p, figures, PLOT_SETTINGS, start=0, end=-1, verbose = False):
             fig = plotContacts('GRFs', time_log=p.time_log, des_Forces_log=p.grForcesW_des_log,
                      Forces_log=p.grForcesW_log, contact_states=p.contact_state_log, frame='W',
                      sharex=True, sharey=False, start=start, end=end)
-            manipulateFig(fig, 'grfs', PLOT_SETTINGS, verbose)
+            manipulateFig(fig, 'grfs', PLOT_SETTINGS, directory, verbose)
             id += 1
 
         else:
