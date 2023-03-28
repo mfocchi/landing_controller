@@ -14,9 +14,6 @@ def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr += 'base ang vel: ' + str(np.round(simulation['twist'][3:], 3)/DEG2RAD) + ' deg/s\n'
     SIMstr += 'useWBC: ' +  str(simulation['useWBC']) + '\n'
     SIMstr += 'useIK: ' + str(simulation['useIK'])
-    if printVideo and speedUpDown>0:
-        SIMstr += '\nt_video: ' + str(simulation['t_video']) + '\n'
-        SIMstr += 't_video_speedUpDown: ' + str(simulation['t_video']/speedUpDown) + '\n'
     return SIMstr
 
 def findLimitsInitCond2str(simulation):
@@ -142,12 +139,6 @@ def setId(simulation, sim_counter):
         simulation['id'] = '0' + str(sim_counter)
     else:
         simulation['id'] = str(sim_counter)
-
-def setVideoTimings(t_start_video, simulation, previous_simulation=None):
-    if previous_simulation is None:
-        simulation['t_video'] = t_start_video
-    else:
-        simulation['t_video'] += SETTINGS['SIMS'][sim_counter - 1]['t_video']
 
 def saveAllInitConds(directory, SIMS, speedUpDown=1., verbose=False):
     f = open(directory + "/ALL_simulations.txt", "w")
