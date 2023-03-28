@@ -51,7 +51,7 @@ class LcEvents:
 #          [positionX]
 
 class LandingController:
-    def __init__(self, robot, dt, q0, g_mag=9.81):
+    def __init__(self, robot, dt, q0, g_mag=9.81, smoothing_param = 0.005):
         self.u = Utils()
         
         self.robot = robot
@@ -133,7 +133,7 @@ class LandingController:
         self.init_vel = np.zeros([3, 1])
 
         self.alpha = 0.0
-        self.smoothing_param = 0.005
+        self.smoothing_param = smoothing_param
 
         self.euler_final = np.zeros(3)
 
