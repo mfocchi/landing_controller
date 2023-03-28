@@ -122,18 +122,6 @@ def makePlots(p, figures, PLOT_SETTINGS, directory, start=0, end=-1, verbose = F
         else:
             print('Cannot understand ' + name)
 
-def saveWorkspace(path):
-    filename = path + '/workspace.out'
-    my_shelf = shelve.open(filename, 'n')  # 'n' for new
-
-    for key in dir():
-        try:
-            my_shelf[key] = globals()[key]
-        except TypeError:
-            # __builtins__, my_shelf, and imported modules can not be shelved.
-            print('ERROR shelving: {0}'.format(key))
-    my_shelf.close()
-
 def setId(simulation, sim_counter):
     if sim_counter < 10:
         simulation['id'] = '0' + str(sim_counter)
