@@ -66,7 +66,7 @@ if __name__ == '__main__':
                        simulation['typeWBC'],
                        simplified=False)
                 if SETTINGS['verbose']:
-                    print("--> simulation " + simulation['id'] + 'completed:' + str(ret))
+                    print("--> simulation " + simulation['id'] + 'completed. Stabilized?' + str(ret))
 
 
 

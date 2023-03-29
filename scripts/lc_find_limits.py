@@ -22,7 +22,7 @@ ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
 world_name = 'slow.world'
 use_gui = False
 
-phase_deg_list = np.array([-180]) #np.arange(-180, 180, 30)
+phase_deg_list = np.arange(-180, 180, 30)
 #magnitude_init_list = np.ones_like(phase_deg_list)
 
 if __name__ == '__main__':
@@ -103,30 +103,28 @@ if __name__ == '__main__':
                                      simplified=False)
 
 
-                        if ret == 0:
-                            print('    Succeed')
-                            if increase_mag:  # simulation succeed, increase the init vel and restart
-                                succeed_once = True
-                                magnitude = magnitude_try
-                                magnitude_try = np.around(magnitude_try + 0.1, 1)
-                            else:  # simulation succeed, init vel has been only decreased -> solution found
-                                succeed_once = True
-                                magnitude = magnitude_try
-                                break
-                        else:
-                            print('    Failed')
-                            if ret == 1:
-                                print('    Fault cause: cannot track com', flush=True)
-                            elif ret == 2:
-                                print('    Fault cause: A foot moved', flush=True)
-                            if not succeed_once:  # simulation failed and never succeeded before, decrease increase_mag
-                                increase_mag = False
-                                magnitude_try = np.around(magnitude_try - 0.1, 1)
-                                if magnitude_try < 0.:
-                                    print('    A solution does not exist', flush=True)
+                            if ret:
+                                if SETTINGS['verbose']:
+                                    print('    Succeed')
+                                if increase_mag:  # simulation succeed, increase the init vel and restart
+                                    succeed_once = True
+                                    magnitude = magnitude_try
+                                    magnitude_try = np.around(magnitude_try + 0.1, 1)
+                                else:  # simulation succeed, init vel has been only decreased -> solution found
+                                    succeed_once = True
+                                    magnitude = magnitude_try
                                     break
-                            else:  # simulation succeed, init vel has been only increased -> solution found
-                                break
+                            else:
+                                if SETTINGS['verbose']:
+                                    print('    Failed')
+                                if not succeed_once:  # simulation failed and never succeeded before, decrease increase_mag
+                                    increase_mag = False
+                                    magnitude_try = np.around(magnitude_try - 0.1, 1)
+                                    if magnitude_try < 0.:
+                                        print('    A solution does not exist', flush=True)
+                                        break
+                                else:  # simulation succeed, init vel has been only increased -> solution found
+                                    break
 
                     magnitude_list.append(magnitude)
                     print("\nLimit magnitude for " + str(phase_deg) + " deg: " + str(magnitude) + " [m/s]")
@@ -146,7 +144,7 @@ if __name__ == '__main__':
 
                 print('limit magnitude (m/s): ', end='')
                 for i in range(n_phases):
-                    if i != 5:
+                    if i != n_phases - 1:
                         print(str(magnitude_list[i]) + ', ', end='')
                     else:
                         print(str(magnitude_list[i]))

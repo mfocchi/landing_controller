@@ -14,21 +14,6 @@ class LandingManager:
 
         self.settings = settings
 
-
-    def returnValue(self):
-        # com close to des com
-        if np.linalg.norm(self.p.comPoseW_des[0:3] - self.p.comPoseW[0:3]) > 0.1:
-            return 1
-
-        # feet don't move too much
-        for i in range(4):
-            for c in self.p.W_contacts_log[0:3,
-                     self.lc.lc_events.touch_down.sample:self.p.log_counter].T:
-                if np.linalg.norm(c - self.p.W_contacts_TD[0]) > 0.03:
-                    return 2
-        return 0
-
-
     def run(self, simulation_counter, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False):
         #########
         # reset #
@@ -87,10 +72,13 @@ class LandingManager:
 
         start_time = self.p.time
         flag5s = False
+        collided = False
         while not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics(update_legOdom=self.lc.lc_events.touch_down.detected)
+            # check for collisions
+            collided = collided or self.p.checkGroundCollisions()
 
             # self.p.visualizeContacts()
 
@@ -281,6 +269,12 @@ class LandingManager:
                 self.p.saveVideo(self.settings['SIMS'][simulation_counter]['directory'],
                                   speedUpDown=self.settings['VIDEO']['speedUpDown'])
 
-        return self.returnValue()
+            feet_in_touch = True
+            for leg in range(4):
+                feet_in_touch = feet_in_touch and self.p.W_contacts[leg][2]<0.03
+
+            # at the end I want no collision and feet on ground!
+            ret = (not collided) and feet_in_touch
+        return ret
 
 
