@@ -317,8 +317,6 @@ class LandingController:
             return False
 
 
-
-
     def apexReached(self, t, sample, vel_z_pre, vel_z_now):
         if t > self.check_apex_time:
             if (vel_z_pre >=0. and vel_z_now < 0.) or (vel_z_pre <0. and vel_z_now < 0.):
@@ -336,10 +334,10 @@ class LandingController:
 
     def touchDown(self, t, sample, contacts_state):
         if t >= self.check_touch_down_time:
-            anyTD = any(contacts_state)
-            if anyTD and self.lc_events.touch_down.detected == False:
+            allTD = all(contacts_state)
+            if allTD:
                 self.lc_events.touch_down.set(t, sample)
-            return anyTD
+            return allTD
         else:
             return False
 
