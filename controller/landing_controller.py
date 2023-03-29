@@ -51,9 +51,10 @@ class LcEvents:
 #          [positionX]
 
 class LandingController:
-    def __init__(self, robot, dt, q0, g_mag=9.81, smoothing_param = 0.005):
+    def __init__(self, robot, dt, q0, g_mag=9.81, smoothing_param = 0.005, naive=False):
         self.u = Utils()
-        
+
+        self.naive = naive
         self.robot = robot
         self.qj_home = q0[7:]
         self.v_home = pin.utils.zero(self.robot.nv)
@@ -181,6 +182,10 @@ class LandingController:
         if self.alpha < 1.:
             self.alpha = np.around(self.alpha+self.smoothing_param, 2)
 
+        if self.naive:
+            self.slip_dyn.zmp_xy[0] = 0.0
+            self.slip_dyn.zmp_xy[1] = 0.0
+
         for leg in range(4):
             self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
             self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
@@ -204,7 +209,7 @@ class LandingController:
         self.Ydyn = np.vstack([self.twist_des[5], self.pose_des[5]])
 
 
-    def landed_phase(self, t, simplified=False):
+    def landed_phase(self, t):
         # use the last trajectory computed
         # task for feet in terrain frame
 
@@ -215,67 +220,94 @@ class LandingController:
             if self.lp_counter %2 == 0:
                 self.ref_k += 1
 
-        if simplified:
-            # ---> POSE
-            self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, 0]
-            self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, 0]
-            self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, 0]
-
-            self.pose_des[3:6] = 0.
-
-            # ---> TWIST
-            self.twist_des[:] = 0.
-
-            # ---> ACCELERATION
-            self.acc_des[:] = 0.
-            return
 
         # REFERENCES
+        if self.naive: # naive controller (not use this in real robot)
+            self.Rdyn = self.MAT_ANG @ self.Rdyn
+            self.Pdyn = self.MAT_ANG @ self.Pdyn
+            self.Ydyn = self.MAT_ANG @ self.Ydyn
+            # ---> POSE
+            # to avoid reshape, use these three lines
+            self.pose_des[0] = self.T_comPose_TD[0]
+            self.pose_des[1] = self.T_comPose_TD[1]
+            self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
-        self.Rdyn = self.MAT_ANG @ self.Rdyn
-        self.Pdyn = self.MAT_ANG @ self.Pdyn
-        self.Ydyn = self.MAT_ANG @ self.Ydyn  # <-- no need to impose a dynamics on yaw, instead the yaw must be kept constant, otherwise the robot will rotate
-        # ---> POSE
-        # to avoid reshape, use these three lines
-        self.pose_des[0] = self.slip_dyn.T_p_com_ref[0, self.ref_k] + self.T_comPose_TD[0]
-        self.pose_des[1] = self.slip_dyn.T_p_com_ref[1, self.ref_k] + self.T_comPose_TD[1]
-        self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
+            self.pose_des[3] = self.Rdyn[1]
+            self.pose_des[4] = self.Pdyn[1]
+            self.pose_des[5] = self.Ydyn[1] + self.T_comPose_TD[5]
 
+            B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3], self.pose_des[4], 0).T
 
-        self.pose_des[3] = self.Rdyn[1]
-        self.pose_des[4] = self.Pdyn[1]
-        self.pose_des[5] = self.Ydyn[1] + self.T_comPose_TD[5]
+            # ---> TWIST
+            self.twist_des[0] = 0
+            self.twist_des[1] = 0
+            self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
 
-        B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3], self.pose_des[4], 0).T
+            self.twist_des[3] = self.Rdyn[0]
+            self.twist_des[4] = self.Pdyn[0]
+            self.twist_des[5] = self.Ydyn[0]
 
-        # ---> TWIST
-        self.twist_des[0] = self.slip_dyn.T_v_com_ref[0, self.ref_k]
-        self.twist_des[1] = self.slip_dyn.T_v_com_ref[1, self.ref_k]
-        self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
+            # ---> ACCELERATION
+            self.acc_des[0] = 0
+            self.acc_des[1] = 0
+            self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
 
-        self.twist_des[3] = self.Rdyn[0]
-        self.twist_des[4] = self.Pdyn[0]
-        self.twist_des[5] = self.Ydyn[0]
+            Dm = self.slip_dyn.D / self.slip_dyn.m
+            Km = self.slip_dyn.K / self.slip_dyn.m
+            self.acc_des[3] = -Dm * self.Rdyn[0] - Km * self.Rdyn[1]
+            self.acc_des[4] = -Dm * self.Pdyn[0] - Km * self.Pdyn[1]
+            self.acc_des[5] = -Dm * self.Ydyn[0] - Km * self.Ydyn[1]
 
-        # ---> ACCELERATION
-        self.acc_des[0] = self.slip_dyn.T_a_com_ref[0, self.ref_k]
-        self.acc_des[1] = self.slip_dyn.T_a_com_ref[1, self.ref_k]
-        self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
+            self.T_o_B[2] = self.pose_des[2]
 
-        Dm = self.slip_dyn.D / self.slip_dyn.m
-        Km = self.slip_dyn.K / self.slip_dyn.m
-        self.acc_des[3] = -Dm * self.Rdyn[0] - Km * self.Rdyn[1]
-        self.acc_des[4] = -Dm * self.Pdyn[0] - Km * self.Pdyn[1]
-        self.acc_des[5] = -Dm * self.Ydyn[0] - Km * self.Ydyn[1]
+            for leg in range(4):
+                self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
+                self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
+                self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
 
+        else: # lc controller
+            self.Rdyn = self.MAT_ANG @ self.Rdyn
+            self.Pdyn = self.MAT_ANG @ self.Pdyn
+            self.Ydyn = self.MAT_ANG @ self.Ydyn
+            # ---> POSE
+            # to avoid reshape, use these three lines
+            self.pose_des[0] = self.T_comPose_TD[0] + self.slip_dyn.T_p_com_ref[0, self.ref_k]
+            self.pose_des[1] = self.T_comPose_TD[1] + self.slip_dyn.T_p_com_ref[1, self.ref_k]
+            self.pose_des[2] = self.slip_dyn.T_p_com_ref[2, self.ref_k]
 
+            self.pose_des[3] = self.Rdyn[1]
+            self.pose_des[4] = self.Pdyn[1]
+            self.pose_des[5] = self.Ydyn[1] + self.T_comPose_TD[5]
 
-        self.T_o_B[2] = self.pose_des[2]
+            B_R_T_des = pin.rpy.rpyToMatrix(self.pose_des[3], self.pose_des[4], 0).T
 
-        for leg in range(4):
-            self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
-            self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
-            self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
+            # ---> TWIST
+            self.twist_des[0] = self.slip_dyn.T_v_com_ref[0, self.ref_k]
+            self.twist_des[1] = self.slip_dyn.T_v_com_ref[1, self.ref_k]
+            self.twist_des[2] = self.slip_dyn.T_v_com_ref[2, self.ref_k]
+
+            self.twist_des[3] = self.Rdyn[0]
+            self.twist_des[4] = self.Pdyn[0]
+            self.twist_des[5] = self.Ydyn[0]
+
+            # ---> ACCELERATION
+            self.acc_des[0] = self.slip_dyn.T_a_com_ref[0, self.ref_k]
+            self.acc_des[1] = self.slip_dyn.T_a_com_ref[1, self.ref_k]
+            self.acc_des[2] = self.slip_dyn.T_a_com_ref[2, self.ref_k]
+
+            Dm = self.slip_dyn.D / self.slip_dyn.m
+            Km = self.slip_dyn.K / self.slip_dyn.m
+            self.acc_des[3] = -Dm * self.Rdyn[0] - Km * self.Rdyn[1]
+            self.acc_des[4] = -Dm * self.Pdyn[0] - Km * self.Pdyn[1]
+            self.acc_des[5] = -Dm * self.Ydyn[0] - Km * self.Ydyn[1]
+
+            self.T_o_B[2] = self.pose_des[2]
+
+            for leg in range(4):
+                self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
+                self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
+                self.B_feet_task[leg] = B_R_T_des @ (
+                            self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
 
 
     def setCheckTimings(self, expected_lift_off_time=None, expected_apex_time=None, expected_touch_down_time=None, clearance=None):

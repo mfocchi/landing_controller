@@ -29,7 +29,7 @@ class LandingManager:
         return 0
 
 
-    def run(self, simulation_counter, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', simplified=False):
+    def run(self, simulation_counter, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False):
         #########
         # reset #
         #########
@@ -60,7 +60,8 @@ class LandingManager:
                                         q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
                                                       self.p.quaternion,
                                                       q_des]),
-                                        smoothing_param = 0.02)
+                                        smoothing_param = 0.02,
+                                        naive = naive)
 
             self.lc.setCheckTimings(expected_touch_down_time=self.p.time + (2*self.p.basePoseW[2]-0.3)/self.lc.g_mag , clearance=0.05)
             if self.settings['VIDEO']['save']:
@@ -206,7 +207,7 @@ class LandingManager:
                     break
                 else:
                     # use last computed trajectories
-                    self.lc.landed_phase(self.p.time, simplified)
+                    self.lc.landed_phase(self.p.time)
 
                     # set references
                     b_R_w_des = pin.rpy.rpyToMatrix(self.p.u.angPart(self.lc.pose_des)).T
