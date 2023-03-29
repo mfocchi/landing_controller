@@ -56,10 +56,10 @@ if __name__ == '__main__':
             sys.stdout = logfile
 
         for simulation in SETTINGS['SIMS']:
-            if simulation['name'] != 'find_limits':
+            if 'find_limits' not in simulation['name']:
                 sys.stdout = stdout
                 assert simulation['name'] != 'find_limits', "You should use lc_simulation.py. Exit..."
-            else:
+            elif simulation['name'] == 'find_limits_linear':
                 sim_counter += 1
                 simtry_counter = -1
                 sim_str = findLimitsInitCond2str(simulation)
@@ -76,31 +76,32 @@ if __name__ == '__main__':
 
                     increase_mag = True
                     succeed_once = False
-                    while True:
-                        simtry_counter += 1
-                        simulation_try = {'name': simulation['name'],
-                                          'pose': simulation['pose'],
-                                          'twist': magnitude_try * unit_baseTwist,
-                                          'useWBC': simulation['useWBC'],
-                                          'useIK': simulation['useIK'],
-                                          'typeWBC': simulation['typeWBC'],  # or 'qp' (used only if useWBC is True)
-                                          'id': '',
-                                          't_video': 0.0,
-                                          'directory': ''}
-                        setId(simulation_try, simtry_counter)
-                        simulation_try['id'] = str(sim_counter) + simulation_try['id']
-                        SETTINGS['SIMS'][sim_counter] = simulation_try
+                    for naive in [False, True]:
+                        while True:
+                            simtry_counter += 1
+                            simulation_try = {'name': simulation['name'],
+                                              'pose': simulation['pose'],
+                                              'twist': magnitude_try * unit_baseTwist,
+                                              'useWBC': simulation['useWBC'],
+                                              'useIK': simulation['useIK'],
+                                              'typeWBC': simulation['typeWBC'],  # or 'qp' (used only if useWBC is True)
+                                              'id': '',
+                                              't_video': 0.0,
+                                              'directory': ''}
+                            setId(simulation_try, simtry_counter)
+                            simulation_try['id'] = str(sim_counter) + simulation_try['id']
+                            SETTINGS['SIMS'][sim_counter] = simulation_try
 
-                        if SETTINGS['verbose']:
-                            print("--> Testing magnitude: " + str(magnitude_try) + " [m/s]", flush=True)
+                            if SETTINGS['verbose']:
+                                print("--> Testing magnitude: " + str(magnitude_try) + " [m/s]", flush=True)
 
-                        ret = lm.run(sim_counter,
-                                     simulation_try['pose'],
-                                     simulation_try['twist'],
-                                     simulation_try['useIK'],
-                                     simulation_try['useWBC'],
-                                     simulation_try['typeWBC'],
-                                     simplified=False)
+                            ret = lm.run(sim_counter,
+                                         simulation_try['pose'],
+                                         simulation_try['twist'],
+                                         simulation_try['useIK'],
+                                         simulation_try['useWBC'],
+                                         simulation_try['typeWBC'],
+                                         naive=naive)
 
 
                             if ret:
@@ -148,6 +149,84 @@ if __name__ == '__main__':
                         print(str(magnitude_list[i]) + ', ', end='')
                     else:
                         print(str(magnitude_list[i]))
+            elif simulation['name'] == 'find_limits_angular':
+                sim_counter += 1
+                simtry_counter = -1
+                sim_str = findLimitsInitCond2str(simulation)
+                print(sim_str)
+
+                while True:
+                    # all in rad or in rad/s
+                    simtry_counter += 1
+                    simulation_try = {'name': simulation['name'],
+                                      'pose': simulation['pose'],
+                                      'twist': simulation['twist'],
+                                      'useWBC': simulation['useWBC'],
+                                      'useIK': simulation['useIK'],
+                                      'typeWBC': simulation['typeWBC'],  # or 'qp' (used only if useWBC is True)
+                                      'test_limit': simulation['test_limit'],
+                                      'id': '',
+                                      't_video': 0.0,
+                                      'directory': ''}
+                    setId(simulation_try, simtry_counter)
+                    simulation_try['id'] = str(sim_counter) + simulation_try['id']
+                    SETTINGS['SIMS'][sim_counter] = simulation_try
+
+                    if SETTINGS['verbose']:
+                        print("--> Testing orientation: " + str(simulation_try['pose'][3:]) + " [rad] and angular velocity "
+                              + str(simulation_try['twist'][3:]+ " [rad/s]"), flush=True)
+
+                    ret = lm.run(sim_counter,
+                                 simulation_try['pose'],
+                                 simulation_try['twist'],
+                                 simulation_try['useIK'],
+                                 simulation_try['useWBC'],
+                                 simulation_try['typeWBC'],
+                                 simplified=False)
+
+                    if ret:
+                        print('    Succeed')
+                        if simulation_try['test_limit'] == '+roll':
+                            simulation_try['pose'][3] += 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '-roll':
+                            simulation_try['pose'][3] -= 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '+pitch':
+                            simulation_try['pose'][4] += 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '-pitch':
+                            simulation_try['pose'][4] -= 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '+omegax':
+                            simulation_try['twist'][3] += 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '-omegax':
+                            simulation_try['twist'][3] -= 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '+omegay':
+                            simulation_try['twist'][4] += 10*DEG2RAD
+                        elif simulation_try['test_limit'] == '-omegay':
+                            simulation_try['twist'][4] -= 10*DEG2RAD
+
+                    else:
+                        print('    Failed')
+                        if ret == 1:
+                            print('    Fault cause: cannot track com', flush=True)
+                        elif ret == 2:
+                            print('    Fault cause: A foot moved', flush=True)
+                        break
+
+                if simulation_try['test_limit'] == '+roll':
+                    print('Limit roll' + str(simulation_try['pose'][3]))
+                elif simulation_try['test_limit'] == '-roll':
+                    print('Limit roll' + str(simulation_try['pose'][3]))
+                elif simulation_try['test_limit'] == '+pitch':
+                    print('Limit pitch' + str(simulation_try['pose'][4]))
+                elif simulation_try['test_limit'] == '-pitch':
+                    print('Limit pitch' + str(simulation_try['pose'][4]))
+                elif simulation_try['test_limit'] == '+omegax':
+                    print('Limit omegax' + str(simulation_try['twist'][3]))
+                elif simulation_try['test_limit'] == '-omegax':
+                    print('Limit omegax' + str(simulation_try['twist'][3]))
+                elif simulation_try['test_limit'] == '+omegay':
+                    print('Limit omegay' + str(simulation_try['twist'][4]))
+                elif simulation_try['test_limit'] == '-omegay':
+                    print('Limit omegay' + str(simulation_try['twist'][4]))
 
 
 

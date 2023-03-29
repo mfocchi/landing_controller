@@ -10,9 +10,9 @@ def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr += 'id: '   + simulation['id'] + '\n'
     SIMstr += 'name: ' + simulation['name'] + '\n'
     SIMstr += 'base height: ' + str(np.round(simulation['pose'][2], 3)) + ' m\n'
-    SIMstr += 'base orientation: ' + str(np.round(simulation['pose'][3:], 3)/DEG2RAD) + ' deg\n'
+    SIMstr += 'base orientation: ' + str(np.round(simulation['pose'][3:]/DEG2RAD, 3)) + ' deg\n'
     SIMstr += 'base lin vel: ' + str(np.round(simulation['twist'][:3], 3)) + ' m/s\n'
-    SIMstr += 'base ang vel: ' + str(np.round(simulation['twist'][3:], 3)/DEG2RAD) + ' deg/s\n'
+    SIMstr += 'base ang vel: ' + str(np.round(simulation['twist'][3:]/DEG2RAD, 3)) + ' deg/s\n'
     SIMstr += 'useWBC: ' +  str(simulation['useWBC']) + '\n'
     SIMstr += 'useIK: ' + str(simulation['useIK'])
     return SIMstr
@@ -21,8 +21,8 @@ def findLimitsInitCond2str(simulation):
     s0 = ' FIND LIMITS \n'
     s0 += '\n'
     s0 += ' base height: ' + str(np.round(simulation['pose'][2], 3)) + ' m \n'
-    s0 += ' base orientation: ' + str(np.round(simulation['pose'][3:], 3) / DEG2RAD) + ' deg \n'
-    s0 += ' base ang vel: ' + str(np.round(simulation['twist'][3:], 3) / DEG2RAD) + ' deg/s \n'
+    s0 += ' base orientation: ' + str(np.round(simulation['pose'][3:]/DEG2RAD, 3)) + ' deg \n'
+    s0 += ' base ang vel: ' + str(np.round(simulation['twist'][3:]/DEG2RAD, 3)) + ' deg/s \n'
     s0 += ' useWBC: ' + str(simulation['useWBC']) + ' \n'
     s0 += ' useIK: ' + str(simulation['useIK']) + ' '
 
