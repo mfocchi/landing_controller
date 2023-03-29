@@ -65,18 +65,23 @@ if __name__ == '__main__':
                 sim_str = findLimitsInitCond2str(simulation)
                 print(sim_str)
                 magnitude_list = []
-                for ii, phase_deg in enumerate(phase_deg_list):
-                    if SETTINGS['verbose']:
-                        print( "Searching maximum magnitude for phase: " + str(
-                            phase_deg) + " deg", flush=True)
-                    phase_rad = phase_deg * np.pi / 180
-                    unit_baseTwist = np.array([np.cos(phase_rad), np.sin(phase_rad), 0., 0., 0., 0.])
-                    magnitude_try = simulation['magnitude_init_list'][ii]
-                    magnitude = 0.
+                for naive in [False, True]:
+                    if naive:
+                        ctrl = 'naive approach'
+                    else:
+                        ctrl = 'LC'
+                    for ii, phase_deg in enumerate(phase_deg_list):
+                        if SETTINGS['verbose']:
+                            print( "Searching maximum magnitude for phase: " + str(
+                                phase_deg) + " deg", flush=True)
+                        phase_rad = phase_deg * np.pi / 180
+                        unit_baseTwist = np.array([np.cos(phase_rad), np.sin(phase_rad), 0., 0., 0., 0.])
+                        magnitude_try = simulation['magnitude_init_list'][ii]
+                        magnitude = 0.
 
-                    increase_mag = True
-                    succeed_once = False
-                    for naive in [False, True]:
+                        increase_mag = True
+                        succeed_once = False
+
                         while True:
                             simtry_counter += 1
                             simulation_try = {'name': simulation['name'],
@@ -93,7 +98,7 @@ if __name__ == '__main__':
                             SETTINGS['SIMS'][sim_counter] = simulation_try
 
                             if SETTINGS['verbose']:
-                                print("--> Testing magnitude: " + str(magnitude_try) + " [m/s]", flush=True)
+                                print("--> Testing magnitude: " + str(magnitude_try) + " [m/s] with " + ctrl, flush=True)
 
                             ret = lm.run(sim_counter,
                                          simulation_try['pose'],
@@ -127,28 +132,28 @@ if __name__ == '__main__':
                                 else:  # simulation succeed, init vel has been only increased -> solution found
                                     break
 
-                    magnitude_list.append(magnitude)
-                    print("\nLimit magnitude for " + str(phase_deg) + " deg: " + str(magnitude) + " [m/s]")
-                    print('-' * 60)
+                        magnitude_list.append(magnitude)
+                        print("\nLimit magnitude for " + str(phase_deg) + " deg: " + str(magnitude) + " [m/s]with " + ctrl)
+                        print('-' * 60)
 
-                print('RESULTS for height', np.around(simulation['pose'][2], 2), '[m] with controller')
-                for ii in range(len(phase_deg_list)):
-                    print('phase:', phase_deg_list[ii], 'deg, limit magnitude:', magnitude_list[ii])
+                    print('RESULTS for height', np.around(simulation['pose'][2], 2), '[m] with ' + ctrl)
+                    for ii in range(len(phase_deg_list)):
+                        print('phase:', phase_deg_list[ii], 'deg, limit magnitude:', magnitude_list[ii])
 
-                n_phases = len(phase_deg_list)
-                print('phase (deg):' + ' ' * 11, end='')
-                for i in range(n_phases):
-                    if i != n_phases - 1:
-                        print(str(phase_deg_list[i]) + ', ', end='')
-                    else:
-                        print(str(phase_deg_list[i]))
+                    n_phases = len(phase_deg_list)
+                    print('phase (deg):' + ' ' * 11, end='')
+                    for i in range(n_phases):
+                        if i != n_phases - 1:
+                            print(str(phase_deg_list[i]) + ', ', end='')
+                        else:
+                            print(str(phase_deg_list[i]))
 
-                print('limit magnitude (m/s): ', end='')
-                for i in range(n_phases):
-                    if i != n_phases - 1:
-                        print(str(magnitude_list[i]) + ', ', end='')
-                    else:
-                        print(str(magnitude_list[i]))
+                    print('limit magnitude (m/s): ', end='')
+                    for i in range(n_phases):
+                        if i != n_phases - 1:
+                            print(str(magnitude_list[i]) + ', ', end='')
+                        else:
+                            print(str(magnitude_list[i]))
             elif simulation['name'] == 'find_limits_angular':
                 sim_counter += 1
                 simtry_counter = -1
