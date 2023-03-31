@@ -187,7 +187,7 @@ if __name__ == '__main__':
                                  simulation_try['useIK'],
                                  simulation_try['useWBC'],
                                  simulation_try['typeWBC'],
-                                 simplified=False)
+                                 naive=False)
 
                     if ret:
                         print('    Succeed')
