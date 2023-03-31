@@ -77,8 +77,9 @@ class LandingManager:
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics(update_legOdom=self.lc.lc_events.touch_down.detected)
-            # check for collisions
-            collided = collided or self.p.checkGroundCollisions()
+            # check for collisions (only in simualtion)
+            if not self.p.real_robot:
+                collided = collided or self.p.checkGroundCollisions()
 
             # self.p.visualizeContacts()
 
@@ -275,6 +276,8 @@ class LandingManager:
 
             # at the end I want no collision and feet on ground!
             ret = (not collided) and feet_in_touch
+        else:
+            ret = True # the che collision and feet on ground checks are not relevant on real robot
         return ret
 
 
