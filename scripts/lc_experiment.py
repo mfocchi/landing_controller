@@ -66,10 +66,13 @@ if __name__ == '__main__':
             SETTINGS['WORKSPACE']['save'] = input('Do you want to save data? [y/n]') == 'y'  # ask it anyway
         if SETTINGS['WORKSPACE']['save']:
             EXTRADATA = {}
-            EXTRADATA["lift_off"] = lm.lc.lc_events.lift_off
-            EXTRADATA["apex"] = lm.lc.lc_events.apex
-            EXTRADATA["touch_down"] = lm.lc.lc_events.touch_down
-            p.saveData(SETTINGS['save_path'], EXTRADATA=EXTRADATA, start=lm.lc.lc_events.apex, stop=lm.p.log_counter)
+            EXTRADATA["lift_off_sample"] = lm.lc.lc_events.lift_off.sample
+            EXTRADATA["lift_off_t"] = lm.lc.lc_events.lift_off.t
+            EXTRADATA["apex_sample"] = lm.lc.lc_events.apex.sample
+            EXTRADATA["apex_t"] = lm.lc.lc_events.apex.t
+            EXTRADATA["touch_down_sample"] = lm.lc.lc_events.touch_down.sample
+            EXTRADATA["touch_down_t"] = lm.lc.lc_events.touch_down.t
+            p.saveData(SETTINGS['save_path'], EXTRADATA=EXTRADATA)
 
         # useful for debug
         # if you want to save new plots, you should consider to add them in makePlots()
