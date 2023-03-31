@@ -239,8 +239,9 @@ class LandingManager:
         if not self.p.real_robot:
             self.p.pause_physics_client()
 
-            if self.settings['PLOTS']['save']:
-                self.settings['SIMS'][simulation_counter]['directory'] = self.settings['save_path']+'/sim' + self.settings['SIMS'][simulation_counter]['id']
+
+            self.settings['SIMS'][simulation_counter]['directory'] = self.settings['save_path']+'/sim' + self.settings['SIMS'][simulation_counter]['id']
+            if self.settings['save_path']:
                 os.mkdir(self.settings['SIMS'][simulation_counter]['directory'])
                 saveInitConds(self.settings['SIMS'][simulation_counter]['directory'],
                               self.settings['SIMS'][simulation_counter],

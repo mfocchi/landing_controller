@@ -145,7 +145,7 @@ def saveInitConds(directory, simulation, speedUpDown=1., verbose=False):
         print(directory + '/simulations.txt saved')
 
 def setSavePath(SETTINGS, directory='simulation'):
-    if SETTINGS['WORKSPACE']['save'] or SETTINGS['PLOTS']['save'] or SETTINGS['save_log'] or SETTINGS['INIT_CONDS']['save_all']:
+    #if SETTINGS['WORKSPACE']['save'] or SETTINGS['PLOTS']['save'] or SETTINGS['save_log'] or SETTINGS['INIT_CONDS']['save_all']: # set save path in all the cases
         now = datetime.datetime.now()
         now_s = str(now)
         now_s = now_s.replace('-', '')
