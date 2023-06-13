@@ -42,7 +42,7 @@ if __name__ == '__main__':
                           use_ground_truth_contacts=False,
                           additional_args=['gui:=true',
                                            'go0_conf:=standDown',
-                                           'pid_discrete_implementation:=false'])
+                                           'pid_discrete_implementation:=true'])
 
         p.startupProcedure()
 
@@ -61,46 +61,46 @@ if __name__ == '__main__':
                 assert simulation['name'] != 'find_limits', "You should use lc_simulation.py. Exit..."
             elif simulation['name'] == 'find_limits_linear':
                 sim_counter += 1
-                simtry_counter = -1
+
                 sim_str = findLimitsInitCond2str(simulation)
                 print(sim_str)
-                magnitude_list = []
-                for naive in [False, True]:
+                for naive in [True, False]:
+
                     if naive:
                         ctrl = 'naive approach'
+                        ctrl_counter = 1
                     else:
                         ctrl = 'LC'
+                        ctrl_counter = 0
                     for ii, phase_deg in enumerate(phase_deg_list):
-                        if SETTINGS['verbose']:
-                            print( "Searching maximum magnitude for phase: " + str(
-                                phase_deg) + " deg", flush=True)
+                        print( "Searching maximum magnitude for base height"+ str(simulation['pose'][2])+ " m for phase "
+                               + str(phase_deg) + " deg with " + ctrl, flush=True)
                         phase_rad = phase_deg * np.pi / 180
                         unit_baseTwist = np.array([np.cos(phase_rad), np.sin(phase_rad), 0., 0., 0., 0.])
-                        magnitude_try = simulation['magnitude_init_list'][ii]
-                        magnitude = 0.
+                        n_test = 31
+                        magnitude_try = np.linspace(0, 3., n_test)
+                        magnitude_succeed = []
+                        fail_couter = 0
+                        for test_id in range(n_test):
+                            if magnitude_try[test_id]<1.7:
+                                continue
 
-                        increase_mag = True
-                        succeed_once = False
-
-                        while True:
-                            simtry_counter += 1
                             simulation_try = {'name': simulation['name'],
                                               'pose': simulation['pose'],
-                                              'twist': magnitude_try * unit_baseTwist,
+                                              'twist':  magnitude_try[test_id] * unit_baseTwist,
                                               'useWBC': simulation['useWBC'],
                                               'useIK': simulation['useIK'],
                                               'typeWBC': simulation['typeWBC'],  # or 'qp' (used only if useWBC is True)
                                               'id': '',
                                               't_video': 0.0,
                                               'directory': ''}
-                            setId(simulation_try, simtry_counter)
-                            simulation_try['id'] = str(sim_counter) + simulation_try['id']
+                            setId(simulation_try, test_id)
+                            simulation_try['id'] = str(2) + str(ctrl_counter) + str(phase_deg) + str(test_id)
                             SETTINGS['SIMS'][sim_counter] = simulation_try
 
-                            if SETTINGS['verbose']:
-                                print("--> Testing magnitude: " + str(magnitude_try) + " [m/s] with " + ctrl, flush=True)
+                            print("--> (sim" +simulation_try['id']+") Testing magnitude: " + str(np.around(magnitude_try[test_id] , 1)) + " [m/s] with " + ctrl, flush=True)
 
-                            ret = lm.run(sim_counter,
+                            ret = lm.run(0,
                                          simulation_try['pose'],
                                          simulation_try['twist'],
                                          simulation_try['useIK'],
@@ -108,61 +108,47 @@ if __name__ == '__main__':
                                          simulation_try['typeWBC'],
                                          naive=naive)
 
-
                             if ret:
-                                if SETTINGS['verbose']:
-                                    print('    Succeed')
-                                if increase_mag:  # simulation succeed, increase the init vel and restart
-                                    succeed_once = True
-                                    magnitude = magnitude_try
-                                    magnitude_try = np.around(magnitude_try + 0.1, 1)
-                                else:  # simulation succeed, init vel has been only decreased -> solution found
-                                    succeed_once = True
-                                    magnitude = magnitude_try
-                                    break
+                                print('    Succeed')
+                                magnitude_succeed.append(np.around(magnitude_try[test_id] , 1))
                             else:
-                                if SETTINGS['verbose']:
-                                    print('    Failed')
-                                if not succeed_once:  # simulation failed and never succeeded before, decrease increase_mag
-                                    increase_mag = False
-                                    magnitude_try = np.around(magnitude_try - 0.1, 1)
-                                    if magnitude_try < 0.:
-                                        print('    A solution does not exist', flush=True)
-                                        break
-                                else:  # simulation succeed, init vel has been only increased -> solution found
-                                    break
+                                print('    Failed')
+                                fail_couter += 1
 
-                        magnitude_list.append(magnitude)
-                        print("\nLimit magnitude for " + str(phase_deg) + " deg: " + str(magnitude) + " [m/s]with " + ctrl)
-                        print('-' * 60)
+                            if fail_couter > 3 and magnitude_try[test_id] > 1.5:
+                                break
 
-                    print('RESULTS for height', np.around(simulation['pose'][2], 2), '[m] with ' + ctrl)
-                    for ii in range(len(phase_deg_list)):
-                        print('phase:', phase_deg_list[ii], 'deg, limit magnitude:', magnitude_list[ii])
-
-                    n_phases = len(phase_deg_list)
-                    print('phase (deg):' + ' ' * 11, end='')
-                    for i in range(n_phases):
-                        if i != n_phases - 1:
-                            print(str(phase_deg_list[i]) + ', ', end='')
-                        else:
-                            print(str(phase_deg_list[i]))
-
-                    print('limit magnitude (m/s): ', end='')
-                    for i in range(n_phases):
-                        if i != n_phases - 1:
-                            print(str(magnitude_list[i]) + ', ', end='')
-                        else:
-                            print(str(magnitude_list[i]))
+                        print('#' * 60)
+                        print("Succeeding magnitudes for " + str(phase_deg) + " deg with " + ctrl + ":\n" + str(magnitude_succeed) + " [m/s]", flush=True)
+                        print('#' * 60)
             elif simulation['name'] == 'find_limits_angular':
                 sim_counter += 1
-                simtry_counter = -1
-                sim_str = findLimitsInitCond2str(simulation)
+                simtry_counter = 0
+                sim_str = findLimitsInitCond2str_angularTest(simulation)
                 print(sim_str)
 
                 while True:
                     # all in rad or in rad/s
                     simtry_counter += 1
+                    simulation['pose'][3:6] = 0
+                    simulation['twist'][3:6] = 0
+                    if simulation['test_limit'] == '+roll':
+                        simulation['pose'][3] = simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '-roll':
+                        simulation['pose'][3] = -simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '+pitch':
+                        simulation['pose'][4] = simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '-pitch':
+                        simulation['pose'][4] = -simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '+omegax':
+                        simulation['twist'][3] = simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '-omegax':
+                        simulation['twist'][3] = -simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '+omegay':
+                        simulation['twist'][4] = simtry_counter * 10 * DEG2RAD
+                    elif simulation['test_limit'] == '-omegay':
+                        simulation['twist'][4] = -simtry_counter * 10 * DEG2RAD
+
                     simulation_try = {'name': simulation['name'],
                                       'pose': simulation['pose'],
                                       'twist': simulation['twist'],
@@ -177,9 +163,8 @@ if __name__ == '__main__':
                     simulation_try['id'] = str(sim_counter) + simulation_try['id']
                     SETTINGS['SIMS'][sim_counter] = simulation_try
 
-                    if SETTINGS['verbose']:
-                        print("--> Testing orientation: " + str(simulation_try['pose'][3:]) + " [rad] and angular velocity "
-                              + str(simulation_try['twist'][3:]+ " [rad/s]"), flush=True)
+                    print("--> (sim " + simulation_try['id']+") Testing orientation: " + str(simulation_try['pose'][3:]) + " [rad] and angular velocity "
+                              + str(simulation_try['twist'][3:])+ " [rad/s]", flush=True)
 
                     ret = lm.run(sim_counter,
                                  simulation_try['pose'],
@@ -191,47 +176,31 @@ if __name__ == '__main__':
 
                     if ret:
                         print('    Succeed')
-                        if simulation_try['test_limit'] == '+roll':
-                            simulation_try['pose'][3] += 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '-roll':
-                            simulation_try['pose'][3] -= 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '+pitch':
-                            simulation_try['pose'][4] += 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '-pitch':
-                            simulation_try['pose'][4] -= 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '+omegax':
-                            simulation_try['twist'][3] += 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '-omegax':
-                            simulation_try['twist'][3] -= 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '+omegay':
-                            simulation_try['twist'][4] += 10*DEG2RAD
-                        elif simulation_try['test_limit'] == '-omegay':
-                            simulation_try['twist'][4] -= 10*DEG2RAD
+
 
                     else:
                         print('    Failed')
-                        if ret == 1:
-                            print('    Fault cause: cannot track com', flush=True)
-                        elif ret == 2:
-                            print('    Fault cause: A foot moved', flush=True)
                         break
 
-                if simulation_try['test_limit'] == '+roll':
-                    print('Limit roll' + str(simulation_try['pose'][3]))
-                elif simulation_try['test_limit'] == '-roll':
-                    print('Limit roll' + str(simulation_try['pose'][3]))
-                elif simulation_try['test_limit'] == '+pitch':
-                    print('Limit pitch' + str(simulation_try['pose'][4]))
-                elif simulation_try['test_limit'] == '-pitch':
-                    print('Limit pitch' + str(simulation_try['pose'][4]))
-                elif simulation_try['test_limit'] == '+omegax':
-                    print('Limit omegax' + str(simulation_try['twist'][3]))
-                elif simulation_try['test_limit'] == '-omegax':
-                    print('Limit omegax' + str(simulation_try['twist'][3]))
-                elif simulation_try['test_limit'] == '+omegay':
-                    print('Limit omegay' + str(simulation_try['twist'][4]))
-                elif simulation_try['test_limit'] == '-omegay':
-                    print('Limit omegay' + str(simulation_try['twist'][4]))
+                if 'roll' in simulation_try['test_limit']:
+                    roll_rad = simulation_try['pose'][3] - np.sign(simulation_try['pose'][3]) * 10*DEG2RAD
+                    roll_deg = np.round(roll_rad/DEG2RAD, 4)
+                    print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(roll_rad, 4) )+ " [rad] = " +str(roll_deg) + " [deg]")
+
+                elif 'pitch' in simulation_try['test_limit']:
+                    pitch_rad =  simulation_try['pose'][4] - np.sign(simulation_try['pose'][4]) * 10*DEG2RAD
+                    pitch_deg = np.round(pitch_rad/DEG2RAD, 4)
+                    print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(pitch_rad, 4) )+ " [rad] = " +str(pitch_deg) + " [deg]")
+
+                elif 'omegax' in simulation_try['test_limit']:
+                    omegax_rad = simulation_try['twist'][3] - np.sign(simulation_try['twist'][3]) * 10 * DEG2RAD
+                    omegax_deg = np.round(omegax_rad/ DEG2RAD, 4)
+                    print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(omegax_rad, 4) ) + " [rad/s] = " + str(omegax_deg) + " [deg/s]")
+
+                elif 'omegay' in simulation_try['test_limit']:
+                    omegay_rad = simulation_try['twist'][4] - np.sign(simulation_try['twist'][4]) * 10 * DEG2RAD
+                    omegay_deg = np.round(omegay_rad / DEG2RAD, 4)
+                    print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(omegay_rad, 4) ) + " [rad/s] = " + str(omegay_deg) + " [deg/s]")
 
 
 

@@ -13,15 +13,16 @@ np.set_printoptions(linewidth=np.inf,   # number of characters per line before n
 import os
 from scipy.io import loadmat
 
-directory = os.environ['LOCOSIM_DIR'] + '/landing_controller/simulations/20230328_115407/sim00/'
+directory = os.environ['LOCOSIM_DIR'] + '/landing_controller/experiments/20230421_145931/'
 filename = "DATA.mat"
 DATA = loadmat(directory + filename)
 # Convert dictionary entries into local variables 
 locals().update(DATA)
 
-
-# plotFrame('position', time_log=time_log, des_Pose_log=comPoseW_des_log, Pose_log=comPoseW_log,
-#           title='CoM', frame='W', sharex=True, sharey=False, start=apex_sample, end=-1)
+time_log = time_log.flatten()
+apex_sample = apex_sample.item()
+plotFrame('position', time_log=time_log, des_Pose_log=comPoseW_des_log, Pose_log=comPoseW_log,
+          title='CoM', frame='W', sharex=True, sharey=False, start=apex_sample, end=-1)
 # plotFrame('velocity', time_log=time_log, des_Twist_log=comTwistW_des_log, Twist_log=comTwistW_log,
 #           title='CoM', frame='W', sharex=True, sharey=False, start=apex_sample, end=-1)
 # plotFrame('position', time_log=time_log, des_Pose_log=basePoseW_des_log, Pose_log=basePoseW_log,
