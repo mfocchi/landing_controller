@@ -17,6 +17,32 @@ def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr += 'useIK: ' + str(simulation['useIK'])
     return SIMstr
 
+def findLimitsInitCond2str_angularTest(simulation):
+    s0 = ' FIND LIMITS \n'
+    s0 += '\n'
+    s0 += ' base height: ' + str(np.round(simulation['pose'][2], 3)) + ' m \n'
+    s0 += ' base lin vel: ' + str(np.round(simulation['twist'][:3], 3)) + ' m/s \n'
+    s0 += ' test limit: ' + simulation['test_limit'] +'\n'
+    s0 += ' useWBC: ' + str(simulation['useWBC']) + ' \n'
+    s0 += ' useIK: ' + str(simulation['useIK']) + ' '
+
+    max_row = max(len(row) for row in s0.split('\n'))
+
+    s1 = ''
+    for row in s0.split('\n'):
+        l = len(row)
+        row = '*' + row
+        if l == 0:
+            row += '*' * max_row
+        elif 0<l < max_row:
+            row += ' ' * (max_row - l)
+        row += '*\n'
+        s1 += row
+    s1 = s1[:-1] # remove the last \n
+    n_char = max(len(row) for row in s1.split('\n'))
+    sim_str = '*'*n_char + '\n' +  s1 + '\n' + '*'*n_char
+    return sim_str
+
 def findLimitsInitCond2str(simulation):
     s0 = ' FIND LIMITS \n'
     s0 += '\n'
@@ -156,5 +182,5 @@ def setSavePath(SETTINGS, directory='simulation'):
             os.mkdir(os.environ['LOCOSIM_DIR'] + '/landing_controller/'+directory)
         except OSError as error:
             pass
-        SETTINGS['save_path'] = os.environ['LOCOSIM_DIR'] + '/landing_controller/simulations/' + now_s
+        SETTINGS['save_path'] = os.environ['LOCOSIM_DIR'] + '/landing_controller/' + directory +"/"+ now_s
         os.mkdir(SETTINGS['save_path'])

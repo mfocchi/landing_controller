@@ -50,7 +50,7 @@ if __name__ == '__main__':
     test['pulse2'] = test['pulse']**2
     try:
 
-        p.startController(world_name='fast.world', use_ground_truth_contacts=False, additional_args=['gui:=false', 'go0_conf:=standDown', 'pid_discrete_implementation:=true'])
+        p.startController(world_name='slow.world', use_ground_truth_contacts=False, additional_args=['gui:=true', 'go0_conf:=standDown', 'pid_discrete_implementation:=true'])
 
         p.startupProcedure()  # overloaded method
 
@@ -75,6 +75,7 @@ if __name__ == '__main__':
             #print(p.time, state)
             # update the kinematics
             p.updateKinematics()
+            collided = p.checkGroundCollisions()
             # p.visualizeContacts()
             # Reference Generation
             if state == 0:

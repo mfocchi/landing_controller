@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
         lm = LandingManager(p, SETTINGS)
 
-        ret = lm.run(0, useIK=True, useWBC=True)
+        ret = lm.run(0, useIK=True, useWBC=True, naive=False)
 
 
 

@@ -36,7 +36,7 @@ if __name__ == '__main__':
         p.startController(world_name=world_name,
                           use_ground_truth_pose=True,
                           use_ground_truth_contacts=False,
-                          additional_args=['gui:=true',
+                          additional_args=['gui:=false',
                                            'go0_conf:=standDown',
                                            'pid_discrete_implementation:=false'])
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
                        simulation['useIK'],
                        simulation['useWBC'],
                        simulation['typeWBC'],
-                       simplified=False)
+                       naive=False)
                 if SETTINGS['verbose']:
                     print("--> simulation " + simulation['id'] + 'completed. Stabilized?' + str(ret))
 
