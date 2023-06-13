@@ -1,9 +1,0 @@
-id: 07
-name: D_pitch_mix
-base height: 0.85 m
-base pitch: 10.026761414789405 deg
-base fw vel: 0.5 m/s
-base lat vel: 0.5 m/s
-base pitch vel: 0.0 deg/s
-t_video: [ 10.02800]
-t_video_speedUpDown: [ 50.14000]

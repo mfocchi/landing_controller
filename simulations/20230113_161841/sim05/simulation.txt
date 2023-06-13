@@ -1,9 +1,0 @@
-id: 05
-name: C_pitch
-base height: 0.85 m
-base pitch: 10.026761414789405 deg
-base fw vel: 0.5 m/s
-base lat vel: 0.0 m/s
-base pitch vel: 0.0 deg/s
-t_video: [ 8.18000]
-t_video_speedUpDown: [ 40.90000]
