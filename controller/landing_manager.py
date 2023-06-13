@@ -34,7 +34,7 @@ class LandingManager:
             q_des = self.p.qj_0.copy()
             qd_des = np.zeros_like(q_des)
             tau_ffwd = np.zeros_like(q_des)
-            self.p.unpause_physics_client()
+            #self.p.unpause_physics_client()
             self.p.reset(basePoseW=basePose_init,
                          baseTwistW=baseTwist_init,
                          resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
@@ -75,14 +75,16 @@ class LandingManager:
 
         start_time = self.p.time
         flag5s = False
-        collided = False
+        base_collided = False
+        kfes_collided = False
         while not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
             self.p.updateKinematics(update_legOdom=self.lc.lc_events.touch_down.detected)
             # check for collisions (only in simualtion)
             if not self.p.real_robot:
-                collided = collided or self.p.checkGroundCollisions()
+                base_collided = base_collided or self.p.checkBaseCollisions()
+                kfes_collided = kfes_collided or self.p.checkKFECollisions()
 
             # self.p.visualizeContacts()
 
@@ -240,7 +242,10 @@ class LandingManager:
             self.p.send_command(q_des, qd_des, tau_ffwd)
 
         if not self.p.real_robot:
-            self.p.pause_physics_client()
+            #self.p.pause_physics_client()
+            self.p.q_des = self.p.qj_0.copy()
+            self.p.qd_des = np.zeros(self.p.robot.na)
+            self.p.tau_ffwd = np.zeros(self.p.robot.na)
 
 
             self.settings['SIMS'][simulation_counter]['directory'] = self.settings['save_path']+'/sim' + self.settings['SIMS'][simulation_counter]['id']
@@ -278,10 +283,16 @@ class LandingManager:
             for leg in range(4):
                 feet_in_touch = feet_in_touch and self.p.W_contacts[leg][2]<0.03
 
+            stable_standing = np.linalg.norm(self.p.qd) < 0.6
+
             # at the end I want no collision and feet on ground!
-            ret = (not collided) and feet_in_touch
+            print("    base not collided?", not base_collided)
+            print("    kfes not collided?", not kfes_collided)
+            print("    feet in touch?", feet_in_touch)
+            print("    stable standing?", stable_standing)
+            ret = (not base_collided) and (not kfes_collided) and feet_in_touch and stable_standing
         else:
-            ret = True # the che collision and feet on ground checks are not relevant on real robot
+            ret = True # the collision and feet on ground checks are not relevant on real robot
         return ret
 
 
