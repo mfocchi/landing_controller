@@ -28,7 +28,7 @@ class LandingManager:
                                         q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
                                                       self.p.quaternion,
                                                       q_des]),
-                                        smoothing_param = 0.005)
+                                        smoothing_param = 0.02)
 
         else:
             q_des = self.p.qj_0.copy()

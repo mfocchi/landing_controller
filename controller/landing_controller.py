@@ -180,7 +180,7 @@ class LandingController:
 
         # task for feet in terrain frame
         if self.alpha < 1.:
-            self.alpha = np.around(self.alpha+self.smoothing_param, 2)
+            self.alpha = np.around(self.alpha+self.smoothing_param, 3)
 
         if self.naive:
             self.slip_dyn.zmp_xy[0] = 0.0
