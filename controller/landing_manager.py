@@ -48,7 +48,10 @@ class LandingManager:
                                         smoothing_param = 0.02,
                                         naive = naive)
 
-            self.lc.setCheckTimings(expected_touch_down_time=self.p.time + (2*self.p.basePoseW[2]-0.3)/self.lc.g_mag , clearance=0.05)
+            self.lc.setCheckTimings(expected_lift_off_time=None,
+                                    expected_apex_time=None,
+                                    expected_touch_down_time=self.p.time + np.sqrt(2*(self.p.basePoseW[2]-0.25)/self.lc.g_mag) ,
+                                    clearance=0.05) # about 12 mm of error in touch down
             if self.settings['VIDEO']['save']:
                 # check if some old jpg are still in /tmp
                 remove_jpg_cmd = "rm /tmp/camera_save/*"
