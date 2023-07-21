@@ -120,11 +120,11 @@ def manipulateFig(fig, filename, PLOT_SETTINGS, directory,  verbose = False):
     fig.set_size_inches([PLOT_SETTINGS['width_inches'], PLOT_SETTINGS['height_inches']])
 
     if PLOT_SETTINGS['save']:
-        plt.savefig(directory + '/' + filename+ '.png')
+        plt.savefig(directory + '/' + filename+ '.pdf')
         plt.close()
         del fig
         if verbose:
-            print('Plot ' + filename+ '.png saved', flush=True)
+            print('Plot ' + filename+ '.pdf saved', flush=True)
 
     if PLOT_SETTINGS['show']:
         plt.show()
