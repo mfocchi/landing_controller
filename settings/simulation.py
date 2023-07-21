@@ -15,76 +15,76 @@ import numpy as np
 
 DEG2RAD = np.pi / 180
 SIMS_SETTINGS = []
+SIMS_SETTINGS.append({'name': 'A_high_jump',
+                      'pose': np.array([0., 0., .6, 0., 0., 0]),
+                      'twist': np.array([1., 0.0, 0., 0., 0., 0.]),
+                      'useWBC': True,
+                      'useIK': False,
+                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+                      'id': '',
+                      'directory': ''})
 # SIMS_SETTINGS.append({'name': 'A_high_jump',
 #                       'pose': np.array([0., 0., .6, 0., 0., 0]),
-#                       'twist': np.array([1.5, 0.0, 0., 0., 0., 0.]),
+#                       'twist': np.array([1.0, 0.0, 0., 0., 0., 0.]),
 #                       'useWBC': True,
 #                       'useIK': False,
 #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
 #                       'id': '',
 #                       'directory': ''})
-# # SIMS_SETTINGS.append({'name': 'A_high_jump',
-# #                       'pose': np.array([0., 0., .6, 0., 0., 0]),
-# #                       'twist': np.array([1.0, 0.0, 0., 0., 0., 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': False,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# #
-# # SIMS_SETTINGS.append({'name': 'A_high_jump',
-# #                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
-# #                       'twist': np.array([0., 1.0, 0., 0., 0., 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': False,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# #
-# # SIMS_SETTINGS.append({'name': 'A_high_jump',
-# #                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
-# #                       'twist': np.array([0., -1.0, 0., 0., 0., 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': False,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# # SIMS_SETTINGS.append({'name': 'A_high_jump',
-# #                       'pose': np.array([0., 0., 1., 0., 0, 0.]),
-# #                       'twist': np.array([-1., 0., 0., 0., 0.5, 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': False,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# #
-# # SIMS_SETTINGS.append({'name': 'A_high_jump',
-# #                       'pose': np.array([0., 0., 0.85, 0., 0., 0.]),
-# #                       'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': False,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# #
-# # SIMS_SETTINGS.append({'name': 'B_lateral_mix',
-# #                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
-# #                       'twist': np.array([0.3, 0.5, 0., 0., 0., 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': True,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# #
-# # SIMS_SETTINGS.append({'name': 'B_lateral_mix',
-# #                       'pose': np.array([0., 0., 0.85, 0., 0., 0.]),
-# #                       'twist': np.array([0.3, 0.6, 0., 0., 0., 0.]),
-# #                       'useWBC': True,
-# #                       'useIK': False,
-# #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-# #                       'id': '',
-# #                       'directory': ''})
-# #
+#
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
+#                       'twist': np.array([0., 1.0, 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., .6, 0., 0., 0.]),
+#                       'twist': np.array([0., -1.0, 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., 1., 0., 0, 0.]),
+#                       'twist': np.array([-1., 0., 0., 0., 0.5, 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+# SIMS_SETTINGS.append({'name': 'A_high_jump',
+#                       'pose': np.array([0., 0., 0.85, 0., 0., 0.]),
+#                       'twist': np.array([0.5, 0., 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+# SIMS_SETTINGS.append({'name': 'B_lateral_mix',
+#                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
+#                       'twist': np.array([0.3, 0.5, 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': True,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+# SIMS_SETTINGS.append({'name': 'B_lateral_mix',
+#                       'pose': np.array([0., 0., 0.85, 0., 0., 0.]),
+#                       'twist': np.array([0.3, 0.6, 0., 0., 0., 0.]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
 # SIMS_SETTINGS.append({'name': 'C_pitch',
 #                       'pose': np.array([0., 0., 0.6, 0., -20. * DEG2RAD, 0.]),
 #                       'twist': np.array([1.0, 0., 0., 0., 0., 0.]),
@@ -158,7 +158,7 @@ SIMS_SETTINGS = []
 #                       'directory': ''})
 
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
-#                       'pose': np.array([0., 0., 0.6, 10*DEG2RAD, 0., 0.]),
+#                       'pose': np.array([0., 0., 0.6, 5*DEG2RAD, 0., 0.]),
 #                       'twist': np.array([1, 0., 0., 0., 0., 0.]),
 #                       'test_limit': '+roll',
 #                       'useWBC': True,
@@ -168,7 +168,7 @@ SIMS_SETTINGS = []
 #                       'directory': ''})
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
-#                       'pose': np.array([0., 0., 0.6, -10*DEG2RAD, 0., 0.]),
+#                       'pose': np.array([0., 0., 0.6, -5*DEG2RAD, 0., 0.]),
 #                       'twist': np.array([1, 0., 0., 0., 0., 0.]),
 #                       'test_limit': '-roll',
 #                       'useWBC': True,
@@ -178,7 +178,7 @@ SIMS_SETTINGS = []
 #                       'directory': ''})
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
-#                       'pose': np.array([0., 0., 0.6, 0., 20*DEG2RAD, 0.]),
+#                       'pose': np.array([0., 0., 0.6, 0., 5*DEG2RAD, 0.]),
 #                       'twist': np.array([1, 0., 0., 0., 0., 0.]),
 #                       'test_limit': '+pitch',
 #                       'useWBC': True,
@@ -188,7 +188,7 @@ SIMS_SETTINGS = []
 #                       'directory': ''})
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
-#                       'pose': np.array([0., 0., 0.6, 0., -20*DEG2RAD, 0.]),
+#                       'pose': np.array([0., 0., 0.6, 0., -5*DEG2RAD, 0.]),
 #                       'twist': np.array([1, 0., 0., 0., 0., 0.]),
 #                       'test_limit': '-pitch',
 #                       'useWBC': True,
@@ -199,7 +199,7 @@ SIMS_SETTINGS = []
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
 #                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
-#                       'twist': np.array([1, 0., 0., 50*DEG2RAD, 0., 0.]),
+#                       'twist': np.array([1, 0., 0., 5*DEG2RAD, 0., 0.]),
 #                       'test_limit': '+omegax',
 #                       'useWBC': True,
 #                       'useIK': False,
@@ -209,7 +209,7 @@ SIMS_SETTINGS = []
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
 #                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
-#                       'twist': np.array([1, 0., 0., 50*DEG2RAD, 0., 0.]),
+#                       'twist': np.array([1, 0., 0., -5*DEG2RAD, 0., 0.]),
 #                       'test_limit': '-omegax',
 #                       'useWBC': True,
 #                       'useIK': False,
@@ -219,7 +219,7 @@ SIMS_SETTINGS = []
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
 #                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
-#                       'twist': np.array([1, 0., 0., 0., 50*DEG2RAD, 0.]),
+#                       'twist': np.array([1, 0., 0., 0., 5*DEG2RAD, 0.]),
 #                       'test_limit': '+omegay',
 #                       'useWBC': True,
 #                       'useIK': False,
@@ -229,7 +229,7 @@ SIMS_SETTINGS = []
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_angular',
 #                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
-#                       'twist': np.array([1, 0., 0., 0., 50*DEG2RAD, 0.]),
+#                       'twist': np.array([1, 0., 0., 0., -5*DEG2RAD, 0.]),
 #                       'test_limit': '-omegay',
 #                       'useWBC': True,
 #                       'useIK': False,
@@ -237,39 +237,60 @@ SIMS_SETTINGS = []
 #                       'id': '',
 #                       'directory': ''})
 #
-SIMS_SETTINGS.append({'name': 'find_limits_linear',
-                      'pose': np.array([0., 0., 0.35, 0., 0., 0.]),
-                      'twist': np.array([0, 0., 0., 0., 0., 0.]),
-                      'magnitude_init_list':  0.5*np.ones(12), #np.array([1.5, 1.4, 1.7, 2.2, 1.9, 2.2, 2.8, 2.2, 1.9, 2.1, 1.7, 1.4]),
-                      'useWBC': True,
-                      'useIK': False,
-                      'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
-                      'id': '',
-                      'directory': ''})
-
-# SIMS_SETTINGS.append({'name': 'find_limits_linear',
-#                       'pose': np.array([0., 0., 0.5, 0., 0., 0.]),
-#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
-#                       'magnitude_init_list':  0.5*np.ones(12), #np.array([1.5, 1.4, 1.7, 2.2, 1.9, 2.2, 2.8, 2.2, 1.9, 2.1, 1.7, 1.4]),
+# SIMS_SETTINGS.append({'name': 'find_limits_angular',
+#                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
+#                       'twist': np.array([1, 0., 0., 0., 0., 5*DEG2RAD]),
+#                       'test_limit': '+omegaz',
 #                       'useWBC': True,
 #                       'useIK': False,
 #                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
 #                       'id': '',
 #                       'directory': ''})
 #
+# SIMS_SETTINGS.append({'name': 'find_limits_angular',
+#                       'pose': np.array([0., 0., 0.6, 0., 0., 0.]),
+#                       'twist': np.array([1, 0., 0., 0., 0,-5*DEG2RAD]),
+#                       'test_limit': '-omegaz',
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+# SIMS_SETTINGS.append({'name': 'find_limits_linear',
+#                       'pose': np.array([0., 0., 0.35, 0., 0., 0.]),
+#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
+#                       'magnitude_init_list':  0.5*np.ones(12), #np.array([1.5, 1.4, 1.7, 2.2, 1.9, 2.2, 2.8, 2.2, 1.9, 2.1, 1.7, 1.4]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'qp',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+# SIMS_SETTINGS.append({'name': 'find_limits_linear',
+#                       'pose': np.array([0., 0., 0.5, 0., 0., 0.]),
+#                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
+#                       'magnitude_init_list':  0.5*np.ones(12), #np.array([1.5, 1.4, 1.7, 2.2, 1.9, 2.2, 2.8, 2.2, 1.9, 2.1, 1.7, 1.4]),
+#                       'useWBC': True,
+#                       'useIK': False,
+#                       'typeWBC': 'qp',  # or 'qp' (used only if useWBC is True)
+#                       'id': '',
+#                       'directory': ''})
+#
+#
 #
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_linear',
 #                       'pose': np.array([0., 0., 0.8, 0., 0., 0.]),
 #                       'twist': np.array([0, 0., 0., 0., 0., 0.]),
-#                       'magnitude_init_list':  0.5*np.ones(12),#np.array([3.0, 3.3, 2.7, 2.3, 2.1, 2.1, 2.2, 2.1, 2.0, 2.3, 2.7, 3.3]),
+#                       'magnitude_init_list':  0.1*np.ones(12),#np.array([3.0, 3.3, 2.7, 2.3, 2.1, 2.1, 2.2, 2.1, 2.0, 2.3, 2.7, 3.3]),
 #                       'useWBC': True,
 #                       'useIK': False,
-#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'typeWBC': 'qp',  # or 'qp' (used only if useWBC is True)
 #                       'id': '',
 #                      'directory': ''})
-
-
+#
+#
 #
 # SIMS_SETTINGS.append({'name': 'find_limits_linear',
 #                       'pose': np.array([0., 0., 1., 0., 0., 0.]),
@@ -277,6 +298,6 @@ SIMS_SETTINGS.append({'name': 'find_limits_linear',
 #                       'magnitude_init_list':  0.5*np.ones(12),#np.array([2.6, 2.2, 1.6, 1.3, 1.7, 1.3, 2.2, 1.1, 1.7, 1.4, 1.6, 2.1]),
 #                       'useWBC': True,
 #                       'useIK': False,
-#                       'typeWBC': 'projection',  # or 'qp' (used only if useWBC is True)
+#                       'typeWBC': 'qp',  # or 'qp' (used only if useWBC is True)
 #                       'id': '',
 #                       'directory': ''})

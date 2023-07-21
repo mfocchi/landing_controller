@@ -3,8 +3,8 @@ matplotlib.use('TkAgg')
 import sys
 sys.path.append('../')
 from base_controllers.quadruped_controller import Controller
-from landing_controller.controller.landing_manager import LandingManager
-from landing_controller.controller import SETTINGS
+from landing_controller.controller.landingManager import LandingManager
+from landing_controller.settings import SETTINGS # simumation details are in SETTINGS['SIMS']
 from landing_controller.controller.utility import *
 
 
