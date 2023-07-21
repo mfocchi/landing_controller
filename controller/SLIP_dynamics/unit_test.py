@@ -1,4 +1,4 @@
-from SLIP_dynamics_lib import SLIP_dynamics
+from landing_controller.lib.SLIP_dynamics_lib import SLIP_dynamics
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
