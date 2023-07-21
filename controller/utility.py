@@ -37,6 +37,20 @@ class LcEvents:
         return f"Landing controller events \n  \t lift off: \t\t {self.lift_off} \n  \t apex: \t\t {self.apex} \n   \t touch down: \t {self.touch_down} \n"
 
 
+#########################
+# normal var descriptor #
+#########################
+class Normal:
+    def __init__(self, mean, std, size):
+        self.mean = mean
+        self.std = std
+        self.size = size
+
+    def draw(self):
+        return np.random.normal(self.mean, self.std, self.size)
+
+
+
 def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr = ''
     SIMstr += 'id: '   + simulation['id'] + '\n'
