@@ -39,9 +39,6 @@ if __name__ == '__main__':
         if SETTINGS['save_log']:
             sys.stdout = logfile
 
-        lm = LandingManager(p, SETTINGS)
-        if SETTINGS['save_log']:
-            sys.stdout = logfile
 
         for simulation in SETTINGS['SIMS']:
             if 'find_limits' not in simulation['name']:
