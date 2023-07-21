@@ -4,6 +4,38 @@ import datetime
 from base_controllers.utils.common_functions import *
 DEG2RAD = np.pi/180
 
+###############################
+# TIMINGS DESCRIPTION CLASSES #
+###############################
+
+class Event:
+    def __init__(self, name):
+        self.name = name
+        self.t = 0.
+        self.sample = -1
+        self.detected = False
+
+    def set(self, t, sample):
+        self.t = t
+        self.sample = sample
+        self.detected = True
+
+    def __repr__(self):
+        return f"(t: \t{self.t} [s], sample: \t{self.sample}, detected: \t{self.detected})"
+
+class LcEvents:
+    def __init__(self):
+        self.lift_off = Event('Lift off')
+        self.apex = Event('Apex')
+        self.touch_down = Event('Touch down')
+
+
+        self._list_of_events = [self.lift_off, self.apex, self.touch_down]
+        self._headers = ['Event', 'Time (s)', '# Sample']
+
+    def __repr__(self):
+        return f"Landing controller events \n  \t lift off: \t\t {self.lift_off} \n  \t apex: \t\t {self.apex} \n   \t touch down: \t {self.touch_down} \n"
+
 
 def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr = ''
