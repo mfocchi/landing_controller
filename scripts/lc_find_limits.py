@@ -32,7 +32,9 @@ if __name__ == '__main__':
 
         p.startupProcedure()
 
+
         lm = LandingManager(p, SETTINGS)
+        lm.p.setWBCConstraints()
         sim_counter = -1
         if SETTINGS['save_log']:
             sys.stdout = logfile
