@@ -1,42 +1,10 @@
 import numpy as np
 import pinocchio as pin
 from base_controllers.utils.utils import Utils
-from lib.SLIP_dynamics_lib import SLIP_dynamics
+from landing_controller.lib.SLIP_dynamics_lib import SLIP_dynamics
+from landing_controller.controller.utility import LcEvents
 
 from matplotlib import pyplot as plt
-
-###############################
-# TIMINGS DESCRIPTION CLASSES #
-###############################
-
-class Event:
-    def __init__(self, name):
-        self.name = name
-        self.t = 0.
-        self.sample = -1
-        self.detected = False
-
-    def set(self, t, sample):
-        self.t = t
-        self.sample = sample
-        self.detected = True
-
-    def __repr__(self):
-        return f"(t: \t{self.t} [s], sample: \t{self.sample}, detected: \t{self.detected})"
-
-class LcEvents:
-    def __init__(self):
-        self.lift_off = Event('Lift off')
-        self.apex = Event('Apex')
-        self.touch_down = Event('Touch down')
-
-
-        self._list_of_events = [self.lift_off, self.apex, self.touch_down]
-        self._headers = ['Event', 'Time (s)', '# Sample']
-
-    def __repr__(self):
-        return f"Landing controller events \n  \t lift off: \t\t {self.lift_off} \n  \t apex: \t\t {self.apex} \n   \t touch down: \t {self.touch_down} \n"
-
 
 # In the class appears vectors and matrices describing pose and twist. Explanation:
 # A_p     : position of a generic point expressed wrt frame A
@@ -78,12 +46,18 @@ class LandingController:
         # q_neutral[0:7] and v_neutral[0:6] cannot be modified
         self._q_neutral = pin.neutral(self.robot.model)
 
-        foot2base = self.base_height(q_j=self.u.mapToRos(self.qj_home))
-        floor2foot = 0.02
-        floor2base = foot2base + floor2foot
-        self._q_neutral[2] = floor2base
-        com_home = self.robot.robotComW(self._q_neutral)
-        self.L = com_home[2]
+        self.foot2base = self.base_height(q_j=self.qj_home)
+        # here I assume all the feet has the same radius
+        floor2foot = 0.
+        for obj in robot.collision_model.geometryObjects:
+            if "foot" in obj.name:
+                if hasattr(obj.geometry, 'radius'):
+                    floor2foot = obj.geometry.radius
+            break
+
+        self._q_neutral[2] = self.foot2base + floor2foot
+        self.com_home = self.robot.robotComW(self._q_neutral)
+        self.L = self.com_home[2]
 
         self.max_spring_compression = 0.4 * self.L
         w_v = 1.
@@ -263,7 +237,7 @@ class LandingController:
             for leg in range(4):
                 self.T_feet_task[leg][0] = self.T_feet_home[leg][0] + self.alpha * self.slip_dyn.zmp_xy[0]
                 self.T_feet_task[leg][1] = self.T_feet_home[leg][1] + self.alpha * self.slip_dyn.zmp_xy[1]
-                self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.slip_dyn.T_p_com_ref[:, self.ref_k])
+                self.B_feet_task[leg] = B_R_T_des @ (self.T_feet_task[leg] - self.pose_des[:3])
 
         else: # lc controller
             self.Rdyn = self.MAT_ANG @ self.Rdyn

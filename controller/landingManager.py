@@ -1,5 +1,5 @@
 import numpy as np
-from .landing_controller import LandingController
+from .landingController import LandingController
 from .utility import makePlots, saveInitConds
 import copy
 import datetime
@@ -8,11 +8,12 @@ import pinocchio as pin
 import rospy as ros
 
 class LandingManager:
-    def __init__(self, p, settings = None):
+    def __init__(self, p, settings = None, noise=None):
         self.p = p
         self.lc = None
 
         self.settings = settings
+        self.noise = noise
 
     def run(self, simulation_counter, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False):
         #########
@@ -34,10 +35,16 @@ class LandingManager:
             q_des = self.p.qj_0.copy()
             qd_des = np.zeros_like(q_des)
             tau_ffwd = np.zeros_like(q_des)
-            #self.p.unpause_physics_client()
+            self.p.unpause_physics_client()
             self.p.reset(basePoseW=basePose_init,
                          baseTwistW=baseTwist_init,
                          resetPid=useWBC)  # if useWBC = True, gains of pid are modified in landing phase
+            baseLinVelW_init = baseTwist_init[:3].copy()
+            if self.noise is not None:
+                if 'horz_vel_init' in self.noise:
+                    baseLinVelW_init[:2] += self.noise['horz_vel_init'].draw()
+                print("Noisy initial horizontal velocity: " + str(baseLinVelW_init[:2]) + " [m/s]", flush=True)
+
 
             q_des = self.p.q.copy()
             self.lc = LandingController(robot=self.p.robot,
@@ -57,7 +64,7 @@ class LandingManager:
                 remove_jpg_cmd = "rm /tmp/camera_save/*"
                 os.system(remove_jpg_cmd)
 
-            self.p.setGravity(-9.81)
+            self.p.setGravity(-self.lc.g_mag)
 
         ###############################
         #### FINITE STATE MACHINE #####
@@ -80,7 +87,7 @@ class LandingManager:
         while not ros.is_shutdown():
             # print('fsm_state:', fsm_state, 'isApexReached:', isApexReached, 'isTouchDownOccurred:', isTouchDownOccurred)
             # update kinematic and dynamic model
-            self.p.updateKinematics(update_legOdom=self.lc.lc_events.touch_down.detected)
+            self.p.updateKinematics(update_legOdom=self.lc.lc_events.touch_down.detected, noise=self.noise)
             # check for collisions (only in simualtion)
             if not self.p.real_robot:
                 base_collided = base_collided or self.p.checkBaseCollisions()
@@ -96,7 +103,7 @@ class LandingManager:
                 if self.p.real_robot:
                     if self.p.time - start_time > 5:
                         if flag5s == False:
-                            print("You can drop the robot now")
+                            print("You can drop the robot now", flush=True)
                             self.p.imu_utils.baseLinTwistImuW[:] = 0.
                             flag5s = True
                         self.lc.apexReachedReal(t=self.p.time, sample=self.p.log_counter,
@@ -169,8 +176,11 @@ class LandingManager:
                     # compute landing trajectory + kinematic adjustment
                     w_R_hf = pin.rpy.rpyToMatrix(0, 0, self.p.u.angPart(self.p.basePoseW)[2])
 
-
-                    self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.p.u.linPart(self.p.baseTwistW))
+                    if self.p.real_robot:
+                        self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.p.u.linPart(self.p.baseTwistW))
+                    else:
+                        baseLinVelW_init[2] = self.p.baseTwistW[2]
+                        self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ baseLinVelW_init)
 
                     # set references
                     # joints position
@@ -178,7 +188,7 @@ class LandingManager:
                         q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
                                                                  leg,
                                                                  self.p.legConfig[leg][0],
-                                                                 self.p.legConfig[leg][1])
+                                                                 self.p.legConfig[leg][1], self.settings['verbose'])
 
                         if isFeasible:
                             self.p.u.setLegJointState(i, q_des_leg, q_des)
@@ -211,7 +221,8 @@ class LandingManager:
                         q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
                                                                  leg,
                                                                  self.p.legConfig[leg][0],
-                                                                 self.p.legConfig[leg][1])
+                                                                 self.p.legConfig[leg][1],
+                                                                 self.settings['verbose'])
                         if isFeasible:
                             self.p.u.setLegJointState(i, q_des_leg, q_des)
 
@@ -242,10 +253,10 @@ class LandingManager:
             self.p.send_command(q_des, qd_des, tau_ffwd)
 
         if not self.p.real_robot:
-            #self.p.pause_physics_client()
-            self.p.q_des = self.p.qj_0.copy()
-            self.p.qd_des = np.zeros(self.p.robot.na)
-            self.p.tau_ffwd = np.zeros(self.p.robot.na)
+            self.p.pause_physics_client()
+            # self.p.q_des = self.p.qj_0.copy()
+            # self.p.qd_des = np.zeros(self.p.robot.na)
+            # self.p.tau_ffwd = np.zeros(self.p.robot.na)
 
 
             self.settings['SIMS'][simulation_counter]['directory'] = self.settings['save_path']+'/sim' + self.settings['SIMS'][simulation_counter]['id']
@@ -283,14 +294,18 @@ class LandingManager:
             for leg in range(4):
                 feet_in_touch = feet_in_touch and self.p.W_contacts[leg][2]<0.03
 
+
+            convergence = np.linalg.norm( self.p.q - self.p.qj_0 ) < 1.
+
             stable_standing = np.linalg.norm(self.p.qd) < 0.6
 
             # at the end I want no collision and feet on ground!
-            print("    base not collided?", not base_collided)
-            print("    kfes not collided?", not kfes_collided)
-            print("    feet in touch?", feet_in_touch)
-            print("    stable standing?", stable_standing)
-            ret = (not base_collided) and (not kfes_collided) and feet_in_touch and stable_standing
+            print("    base not collided?", not base_collided, flush=True)
+            print("    kfes not collided?", not kfes_collided, flush=True)
+            print("    feet in touch?", feet_in_touch, flush=True)
+            print("    convergence?", convergence, ": norm( q - q0 )=" + str(np.linalg.norm( self.p.q - self.p.qj_0 ))+" [rad]", flush=True)
+            print("    stable standing?", stable_standing, ": norm(qd)=" + str(np.linalg.norm(self.p.qd))+" [rad/s]", flush=True)
+            ret = (not base_collided) and (not kfes_collided) and feet_in_touch and convergence and stable_standing
         else:
             ret = True # the collision and feet on ground checks are not relevant on real robot
         return ret
