@@ -46,19 +46,17 @@ if __name__ == '__main__':
                 assert simulation['name'] != 'find_limits', "You should use lc_simulation.py. Exit..."
             elif simulation['name'] == 'find_limits_linear':
                 sim_counter += 1
-
                 sim_str = findLimitsInitCond2str(simulation)
                 print(sim_str)
                 for naive in [True, False]:
-
                     if naive:
                         ctrl = 'naive approach'
-                        ctrl_counter = 1
+                        ctrl_str= 'na'
                     else:
                         ctrl = 'LC'
-                        ctrl_counter = 0
+                        ctrl_str = 'lc'
                     for ii, phase_deg in enumerate(phase_deg_list):
-                        print( "Searching maximum magnitude for base height"+ str(simulation['pose'][2])+ " m for phase "
+                        print( "Searching maximum magnitude for base height "+ str(simulation['pose'][2])+ " m for phase "
                                + str(phase_deg) + " deg with " + ctrl, flush=True)
                         phase_rad = phase_deg * np.pi / 180
                         unit_baseTwist = np.array([np.cos(phase_rad), np.sin(phase_rad), 0., 0., 0., 0.])
@@ -67,8 +65,6 @@ if __name__ == '__main__':
                         magnitude_succeed = []
                         fail_couter = 0
                         for test_id in range(n_test):
-                            if magnitude_try[test_id]<1.7:
-                                continue
 
                             simulation_try = {'name': simulation['name'],
                                               'pose': simulation['pose'],
@@ -80,12 +76,12 @@ if __name__ == '__main__':
                                               't_video': 0.0,
                                               'directory': ''}
                             setId(simulation_try, test_id)
-                            simulation_try['id'] = str(2) + str(ctrl_counter) + str(phase_deg) + str(test_id)
+                            simulation_try['id'] = str(sim_counter) + ctrl_str + str(phase_deg) + str(test_id)
                             SETTINGS['SIMS'][sim_counter] = simulation_try
 
                             print("--> (sim" +simulation_try['id']+") Testing magnitude: " + str(np.around(magnitude_try[test_id] , 1)) + " [m/s] with " + ctrl, flush=True)
 
-                            ret = lm.run(0,
+                            ret = lm.run(sim_counter,
                                          simulation_try['pose'],
                                          simulation_try['twist'],
                                          simulation_try['useIK'],
@@ -96,11 +92,12 @@ if __name__ == '__main__':
                             if ret:
                                 print('    Succeed')
                                 magnitude_succeed.append(np.around(magnitude_try[test_id] , 1))
+                                fail_couter = 0
                             else:
                                 print('    Failed')
-                                fail_couter += 1
+                                fail_couter += 1 # number of subsequent fails
 
-                            if fail_couter > 3 and magnitude_try[test_id] > 1.5:
+                            if fail_couter > 3:
                                 break
 
                         print('#' * 60)
