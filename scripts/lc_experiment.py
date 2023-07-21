@@ -3,27 +3,10 @@
 # it does not call reset,
 # (not used yet)
 
-
-import matplotlib
-matplotlib.use('TkAgg')
-import numpy as np
-import rospy as ros
-import sys
-import os
-sys.path.append('../')
 from base_controllers.quadruped_controller import Controller
 from landing_controller.controller.landingManager import LandingManager
 from landing_controller.settings import SETTINGS # simumation details are in SETTINGS['SIMS']
 from landing_controller.controller.utility import *
-import base_controllers.params as conf
-import datetime
-
-np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
-                    floatmode='fixed',  # print fixed number of digits ...
-                    precision=4,        # ... 4
-                    sign=' ',           # print space if sign is plus
-                    suppress=True,      # suppress scientific notation
-                    threshold=np.inf)
 
 
 ROBOT_NAME = 'go1'  # go1, solo, (aliengo)

@@ -1,20 +1,7 @@
-import matplotlib
-matplotlib.use('TkAgg')
-import sys
-sys.path.append('../')
 from base_controllers.quadruped_controller import Controller
 from landing_controller.controller.landingManager import LandingManager
 from landing_controller.settings import SETTINGS # simumation details are in SETTINGS['SIMS']
 from landing_controller.controller.utility import *
-
-
-np.set_printoptions(linewidth=np.inf,   # number of characters per line before new line
-                    floatmode='fixed',  # print fixed number of digits ...
-                    precision=4,        # ... 4
-                    sign=' ',           # print space if sign is plus
-                    suppress=True,      # suppress scientific notation
-                    threshold=np.inf)
-
 
 ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
 world_name = 'slow.world'
