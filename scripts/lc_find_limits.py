@@ -10,6 +10,7 @@ use_gui = False
 
 phase_deg_list = np.arange(-180, 180, 30)
 #magnitude_init_list = np.ones_like(phase_deg_list)
+delta_deg = 5
 
 if __name__ == '__main__':
     setSavePath(SETTINGS, 'simulations')
@@ -115,21 +116,25 @@ if __name__ == '__main__':
                     simulation['pose'][3:6] = 0
                     simulation['twist'][3:6] = 0
                     if simulation['test_limit'] == '+roll':
-                        simulation['pose'][3] = simtry_counter * 10 * DEG2RAD
+                        simulation['pose'][3] = simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '-roll':
-                        simulation['pose'][3] = -simtry_counter * 10 * DEG2RAD
+                        simulation['pose'][3] = -simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '+pitch':
-                        simulation['pose'][4] = simtry_counter * 10 * DEG2RAD
+                        simulation['pose'][4] = simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '-pitch':
-                        simulation['pose'][4] = -simtry_counter * 10 * DEG2RAD
+                        simulation['pose'][4] = -simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '+omegax':
-                        simulation['twist'][3] = simtry_counter * 10 * DEG2RAD
+                        simulation['twist'][3] = simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '-omegax':
-                        simulation['twist'][3] = -simtry_counter * 10 * DEG2RAD
+                        simulation['twist'][3] = -simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '+omegay':
-                        simulation['twist'][4] = simtry_counter * 10 * DEG2RAD
+                        simulation['twist'][4] = simtry_counter * delta_deg * DEG2RAD
                     elif simulation['test_limit'] == '-omegay':
-                        simulation['twist'][4] = -simtry_counter * 10 * DEG2RAD
+                        simulation['twist'][4] = -simtry_counter * delta_deg * DEG2RAD
+                    elif simulation['test_limit'] == '+omegaz':
+                        simulation['twist'][5] = simtry_counter * delta_deg * DEG2RAD
+                    elif simulation['test_limit'] == '-omegaz':
+                        simulation['twist'][5] = -simtry_counter * delta_deg * DEG2RAD
 
                     simulation_try = {'name': simulation['name'],
                                       'pose': simulation['pose'],
@@ -165,24 +170,29 @@ if __name__ == '__main__':
                         break
 
                 if 'roll' in simulation_try['test_limit']:
-                    roll_rad = simulation_try['pose'][3] - np.sign(simulation_try['pose'][3]) * 10*DEG2RAD
+                    roll_rad = simulation_try['pose'][3] - np.sign(simulation_try['pose'][3]) * delta_deg *DEG2RAD
                     roll_deg = np.round(roll_rad/DEG2RAD, 4)
                     print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(roll_rad, 4) )+ " [rad] = " +str(roll_deg) + " [deg]")
 
                 elif 'pitch' in simulation_try['test_limit']:
-                    pitch_rad =  simulation_try['pose'][4] - np.sign(simulation_try['pose'][4]) * 10*DEG2RAD
+                    pitch_rad =  simulation_try['pose'][4] - np.sign(simulation_try['pose'][4]) * delta_deg *DEG2RAD
                     pitch_deg = np.round(pitch_rad/DEG2RAD, 4)
                     print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(pitch_rad, 4) )+ " [rad] = " +str(pitch_deg) + " [deg]")
 
                 elif 'omegax' in simulation_try['test_limit']:
-                    omegax_rad = simulation_try['twist'][3] - np.sign(simulation_try['twist'][3]) * 10 * DEG2RAD
+                    omegax_rad = simulation_try['twist'][3] - np.sign(simulation_try['twist'][3]) * delta_deg * DEG2RAD
                     omegax_deg = np.round(omegax_rad/ DEG2RAD, 4)
                     print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(omegax_rad, 4) ) + " [rad/s] = " + str(omegax_deg) + " [deg/s]")
 
                 elif 'omegay' in simulation_try['test_limit']:
-                    omegay_rad = simulation_try['twist'][4] - np.sign(simulation_try['twist'][4]) * 10 * DEG2RAD
+                    omegay_rad = simulation_try['twist'][4] - np.sign(simulation_try['twist'][4]) * delta_deg * DEG2RAD
                     omegay_deg = np.round(omegay_rad / DEG2RAD, 4)
                     print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(omegay_rad, 4) ) + " [rad/s] = " + str(omegay_deg) + " [deg/s]")
+
+                elif 'omegaz' in simulation_try['test_limit']:
+                    omegaz_rad = simulation_try['twist'][5] - np.sign(simulation_try['twist'][5]) * delta_deg * DEG2RAD
+                    omegaz_deg = np.round(omegaz_rad / DEG2RAD, 4)
+                    print('Limit ' + simulation_try['test_limit'] +' '+ str( np.round(omegaz_rad, 4) ) + " [rad/s] = " + str(omegaz_deg) + " [deg/s]")
 
 
 
