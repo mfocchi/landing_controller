@@ -4,6 +4,11 @@ from  scipy.special import comb
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from landing_controller.controller.vhisip_dynamics import VHSIP
+from mpl_toolkits.mplot3d import axes3d
+from landing_controller.controller.feasibility import *
+import os
+
+np.set_printoptions(threshold=np.inf, precision = 5, linewidth = 10000, suppress = True)
 
 def bezier(w, tau):
     b = 0.
@@ -169,48 +174,50 @@ print('wasol: ', wasol)
 
 
 # plot bezier
-fig, axs = plt.subplots(3, 1, figsize=(10, 5))
-
 time, posz = bezierTraj(wpsol, T0=0, Tf=Tsol, step=0.002)
 velz = bezierTraj(wvsol/Tsol, T0=0, Tf=Tsol, step=0.002)[1]
 accz = bezierTraj(wasol/(Tsol**2), T0=0, Tf=Tsol, step=0.002)[1]
 
-axs[0].plot(time, posz)
-axs[0].set_ylabel('position [m]')
-axs[0].hlines(pmin, 0, time[-1], linestyles='dashed')
-axs[0].hlines(pmax, 0, time[-1], linestyles='dashed')
-axs[0].plot(0, p0, marker="o", markersize=5)
-color0 = axs[0].lines[0].get_color()
-axs[0].vlines(tvsol, pmin, pmax, linestyles='dashed', colors=color0)
-if pf is not None and (pmin < pf < pmax):
-    axs[0].plot(time[-1], pf, marker="o", markersize=5)
-axs[0].grid()
+# fig, axs = plt.subplots(3, 1, figsize=(10, 5))
+# axs[0].plot(time, posz)
+# axs[0].set_ylabel('position [m]')
+# axs[0].hlines(pmin, 0, time[-1], linestyles='dashed')
+# axs[0].hlines(pmax, 0, time[-1], linestyles='dashed')
+# axs[0].plot(0, p0, marker="o", markersize=5)
+# color0 = axs[0].lines[0].get_color()
+# axs[0].vlines(tvsol, pmin, pmax, linestyles='dashed', colors=color0)
+# if pf is not None and (pmin < pf < pmax):
+#     axs[0].plot(time[-1], pf, marker="o", markersize=5)
+# axs[0].grid()
+#
+#
+# axs[1].plot(time, velz)
+# axs[1].set_ylabel('velocity [m/s]')
+# axs[1].plot(0, v0, marker="o", markersize=5)
+# axs[1].vlines(tvsol, velz[0], velz[-1], linestyles='dashed', colors=color0)
+# axs[1].grid()
+#
+#
+# axs[2].plot(time, accz)
+# axs[2].set_xlabel('time [s]')
+# axs[2].set_ylabel('acceleration [m/s^2]')
+# axs[2].hlines(0, 0, time[-1], linestyles='dashed')
+# axs[2].hlines(amax, 0, time[-1], linestyles='dashed')
+# axs[2].vlines(tauvsol*Tsol, 0, amax, linestyles='dashed', colors=color0)
+# axs[2].grid()
+#
+# plt.subplots_adjust(right=0.85)
 
 
-axs[1].plot(time, velz)
-axs[1].set_ylabel('velocity [m/s]')
-axs[1].plot(0, v0, marker="o", markersize=5)
-axs[1].vlines(tvsol, velz[0], velz[-1], linestyles='dashed', colors=color0)
-axs[1].grid()
 
-
-axs[2].plot(time, accz)
-axs[2].set_xlabel('time [s]')
-axs[2].set_ylabel('acceleration [m/s^2]')
-axs[2].hlines(0, 0, time[-1], linestyles='dashed')
-axs[2].hlines(amax, 0, time[-1], linestyles='dashed')
-axs[2].vlines(tauvsol*Tsol, 0, amax, linestyles='dashed', colors=color0)
-axs[2].grid()
-
-plt.subplots_adjust(right=0.85)
-
-####################
-# VHSIP TRAJECTORY #
-####################
+# zmp bounds
+uxmin = -0.15
+uxmax = 0.15
+uymin = -0.08
+uymax = 0.08
 L = p0
-vhsip = VHSIP(dt=0.002, L=L, g_mag=9.81, w_v=1., w_p=1., w_u=1.)
 
-state_x0 = np.array([[-30],
+state_x0 = np.array([[0.5],
                      [0.]])
 
 state_y0 = np.array([[0.],
@@ -218,25 +225,34 @@ state_y0 = np.array([[0.],
 
 state_z0 = np.array([[v0],
                      [0.]])
+####################
+# VHSIP TRAJECTORY #
+####################
+# strategy 1: set final velocity
 
-vhsip.set_init(state_x0, state_y0, state_z0)
-vhsip.set_z_dynamics(time, posz, velz, accz)
-vhsip.solve_ocp()
-vhsip.compute_xy_dynamics(vhsip.zmp_xy[0], vhsip.zmp_xy[1])
+vhsip1 = VHSIP(dt=0.002, L=L, g_mag=9.81, w_v=1., w_p=1., w_u=1.)
+
+
+vhsip1.set_init(state_x0, state_y0, state_z0)
+vhsip1.set_z_dynamics(time, posz, velz, accz)
+vhsip1.solve_ocp(vx_f=0.5, vy_f=0)
+vhsip1.compute_xy_dynamics(vhsip1.zmp_xy[0], vhsip1.zmp_xy[1])
 
 fig, axs = plt.subplots(3, 1,  figsize=(10,5))
 
+fig.suptitle("Strategy 1: set final velocity")
+
 axs[0].set_ylabel("c [$m$]")
-axs[0].plot(vhsip.time, vhsip.T_p_com_ref.T)
+axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref.T)
 axs[0].grid()
 
 axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
-axs[1].plot(vhsip.time, vhsip.T_v_com_ref.T)
+axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref.T)
 axs[1].grid()
 
 
 axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
-axs[2].plot(vhsip.time, vhsip.T_a_com_ref.T)
+axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref.T)
 axs[2].grid()
 
 plt.show()
@@ -253,5 +269,248 @@ fig.legend(handles=legend,
 plt.subplots_adjust(right=0.85)
 
 
+fig = plt.figure()
+fig.suptitle("Strategy 1: set final velocity")
+ax = fig.add_subplot(projection='3d')
+plt.plot(vhsip1.T_p_com_ref[0], vhsip1.T_p_com_ref[1], vhsip1.T_p_com_ref[2])
+
+ax.set_zlim([0., 0.35])
+ax.set_xlabel("$c^{x}$ [$m$]")
+ax.set_ylabel("$c^{y}$ [$m$]")
+ax.set_zlabel("$c^{z}$ [$m$]")
+
+ax.scatter([vhsip1.zmp_xy[0]], [vhsip1.zmp_xy[1]], [[0.]], color='red')
+
+u_lims = np.array([[uxmin, uymin, 0.],
+                   [uxmin, uymax, 0.],
+                   [uxmax, uymax, 0.],
+                   [uxmax, uymin, 0.],
+                   [uxmin, uymin, 0.]])
+
+plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
+
+plt.legend(["$c$", "$u_{o}$"])
+
+# ####################
+# # VHSIP TRAJECTORY #
+# ####################
+# strategy 2: optimize final velocity
+vhsip2 = vhsip1.duplicate()
+
+vhsip2.set_init(state_x0, state_y0, state_z0)
+vhsip2.set_z_dynamics(time, posz, velz, accz)
+vhsip2.propagation_matrices()
+
+Wx   = np.array([[1., 0.],
+                 [0., 1.]])
+
+Wy   = np.array([[1., 0.],
+                 [0., 1.]])
+
+Wxix = np.array([[1., 0.],
+                 [0., 1.]])
+
+Wxiy = np.array([[1., 0.],
+                 [0., 1.]])
+
+
+distmax = 0.35
+
+
+#### NLP formulation
+opti = ca.Opti()#'conic')
+
+# optimization variables: u^x, v^x, u^y, v^y
+xi = opti.variable(4)
+xix = xi[0:2]
+xiy = xi[2:4]
+
+vx = xi[0]
+ux = xi[1]
+
+vy = xi[2]
+uy = xi[3]
+
+
+# cost function
+PHI_N = vhsip2.PHI_xy[:, :, -1].copy()
+GAMMA_N = vhsip2.GAMMA_xy[:, :, -1].copy()
+Cp = vhsip2.Cp.copy()
+
+xn = PHI_N @ state_x0 + (GAMMA_N @ Cp ) @ xix
+yn= PHI_N @ state_y0 + (GAMMA_N @ Cp - np.eye(2)) @ xiy
+
+costx = xn - xix
+costy = yn - xiy
+
+cost = costx.T @ Wx @ costx + costy.T @ Wy @ costy + xix.T @ Wxix @ xix + xiy.T @ Wxiy @ xiy
+
+opti.minimize(cost)
+
+# costraints
+# bounds on zmp
+
+kinematic_region_filename = os.environ['LOCOSIM_DIR']+'/landing_controller/controller/go1_kin_region_l0.mat'
+feasibility = Feasibility(kinematic_region_filename, type='KINEMATICS_AND_FRICTION')
+
+opti.subject_to(uxmin<=ux)
+opti.subject_to(ux<=uxmax)
+opti.subject_to(uymin<=uy)
+opti.subject_to(uy<=uymax)
+
+
+# bounded distance between com
+cn = ca.vcat([xn[1], yn[1], vhsip2.T_p_com_ref[2, -1]])
+u = ca.vcat([ux, uy, 0])
+dist = cn-u
+# opti.subject_to(dist.T@dist <= distmax**2)
+
+
+# opti.solver('qpoases')
+
+p_opts = {"expand":True}
+s_opts = {"max_iter": 1000}
+opti.solver("ipopt",p_opts,
+                    s_opts)
+
+sol = opti.solve()
+vhsip2.zmp_xy[0] = sol.value(ux)
+vhsip2.zmp_xy[1] = sol.value(uy)
+
+vhsip2.compute_xy_dynamics(vhsip2.zmp_xy[0], vhsip2.zmp_xy[1])
+
+fig, axs = plt.subplots(3, 1,  figsize=(10,5))
+
+fig.suptitle("Strategy 2: optimize final velocity")
+
+axs[0].set_ylabel("c [$m$]")
+axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref.T)
+axs[0].grid()
+
+axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
+axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref.T)
+axs[1].grid()
+
+
+axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
+axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref.T)
+axs[2].grid()
+
+plt.show()
+
+legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x"),
+          Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="y"),
+          Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=4, label="z")]
+
+fig.legend(handles=legend,
+           loc="center right",  # Position of legend
+           borderaxespad=1,  # Small spacing around legend box
+           )
+
+plt.subplots_adjust(right=0.85)
+
+fig = plt.figure()
+fig.suptitle("Strategy 2: optimize final velocity")
+ax = fig.add_subplot(projection='3d')
+plt.plot(vhsip2.T_p_com_ref[0], vhsip2.T_p_com_ref[1], vhsip2.T_p_com_ref[2])
+
+ax.set_zlim([0., 0.35])
+ax.set_xlabel("$c^{x}$ [$m$]")
+ax.set_ylabel("$c^{y}$ [$m$]")
+ax.set_zlabel("$c^{z}$ [$m$]")
+
+ax.scatter([vhsip2.zmp_xy[0]], [vhsip2.zmp_xy[1]], [[0.]], color='red')
+
+u_lims = np.array([[uxmin, uymin, 0.],
+                   [uxmin, uymax, 0.],
+                   [uxmax, uymax, 0.],
+                   [uxmax, uymin, 0.],
+                   [uxmin, uymin, 0.]])
+
+plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
+
+plt.legend(["$c$", "$u_{o}$"])
+
+
+
+# compare
+
+fig, axs = plt.subplots(3, 1,  figsize=(10,5))
+
+fig.suptitle("Compare strategies")
+
+axs[0].set_ylabel("c [$m$]")
+axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref[0].T)
+axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref[0].T, color=axs[0].lines[-1].get_color(), linestyle='--')
+axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref[1].T)
+axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref[1].T, color=axs[0].lines[-1].get_color(), linestyle='--')
+axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref[2].T)
+axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref[2].T, color=axs[0].lines[-1].get_color(), linestyle='--')
+axs[0].grid()
+
+axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
+axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref[0].T)
+axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref[0].T, color=axs[1].lines[-1].get_color(), linestyle='--')
+axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref[1].T)
+axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref[1].T, color=axs[1].lines[-1].get_color(), linestyle='--')
+axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref[2].T)
+axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref[2].T, color=axs[1].lines[-1].get_color(), linestyle='--')
+axs[1].grid()
+
+
+axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
+axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref[0].T)
+axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref[0].T, color=axs[2].lines[-1].get_color(), linestyle='--')
+axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref[1].T)
+axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref[1].T, color=axs[2].lines[-1].get_color(), linestyle='--')
+axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref[2].T)
+axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref[2].T, color=axs[2].lines[-1].get_color(), linestyle='--')
+axs[2].grid()
+
+plt.show()
+
+legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x (s1)"),
+          Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="x (s2)"),
+          Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=4, label="y (s1)"),
+          Line2D([0], [0], color=axs[0].lines[3].get_color(), lw=4, label="y (s2)"),
+          Line2D([0], [0], color=axs[0].lines[4].get_color(), lw=4, label="z (s1)"),
+          Line2D([0], [0], color=axs[0].lines[5].get_color(), lw=4, label="z (s2)")]
+
+fig.legend(handles=legend,
+           loc="center right",  # Position of legend
+           borderaxespad=1,  # Small spacing around legend box
+           )
+
+# fig.legend(["x (s1)",
+#             "y (s1)",
+#             "z (s1)",
+#             "x (s2)",
+#             "y (s2)",
+#             "z (s2)"])
+plt.subplots_adjust(right=0.85)
+
+# fig = plt.figure()
+# fig.suptitle("Strategy 2: optimize final velocity")
+# ax = fig.add_subplot(projection='3d')
+# plt.plot(vhsip1.T_p_com_ref[0], vhsip1.T_p_com_ref[1], vhsip1.T_p_com_ref[2])
+# ax.scatter([vhsip1.zmp_xy[0]], [vhsip2.zmp_xy[1]], [[0.]], color=axs[0].lines[-1].get_color())
+# plt.plot(vhsip2.T_p_com_ref[0], vhsip2.T_p_com_ref[1], vhsip2.T_p_com_ref[2])
+# ax.scatter([vhsip2.zmp_xy[0]], [vhsip2.zmp_xy[1]], [[0.]], color=axs[0].lines[-1].get_color())
+#
+# ax.set_zlim([0., 0.35])
+# ax.set_xlabel("$x$ [$m$]")
+# ax.set_ylabel("$y$ [$m$]")
+# ax.set_zlabel("$z$ [$m$]")
+#
+#
+# u_lims = np.array([[uxmin, uymin, 0.],
+#                    [uxmin, uymax, 0.],
+#                    [uxmax, uymax, 0.],
+#                    [uxmax, uymin, 0.],
+#                    [uxmin, uymin, 0.]])
+#
+# plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
+
+# plt.legend(["$c$", "$u_{o}$"])
 
 
