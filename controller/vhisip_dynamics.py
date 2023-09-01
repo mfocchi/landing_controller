@@ -44,6 +44,9 @@ class VHSIP:
         self.Q_xyu = np.empty([1,2]) * np.nan
         self.Q_u = np.empty([1,1]) * np.nan
 
+        self.Q_vx = np.empty([1, 2]) * np.nan
+        self.Q_vu = np.empty([1, 1]) * np.nan
+
         self.w_v = w_v
         self.w_p = w_p
         self.w_u = w_u
@@ -90,19 +93,24 @@ class VHSIP:
 
         I1 = np.eye(1)
 
-        self.Q_xy = self.w_v * CvPxy.T @ CvPxy + self.w_p * CpPxy.T @ CpPxy
+        # self.Q_xy = self.w_v * CvPxy.T @ CvPxy + self.w_p * CpPxy.T @ CpPxy # not usefull
         self.Q_xyu = self.w_v * CvPu.T @ CvPxy + self.w_p * (CpPu - I1).T @ CpPxy
         self.Q_u = self.w_v * CvPu.T @ CvPu + self.w_p * (CpPu - I1).T @ (CpPu - I1) + self.w_u * I1
 
-    def _compute_zmp(self):
-        Q_hash = -np.linalg.inv(self.Q_u) @ self.Q_xyu
-        self.zmp_xy[0] = Q_hash @ self.state_x0
-        self.zmp_xy[1] = Q_hash @ self.state_y0
+        # self.Q_vx = CvPxy.copy()  # not usefull
+        self.Q_vu = CvPu.copy()
 
-    def solve_ocp(self, vf):
+    def _compute_zmp(self, vx_f, vy_f):
+        Q_u_inv = np.linalg.inv(self.Q_u)
+        Q_hash = -Q_u_inv @ self.Q_xyu
+        Q_dagger = Q_u_inv @ self.Q_vu.T
+        self.zmp_xy[0] = Q_dagger * vx_f + Q_hash @ self.state_x0
+        self.zmp_xy[1] = Q_dagger * vy_f + Q_hash @ self.state_y0
+
+    def solve_ocp(self, vx_f=0., vy_f=0.):
         self._propagation_matrices()
         self._cost_matrices()
-        self._compute_zmp()
+        self._compute_zmp(vx_f, vy_f)
 
 
     def _reshape_arrays(self):
@@ -163,6 +171,7 @@ class VHSIP:
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from matplotlib.lines import Line2D
+    from mpl_toolkits.mplot3d import axes3d
 
     m = 12.
     L = 0.25
@@ -194,7 +203,7 @@ if __name__ == '__main__':
     vhsip.set_init(state_x0, state_y0, state_z0)
     time, pz, vz, az = vhsip.MSD_z_dynamics(m, k, d)
     vhsip.set_z_dynamics(time, pz, vz, az)
-    vhsip.solve_ocp()
+    vhsip.solve_ocp(vx_f=0.5, vy_f=0)
     vhsip.compute_xy_dynamics(vhsip.zmp_xy[0], vhsip.zmp_xy[1])
 
     fig, axs = plt.subplots(3, 1,  figsize=(10,5))
@@ -227,3 +236,13 @@ if __name__ == '__main__':
     plt.subplots_adjust(right=0.85)
 
 
+    ax = plt.figure().add_subplot(projection='3d')
+    plt.plot(vhsip.T_p_com_ref[0], vhsip.T_p_com_ref[1], vhsip.T_p_com_ref[2])
+    ax.set_zlim([0., 0.35])
+    ax.set_xlabel("$c^{x}$ [$m$]")
+    ax.set_ylabel("$c^{y}$ [$m$]")
+    ax.set_zlabel("$c^{z}$ [$m$]")
+
+    ax.scatter([vhsip.zmp_xy[0]], [vhsip.zmp_xy[1]], [[0.]], color='red')
+
+    plt.legend(["$c$", "$u_{o}$"])
