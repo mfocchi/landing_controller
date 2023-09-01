@@ -56,7 +56,7 @@ class VHSIP:
     def duplicate(self):
         return VHSIP(self.L, self.dt, self.g_mag, self.w_v, self.w_p, self.w_u)
 
-    def _propagation_matrices(self):
+    def propagation_matrices(self):
         # matrices that describe xy states starting from 0 to ctrl_horz
 
         self.PHI_xy[:, :, 0] = np.eye(2)
@@ -110,7 +110,7 @@ class VHSIP:
         self.zmp_xy[1] = Q_dagger * vy_f + Q_hash @ self.state_y0
 
     def solve_ocp(self, vx_f=0., vy_f=0.):
-        self._propagation_matrices()
+        self.propagation_matrices()
         self._cost_matrices()
         self._compute_zmp(vx_f, vy_f)
 
