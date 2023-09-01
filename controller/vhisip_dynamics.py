@@ -53,6 +53,8 @@ class VHSIP:
 
         self.zmp_xy = np.empty(2) * np.nan
 
+    def duplicate(self):
+        return VHSIP(self.L, self.dt, self.g_mag, self.w_v, self.w_p, self.w_u)
 
     def _propagation_matrices(self):
         # matrices that describe xy states starting from 0 to ctrl_horz
