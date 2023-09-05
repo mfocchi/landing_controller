@@ -245,11 +245,16 @@ vhsip1.compute_xy_dynamics()
 
 
 
-# ####################
-# # VHSIP TRAJECTORY #
-# ####################
+####################
+# VHSIP TRAJECTORY #
+####################
 # strategy 2: optimize final velocity
-vhsip2 = vhsip1.duplicate()
+# With this approach, the cost is in the form ||state_x - xi_x||^2_Wx + ||state_y - xi_y||^2_Wy + ||xi||^_Wxi
+# cop cannot lie outside the SP
+# the distance between com and cop is bounded
+
+
+vhsip2 = VHSIP(dt=0.002, L=L, g_mag=9.81)
 
 vhsip2.set_init(state_x0, state_y0, state_z0)
 vhsip2.set_z_dynamics(time, posz, velz, accz)
@@ -290,6 +295,7 @@ uy = xi[3]
 PHI_N = vhsip2.PHI_xy[:, :, -1].copy()
 GAMMA_N = vhsip2.GAMMA_xy[:, :, -1].copy()
 Cp = vhsip2.Cp.copy()
+Cv = vhsip2.Cv.copy()
 
 xn = PHI_N @ state_x0 + (GAMMA_N @ Cp ) @ xix
 yn= PHI_N @ state_y0 + (GAMMA_N @ Cp - np.eye(2)) @ xiy
@@ -318,6 +324,9 @@ cn = ca.vcat([xn[1], yn[1], vhsip2.T_p_com_ref[2, -1]])
 u = ca.vcat([ux, uy, 0])
 dist = cn-u
 # opti.subject_to(dist.T@dist <= distmax**2)
+
+# velocity compression
+opti.subject_to(Cv @ xn <= Cv @ state_x0)
 
 
 # opti.solver('qpoases')
