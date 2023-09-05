@@ -239,7 +239,7 @@ vhsip1 = VHSIP(dt=0.002, L=L, g_mag=9.81, w_v=1., w_p=1., w_u=1.)
 vhsip1.set_init(state_x0, state_y0, state_z0)
 vhsip1.set_z_dynamics(time, posz, velz, accz)
 vhsip1.solve_ocp(vx_f=0.5, vy_f=0)
-vhsip1.compute_xy_dynamics(vhsip1.zmp_xy[0], vhsip1.zmp_xy[1])
+vhsip1.compute_xy_dynamics()
 
 
 
