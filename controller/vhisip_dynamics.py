@@ -104,8 +104,8 @@ class VHSIP:
         self.Q_xyu = self.w_v * CvPu.T @ CvPxy + self.w_p * (CpPu - I1).T @ CpPxy
         self.Q_u = self.w_v * CvPu.T @ CvPu + self.w_p * (CpPu - I1).T @ (CpPu - I1) + self.w_u * I1
 
-        # self.Q_vx = CvPxy.copy()  # not usefull
-        self.Q_vu = CvPu.copy()
+        # self.Q_vx = self.w_v * CvPxy.copy()  # not usefull
+        self.Q_vu = self.w_v * CvPu.copy()
 
     def _compute_zmp(self, vx_f, vy_f):
         Q_u_inv = np.linalg.inv(self.Q_u)
