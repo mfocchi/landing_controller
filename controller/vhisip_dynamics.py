@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from mpl_toolkits.mplot3d import axes3d
 
 class VHSIP:
     def __init__(self, L, dt=0.002, g_mag=9.81, w_v=1., w_p=1., w_u=1.):
@@ -174,6 +177,119 @@ class VHSIP:
         self.state_z0 = state_z0.copy()
 
 
+    def plot_ref(self, title=None):
+        fig, axs = plt.subplots(3, 1, figsize=(10, 5))
+        if title is not None:
+            fig.suptitle(title)
+
+        axs[0].set_ylabel("$c$ [$m$]")
+        axs[0].plot(self.time, self.T_p_com_ref.T)
+        axs[0].grid()
+
+        axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
+        axs[1].plot(self.time, self.T_v_com_ref.T)
+        axs[1].grid()
+
+        axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
+        axs[2].plot(self.time, self.T_a_com_ref.T)
+        axs[2].grid()
+
+        plt.show()
+
+        legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x"),
+                  Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="y"),
+                  Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=4, label="z")]
+
+        fig.legend(handles=legend,
+                   loc="center right",  # Position of legend
+                   borderaxespad=1,  # Small spacing around legend box
+                   )
+
+        plt.subplots_adjust(right=0.85)
+        return fig
+        
+    def plot_3D(self, title=None, uxlim=None, uylim=None):
+        fig = plt.figure()
+        if title is not None:
+            fig.suptitle(title)
+        ax = fig.add_subplot(projection='3d')
+        plt.plot(self.T_p_com_ref[0], self.T_p_com_ref[1], self.T_p_com_ref[2])
+
+        ax.set_zlim([0., 0.35])
+        ax.set_xlabel("$c^{x}$ [$m$]")
+        ax.set_ylabel("$c^{y}$ [$m$]")
+        ax.set_zlabel("$c^{z}$ [$m$]")
+
+        ax.scatter([self.zmp_xy[0]], [self.zmp_xy[1]], [[0.]], color='red')
+
+        if uxlim is not None and uylim is not None:
+            u_lims = np.array([[uxlim[0], uylim[0], 0.],
+                               [uxlim[0], uylim[1], 0.],
+                               [uxlim[1], uylim[1], 0.],
+                               [uxlim[1], uylim[0], 0.],
+                               [uxlim[0], uylim[0], 0.]])
+
+            plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
+
+        plt.legend(["$c$", "com lims"])
+
+        return fig
+        
+    def plot_compare(self, other):
+
+        fig, axs = plt.subplots(3, 1, figsize=(10, 5))
+
+        fig.suptitle("Compare strategies")
+
+        axs[0].set_ylabel("c [$m$]")
+        axs[0].plot(self.time, self.T_p_com_ref[0].T)
+        axs[0].plot(other.time, other.T_p_com_ref[0].T, color=axs[0].lines[-1].get_color(), linestyle='--')
+        axs[0].plot(self.time, self.T_p_com_ref[1].T)
+        axs[0].plot(other.time, other.T_p_com_ref[1].T, color=axs[0].lines[-1].get_color(), linestyle='--')
+        axs[0].plot(self.time, self.T_p_com_ref[2].T)
+        axs[0].plot(other.time, other.T_p_com_ref[2].T, color=axs[0].lines[-1].get_color(), linestyle='--')
+        axs[0].grid()
+
+        axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
+        axs[1].plot(self.time, self.T_v_com_ref[0].T)
+        axs[1].plot(other.time, other.T_v_com_ref[0].T, color=axs[1].lines[-1].get_color(), linestyle='--')
+        axs[1].plot(self.time, self.T_v_com_ref[1].T)
+        axs[1].plot(other.time, other.T_v_com_ref[1].T, color=axs[1].lines[-1].get_color(), linestyle='--')
+        axs[1].plot(self.time, self.T_v_com_ref[2].T)
+        axs[1].plot(other.time, other.T_v_com_ref[2].T, color=axs[1].lines[-1].get_color(), linestyle='--')
+        axs[1].grid()
+
+        axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
+        axs[2].plot(self.time, self.T_a_com_ref[0].T)
+        axs[2].plot(other.time, other.T_a_com_ref[0].T, color=axs[2].lines[-1].get_color(), linestyle='--')
+        axs[2].plot(self.time, self.T_a_com_ref[1].T)
+        axs[2].plot(other.time, other.T_a_com_ref[1].T, color=axs[2].lines[-1].get_color(), linestyle='--')
+        axs[2].plot(self.time, self.T_a_com_ref[2].T)
+        axs[2].plot(other.time, other.T_a_com_ref[2].T, color=axs[2].lines[-1].get_color(), linestyle='--')
+        axs[2].grid()
+
+        legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=axs[0].lines[0].get_lw(),
+                         linestyle=axs[0].lines[0].get_linestyle(), label="x (s1)"),
+                  Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=axs[0].lines[1].get_lw(),
+                         linestyle=axs[0].lines[1].get_linestyle(), label="x (s2)"),
+                  Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=axs[0].lines[2].get_lw(),
+                         linestyle=axs[0].lines[2].get_linestyle(), label="y (s1)"),
+                  Line2D([0], [0], color=axs[0].lines[3].get_color(), lw=axs[0].lines[3].get_lw(),
+                         linestyle=axs[0].lines[3].get_linestyle(), label="y (s2)"),
+                  Line2D([0], [0], color=axs[0].lines[4].get_color(), lw=axs[0].lines[4].get_lw(),
+                         linestyle=axs[0].lines[4].get_linestyle(), label="z (s1)"),
+                  Line2D([0], [0], color=axs[0].lines[5].get_color(), lw=axs[0].lines[5].get_lw(),
+                         linestyle=axs[0].lines[5].get_linestyle(), label="z (s2)")]
+
+        fig.legend(handles=legend,
+                   loc="center right",  # Position of legend
+                   borderaxespad=1,  # Small spacing around legend box
+                   )
+
+        plt.subplots_adjust(right=0.85)
+
+        return fig
+        
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
@@ -185,7 +301,7 @@ if __name__ == '__main__':
     max_spring_compression = 0.1
     max_settling_time = 1.2
 
-    state_x0 = np.array([[-0.5],
+    state_x0 = np.array([[4],
                          [0.]])
 
     state_y0 = np.array([[0.],

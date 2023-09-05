@@ -3,8 +3,8 @@ import numpy as np
 from  scipy.special import comb
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from landing_controller.controller.vhisip_dynamics import VHSIP
 from mpl_toolkits.mplot3d import axes3d
+from landing_controller.controller.vhisip_dynamics import VHSIP
 from landing_controller.controller.feasibility import *
 import os
 
@@ -238,58 +238,9 @@ vhsip1.set_z_dynamics(time, posz, velz, accz)
 vhsip1.solve_ocp(vx_f=0.5, vy_f=0)
 vhsip1.compute_xy_dynamics(vhsip1.zmp_xy[0], vhsip1.zmp_xy[1])
 
-fig, axs = plt.subplots(3, 1,  figsize=(10,5))
-
-fig.suptitle("Strategy 1: set final velocity")
-
-axs[0].set_ylabel("c [$m$]")
-axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref.T)
-axs[0].grid()
-
-axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
-axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref.T)
-axs[1].grid()
 
 
-axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
-axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref.T)
-axs[2].grid()
 
-plt.show()
-
-legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x"),
-          Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="y"),
-          Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=4, label="z")]
-
-fig.legend(handles=legend,
-           loc="center right",  # Position of legend
-           borderaxespad=1,  # Small spacing around legend box
-           )
-
-plt.subplots_adjust(right=0.85)
-
-
-fig = plt.figure()
-fig.suptitle("Strategy 1: set final velocity")
-ax = fig.add_subplot(projection='3d')
-plt.plot(vhsip1.T_p_com_ref[0], vhsip1.T_p_com_ref[1], vhsip1.T_p_com_ref[2])
-
-ax.set_zlim([0., 0.35])
-ax.set_xlabel("$c^{x}$ [$m$]")
-ax.set_ylabel("$c^{y}$ [$m$]")
-ax.set_zlabel("$c^{z}$ [$m$]")
-
-ax.scatter([vhsip1.zmp_xy[0]], [vhsip1.zmp_xy[1]], [[0.]], color='red')
-
-u_lims = np.array([[uxmin, uymin, 0.],
-                   [uxmin, uymax, 0.],
-                   [uxmax, uymax, 0.],
-                   [uxmax, uymin, 0.],
-                   [uxmin, uymin, 0.]])
-
-plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
-
-plt.legend(["$c$", "$u_{o}$"])
 
 # ####################
 # # VHSIP TRAJECTORY #
@@ -379,138 +330,12 @@ vhsip2.zmp_xy[1] = sol.value(uy)
 
 vhsip2.compute_xy_dynamics(vhsip2.zmp_xy[0], vhsip2.zmp_xy[1])
 
-fig, axs = plt.subplots(3, 1,  figsize=(10,5))
-
-fig.suptitle("Strategy 2: optimize final velocity")
-
-axs[0].set_ylabel("c [$m$]")
-axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref.T)
-axs[0].grid()
-
-axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
-axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref.T)
-axs[1].grid()
+vhsip2.solve_ocp(vx_f=0, vy_f=0)
+vhsip2.compute_xy_dynamics()
 
 
-axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
-axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref.T)
-axs[2].grid()
-
-plt.show()
-
-legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x"),
-          Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="y"),
-          Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=4, label="z")]
-
-fig.legend(handles=legend,
-           loc="center right",  # Position of legend
-           borderaxespad=1,  # Small spacing around legend box
-           )
-
-plt.subplots_adjust(right=0.85)
-
-fig = plt.figure()
-fig.suptitle("Strategy 2: optimize final velocity")
-ax = fig.add_subplot(projection='3d')
-plt.plot(vhsip2.T_p_com_ref[0], vhsip2.T_p_com_ref[1], vhsip2.T_p_com_ref[2])
-
-ax.set_zlim([0., 0.35])
-ax.set_xlabel("$c^{x}$ [$m$]")
-ax.set_ylabel("$c^{y}$ [$m$]")
-ax.set_zlabel("$c^{z}$ [$m$]")
-
-ax.scatter([vhsip2.zmp_xy[0]], [vhsip2.zmp_xy[1]], [[0.]], color='red')
-
-u_lims = np.array([[uxmin, uymin, 0.],
-                   [uxmin, uymax, 0.],
-                   [uxmax, uymax, 0.],
-                   [uxmax, uymin, 0.],
-                   [uxmin, uymin, 0.]])
-
-plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
-
-plt.legend(["$c$", "$u_{o}$"])
-
-
-
-# compare
-
-fig, axs = plt.subplots(3, 1,  figsize=(10,5))
-
-fig.suptitle("Compare strategies")
-
-axs[0].set_ylabel("c [$m$]")
-axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref[0].T)
-axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref[0].T, color=axs[0].lines[-1].get_color(), linestyle='--')
-axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref[1].T)
-axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref[1].T, color=axs[0].lines[-1].get_color(), linestyle='--')
-axs[0].plot(vhsip1.time, vhsip1.T_p_com_ref[2].T)
-axs[0].plot(vhsip2.time, vhsip2.T_p_com_ref[2].T, color=axs[0].lines[-1].get_color(), linestyle='--')
-axs[0].grid()
-
-axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
-axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref[0].T)
-axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref[0].T, color=axs[1].lines[-1].get_color(), linestyle='--')
-axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref[1].T)
-axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref[1].T, color=axs[1].lines[-1].get_color(), linestyle='--')
-axs[1].plot(vhsip1.time, vhsip1.T_v_com_ref[2].T)
-axs[1].plot(vhsip2.time, vhsip2.T_v_com_ref[2].T, color=axs[1].lines[-1].get_color(), linestyle='--')
-axs[1].grid()
-
-
-axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
-axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref[0].T)
-axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref[0].T, color=axs[2].lines[-1].get_color(), linestyle='--')
-axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref[1].T)
-axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref[1].T, color=axs[2].lines[-1].get_color(), linestyle='--')
-axs[2].plot(vhsip1.time, vhsip1.T_a_com_ref[2].T)
-axs[2].plot(vhsip2.time, vhsip2.T_a_com_ref[2].T, color=axs[2].lines[-1].get_color(), linestyle='--')
-axs[2].grid()
-
-plt.show()
-
-legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x (s1)"),
-          Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="x (s2)"),
-          Line2D([0], [0], color=axs[0].lines[2].get_color(), lw=4, label="y (s1)"),
-          Line2D([0], [0], color=axs[0].lines[3].get_color(), lw=4, label="y (s2)"),
-          Line2D([0], [0], color=axs[0].lines[4].get_color(), lw=4, label="z (s1)"),
-          Line2D([0], [0], color=axs[0].lines[5].get_color(), lw=4, label="z (s2)")]
-
-fig.legend(handles=legend,
-           loc="center right",  # Position of legend
-           borderaxespad=1,  # Small spacing around legend box
-           )
-
-# fig.legend(["x (s1)",
-#             "y (s1)",
-#             "z (s1)",
-#             "x (s2)",
-#             "y (s2)",
-#             "z (s2)"])
-plt.subplots_adjust(right=0.85)
-
-# fig = plt.figure()
-# fig.suptitle("Strategy 2: optimize final velocity")
-# ax = fig.add_subplot(projection='3d')
-# plt.plot(vhsip1.T_p_com_ref[0], vhsip1.T_p_com_ref[1], vhsip1.T_p_com_ref[2])
-# ax.scatter([vhsip1.zmp_xy[0]], [vhsip2.zmp_xy[1]], [[0.]], color=axs[0].lines[-1].get_color())
-# plt.plot(vhsip2.T_p_com_ref[0], vhsip2.T_p_com_ref[1], vhsip2.T_p_com_ref[2])
-# ax.scatter([vhsip2.zmp_xy[0]], [vhsip2.zmp_xy[1]], [[0.]], color=axs[0].lines[-1].get_color())
-#
-# ax.set_zlim([0., 0.35])
-# ax.set_xlabel("$x$ [$m$]")
-# ax.set_ylabel("$y$ [$m$]")
-# ax.set_zlabel("$z$ [$m$]")
-#
-#
-# u_lims = np.array([[uxmin, uymin, 0.],
-#                    [uxmin, uymax, 0.],
-#                    [uxmax, uymax, 0.],
-#                    [uxmax, uymin, 0.],
-#                    [uxmin, uymin, 0.]])
-#
-# plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
-
-# plt.legend(["$c$", "$u_{o}$"])
-
-
+vhsip1.plot_ref()
+vhsip1.plot_3D()
+vhsip2.plot_ref()
+vhsip2.plot_3D()
+vhsip1.plot_compare(vhsip2)
