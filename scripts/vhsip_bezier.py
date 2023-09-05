@@ -341,10 +341,15 @@ vhsip2.zmp_xy[0] = sol.value(ux)
 vhsip2.zmp_xy[1] = sol.value(uy)
 
 vhsip2.compute_xy_dynamics(vhsip2.zmp_xy[0], vhsip2.zmp_xy[1])
-
-vhsip2.solve_ocp(vx_f=0, vy_f=0)
-vhsip2.compute_xy_dynamics()
-
+#
+# vhsip2 = VHSIP(dt=0.002, L=L, g_mag=9.81, w_v=1e10, w_p=.1, w_u=1.)
+#
+#
+# vhsip2.set_init(state_x0, state_y0, state_z0)
+# vhsip2.set_z_dynamics(time, posz, velz, accz)
+# vhsip2.solve_ocp(vx_f=0, vy_f=0)
+# vhsip2.compute_xy_dynamics()
+#
 
 vhsip1.plot_ref()
 vhsip1.plot_3D()
