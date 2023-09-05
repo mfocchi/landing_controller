@@ -70,9 +70,14 @@ class VHSIP:
             self.PHI_xy[:, :, ii] = self.Axy_d @ self.PHI_xy[:, :, ii-1]
             self.GAMMA_xy[:, :, ii] = self.Axy_d @ self.GAMMA_xy[:, :, ii-1] + self.Bxy_d
 
-    def compute_xy_dynamics(self, zmp_x, zmp_y):
+    def compute_xy_dynamics(self, zmp_x=None, zmp_y=None):
         # state = [velocity]
         #         [position]
+
+        if zmp_x is None:
+            zmp_x = self.zmp_xy[0]
+        if zmp_y is None:
+            zmp_y = self.zmp_xy[1]
 
         for ii in range(self.ctrl_horz):
             self.state_x = self.PHI_xy[:, :, ii] @ self.state_x0 + self.GAMMA_xy[:, :, ii] * zmp_x
