@@ -228,7 +228,10 @@ state_z0 = np.array([[v0],
 ####################
 # VHSIP TRAJECTORY #
 ####################
-# strategy 1: set final velocity
+# strategy 1: set final horizontal velocity
+# With this approach, in the cost function I have a term of the form |dot{c_x} - v_x|^2, with v_x given
+# cop can lie outside the SP
+# the only constraint is the dynamics
 
 vhsip1 = VHSIP(dt=0.002, L=L, g_mag=9.81, w_v=1., w_p=1., w_u=1.)
 
