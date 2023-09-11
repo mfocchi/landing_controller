@@ -24,7 +24,7 @@ class Feasibility:
         self.tol = 1e-12
 
     def checkPointFeasibility(self, point):
-        return all(self.A @ point + self.b <= self.tol)
+        return np.all(self.A @ point + self.b <= self.tol)
 
     def checkTrajFeasibility(self, traj):
         for point in traj:
