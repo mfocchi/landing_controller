@@ -32,6 +32,31 @@ class Feasibility:
                 return False
         return True
 
+class FeasibilityOnSlice:
+    # it is a 2d polygon
+    def __init__(self, f, h):
+        # f is an instance of feasibility
+        # h is an height
+        self.h = h
+        start_idx = np.argmin(np.abs(f.points[:, 2]-self.h))
+        self.nearest_h = f.points[start_idx, 2]
+        self.region = f.points[np.asarray(f.points[:, 2] == f.points[start_idx, 2]), :]
+        self.points = np.vstack(self.region[:, :2])
+        self.cv_hull = ConvexHull(self.points, qhull_options="QJ")
+        self.A = self.cv_hull.equations[:, :-1]
+        self.b = self.cv_hull.equations[:, -1]
+        self.b = self.b.reshape(self.b.shape[0], 1)
+        self.tol = 1e-12
+
+    def checkPointFeasibility(self, point):
+        point = point.reshape(point.shape[0], 1)
+        return all(self.A @ point + self.b <= self.tol)
+
+    def checkTrajFeasibility(self, traj):
+        for point in traj:
+            if not self.checkPointFeasibility(point):
+                return False
+        return True
 
 
 if __name__ == '__main__':
