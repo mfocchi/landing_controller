@@ -9,6 +9,7 @@ from scipy.optimize import linprog
 
 from .feasibility import *
 
+np.set_printoptions(threshold=np.inf, precision=5, linewidth=10000, suppress=True)
 
 class VHSIP:
     def __init__(self, L, dt=0.002, g_mag=9.81, w_v=1., w_p=1., w_u=1.):
@@ -725,6 +726,8 @@ class VHSIP:
 
         axs[0].set_ylabel("$c$ [$m$]")
         axs[0].plot(self.time, self.T_p_com_ref.T)
+        axs[0].plot(self.time, np.ones_like(self.time)*self.zmp_xy[0])
+        axs[0].plot(self.time, np.ones_like(self.time) * self.zmp_xy[1])
         axs[0].grid()
 
         axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
@@ -734,8 +737,6 @@ class VHSIP:
         axs[2].set_ylabel("$\ddot{c}$ [$m/s^2$]")
         axs[2].plot(self.time, self.T_a_com_ref.T)
         axs[2].grid()
-
-        plt.show()
 
         legend = [Line2D([0], [0], color=axs[0].lines[0].get_color(), lw=4, label="x"),
                   Line2D([0], [0], color=axs[0].lines[1].get_color(), lw=4, label="y"),
@@ -747,32 +748,61 @@ class VHSIP:
                    )
 
         plt.subplots_adjust(right=0.85)
+        plt.draw()
+        plt.show()
         return fig
         
-    def plot_3D(self, title=None, uxlim=None, uylim=None):
+    def plot_3D(self, title=None):
+
+
         fig = plt.figure()
         if title is not None:
             fig.suptitle(title)
         ax = fig.add_subplot(projection='3d')
-        plt.plot(self.T_p_com_ref[0], self.T_p_com_ref[1], self.T_p_com_ref[2])
+        plt.plot(self.T_p_com_ref[0], self.T_p_com_ref[1], self.T_p_com_ref[2], label='$c$')
 
-        ax.set_zlim([0., 0.35])
+
+        scale = np.linspace(50, 150, len(self.feasibility.region))
+        jet = plt.get_cmap('RdBu')
+        cNorm = colors.Normalize(vmin=55, vmax=145)
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+
+        idx = 5
+        for kin_reg in self.feasibility.region:
+            colorVal = scalarMap.to_rgba(scale[idx])
+            if kin_reg[0, 2] == self.feasibility_l0.nearest_h:
+                idx_h = idx
+            idx -= 1
+            p = Polygon(kin_reg[:, :2], facecolor=colorVal, fill=True, alpha=0.1)
+            ax.add_patch(p)
+            art3d.pathpatch_2d_to_3d(p, z=kin_reg[0, 2], zdir="z")
+            p = Polygon(kin_reg[:, :2], facecolor=colorVal, fill=False, edgecolor=colorVal, alpha=0.8)
+            ax.add_patch(p)
+            art3d.pathpatch_2d_to_3d(p, z=kin_reg[0, 2], zdir="z")
+
+
+
+        ax.scatter([self.projected_zmp[0]], [self.projected_zmp[1]], [0.], color='b', marker='*',
+                   s=40, label='Pr$(u_{opt}, FR_{l_{0}})$')
+        ax.scatter([self.zmp_xy[0]], [self.zmp_xy[1]], [0.], color='r', marker='o', s=80, label='$u_{opt}$', alpha=0.6)
+
+        colorVal = scalarMap.to_rgba(scale[0])
+        p = Polygon(self.feasibility_l0.region[:, :2], edgecolor='k', facecolor=colorVal, label='$ FR_{l_{0}}$', alpha=0.1)
+        ax.add_patch(p)
+        art3d.pathpatch_2d_to_3d(p, z=0., zdir="z")
+
+        floorx_max = np.max([np.abs(self.zmp_xy[0]), np.abs(self.feasibility_l0.region[:, 0]).max()]) + 0.05
+        floory_max = np.max([np.abs(self.zmp_xy[1]), np.abs(self.feasibility_l0.region[:, 0]).max()]) + 0.05
+        ax.set_xlim(-floorx_max, floorx_max)
+        ax.set_ylim(-floory_max, floory_max)
+        ax.set_zlim(-0.0, self.T_p_com_ref[:, 2].max()+0.05)
         ax.set_xlabel("$c^{x}$ [$m$]")
         ax.set_ylabel("$c^{y}$ [$m$]")
         ax.set_zlabel("$c^{z}$ [$m$]")
 
-        ax.scatter([self.zmp_xy[0]], [self.zmp_xy[1]], [[0.]], color='red')
-
-        if uxlim is not None and uylim is not None:
-            u_lims = np.array([[uxlim[0], uylim[0], 0.],
-                               [uxlim[0], uylim[1], 0.],
-                               [uxlim[1], uylim[1], 0.],
-                               [uxlim[1], uylim[0], 0.],
-                               [uxlim[0], uylim[0], 0.]])
-
-            plt.plot(u_lims[:, 0], u_lims[:, 1], u_lims[:, 2])
-
-        plt.legend(["$c$", "com lims"])
+        plt.legend()
+        plt.draw()
+        plt.show()
 
         return fig
         
@@ -830,7 +860,8 @@ class VHSIP:
         plt.subplots_adjust(right=0.85)
 
         return fig
-        
+
+
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
