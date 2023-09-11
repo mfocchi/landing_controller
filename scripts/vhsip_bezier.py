@@ -1,6 +1,6 @@
 import casadi as ca
 import numpy as np
-from  scipy.special import comb
+from scipy.special import comb
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import axes3d
@@ -8,12 +8,13 @@ from landing_controller.controller.vhisip_dynamics import VHSIP
 from landing_controller.controller.feasibility import *
 import os
 
-np.set_printoptions(threshold=np.inf, precision = 5, linewidth = 10000, suppress = True)
+np.set_printoptions(threshold=np.inf, precision=5, linewidth=10000, suppress=True)
+
 
 def bezier(w, tau):
     b = 0.
     deg = w.shape[0] - 1
-    for k in range(0, deg+1):
+    for k in range(0, deg + 1):
         b += comb(deg, k, exact=True) * w[k] * (1 - tau) ** (deg - k) * tau ** k
     return b
 
@@ -27,6 +28,7 @@ def bezierTraj(w, T0=0, Tf=1, step=0.002):
         B[i] = bezier(w, tau)
 
     return T, B
+
 
 ###################################################
 # COMPUTE COM Z REFERENCE AS A BEZIER OF DEGREE 4 #
@@ -48,8 +50,7 @@ pmin = 0.1
 pmax = 0.3
 # boundary on acceleration
 m = 12.5
-amax = 800/m
-
+amax = 8000 / m
 
 #### NLP formulation
 opti = ca.Opti()
@@ -82,51 +83,50 @@ wa2 = 3 * (wv3 - wv2)
 wa = ca.vcat([wa0, wa1, wa2])
 
 # COST
-opti.minimize(-(wv[-1]/T)**2) #'max vf^2'
+opti.minimize(-(wv[-1] / T) ** 2)  # 'max vf^2'
 
 # CONSTRAINTS
 # initial position
 # opti.subject_to(wp0==p0)
 #
 # final position
-if type(wp4) == ca.casadi.MX: # if pf is given, set w4=pf
+if type(wp4) == ca.casadi.MX:  # if pf is given, set w4=pf
     opti.subject_to(wp4 <= pmax)
 #
 # initial velocity
-opti.subject_to(wv0/T == v0)
+opti.subject_to(wv0 / T == v0)
 
 # causality, limited time
 opti.subject_to(T > 0.1)
 opti.subject_to(T <= Tmax)
 
 # positive snap
-s = wa2 - 2*wa1 + wa0
-snap = 2 * s / T**4
-opti.subject_to(s > 0)
+s = wa2 - 2 * wa1 + wa0
+snap = 2 * s / T ** 4
+# opti.subject_to(s > 0)
 
 # the minimum of the acceleration is postive
-a = s/(T**4)
-b = 2*(wa1-wa0)/(T**3)
-c = wa0/(T**2)
+a = s / (T ** 4)
+b = 2 * (wa1 - wa0) / (T ** 3)
+c = wa0 / (T ** 2)
 
-Delta = b**2-4*a*c
-av = -Delta/(4*a)
-opti.subject_to(Delta<= 0.)
+Delta = b ** 2 - 4 * a * c
+av = -Delta / (4 * a)
+opti.subject_to(av>=5)
 # opti.subject_to(av >= 20.)
 
-
 # and in (0, T)
-tv = - b/(2*a)
+tv = - b / (2 * a)
 tauv = tv / T
 opti.subject_to(tv < T)
 
 # initial and final acceleration are upper-bounded
-opti.subject_to(wa0/(T**2) <= amax)
-opti.subject_to(wa2/(T**2) <= amax)
+opti.subject_to(wa0 / (T ** 2) <= amax)
+opti.subject_to(wa2 / (T ** 2) <= amax)
 
-av_alt = bezier(wa/T**2, tauv)
+av_alt = bezier(wa / T ** 2, tauv)
 # zero velocity at minimum of acceleration
-vv = bezier(wv/T, tauv)
+vv = bezier(wv / T, tauv)
 opti.subject_to(vv == 0)
 
 # lower bound of position
@@ -138,18 +138,17 @@ if vf is None:
     opti.subject_to(wv3 >= 0)
 else:
     # if vf is given, equality constaint
-    opti.subject_to(wv3/T==vf) # (not tested)
-    
-# INITIAL GUESS
-opti.set_initial(wp4, 0.98*pmax)
-opti.set_initial(T, Tmax/2)
+    opti.subject_to(wv3 / T == vf)  # (not tested)
 
+# INITIAL GUESS
+opti.set_initial(wp4, 0.5 * pmax)
+opti.set_initial(T, Tmax / 2)
 
 # SOLVER
-p_opts = {"expand":True}
+p_opts = {"expand": True}
 s_opts = {"max_iter": 1000}
-opti.solver("ipopt",p_opts,
-                    s_opts)
+opti.solver("ipopt", p_opts,
+            s_opts)
 
 sol = opti.solve()
 
@@ -166,17 +165,15 @@ avsol = sol.value(av)
 vvsol = sol.value(vv)
 pvsol = sol.value(pv)
 
-
 print('Tsol: ', Tsol)
 print('wpsol: ', wpsol)
 print('wvsol: ', wvsol)
 print('wasol: ', wasol)
 
-
 # plot bezier
 time, posz = bezierTraj(wpsol, T0=0, Tf=Tsol, step=0.002)
-velz = bezierTraj(wvsol/Tsol, T0=0, Tf=Tsol, step=0.002)[1]
-accz = bezierTraj(wasol/(Tsol**2), T0=0, Tf=Tsol, step=0.002)[1]
+velz = bezierTraj(wvsol / Tsol, T0=0, Tf=Tsol, step=0.002)[1]
+accz = bezierTraj(wasol / (Tsol ** 2), T0=0, Tf=Tsol, step=0.002)[1]
 
 # fig, axs = plt.subplots(3, 1, figsize=(10, 5))
 # axs[0].plot(time, posz)
