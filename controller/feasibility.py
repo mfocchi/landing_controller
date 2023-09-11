@@ -20,6 +20,7 @@ class Feasibility:
         self.cv_hull = ConvexHull(self.points, qhull_options="QJ")
         self.A = self.cv_hull.equations[:, :-1]
         self.b = self.cv_hull.equations[:, -1]
+        self.b = self.b.reshape(self.b.shape[0], 1)
         self.tol = 1e-12
 
     def checkPointFeasibility(self, point):
