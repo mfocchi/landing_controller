@@ -2,7 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import axes3d
+import os
 import casadi as ca
+from scipy.special import comb
+from scipy.optimize import linprog
+
+from .feasibility import *
+
 
 class VHSIP:
     def __init__(self, L, dt=0.002, g_mag=9.81, w_v=1., w_p=1., w_u=1.):
@@ -55,7 +61,13 @@ class VHSIP:
         self.w_p = w_p
         self.w_u = w_u
 
+        filename = os.environ['LOCOSIM_DIR']+'/landing_controller/controller/go1_kin_region.mat'
+        self.feasibility = Feasibility(filename, "KINEMATICS_AND_FRICTION")
+        self.feasibility_l0 = FeasibilityOnSlice(self.feasibility, self.L)
+
         self.zmp_xy = np.empty(2) * np.nan
+        self.projected_zmp = np.empty(2) * np.nan
+
         self.ctrl_points = np.linspace(0, 1, num=6, endpoint=True)
         self.ctrl_indexes = np.zeros_like(self.ctrl_points)
 
@@ -652,6 +664,58 @@ class VHSIP:
         self.state_x0 = state_x0.copy()
         self.state_y0 = state_y0.copy()
         self.state_z0 = state_z0.copy()
+
+    def projectPoint(self, point, lb, ub):
+        proj_point = np.minimum(np.maximum(point, lb), ub)
+        inbounds = np.all(proj_point == point)
+        return proj_point, inbounds
+
+
+    def projectPointFRcasadi(self, point):
+        # project a 2d point into the Feasible Region at height = l0 solving the LP
+        # max k
+        # s.t. x = k*[point_x, point_y, l0]
+        #      Ax <= b
+        #      k >= 0
+        # where A, b describe the FR
+        k = ca.SX.sym('k', 1)
+        x = k * point
+
+        A = self.feasibility_l0.A
+        b = self.feasibility_l0.b
+
+        lp = {'x': k, 'f': -k, 'g':A@x}
+        S = ca.nlpsol('S', 'ipopt', lp)
+        res = S(lbx = [0], ubx = [1], lbg=-np.ones_like(b) * np.inf, ubg=-b)
+
+        projected_point = res['x'] * point
+        return projected_point, res
+
+    # noinspection PyDeprecation
+    # this is faster than above
+    def projectPointFR(self, point):
+        c = [-1]
+        A = self.feasibility_l0.A @ point
+        b = self.feasibility_l0.b
+        bounds = (0, None)
+        res = linprog(c, A_ub=A.reshape(A.shape[0], 1), b_ub=-b, bounds=bounds, method='highs-ds')
+        projected_point = res.x * point
+        return projected_point, res
+
+    def is_ZMPfeasible(self):
+        return self.feasibility_l0.checkPointFeasibility(self.zmp_xy)
+
+
+    def is_COMtrajFeasible(self):
+        for id in self.ctrl_indexes:
+            if id == self.ctrl_indexes[-1]:
+                id = -1
+            if not self.feasibility.checkPointFeasibility(self.T_p_com_ref[:, id].reshape(3, 1)):
+                print(id, self.T_p_com_ref[:, id], False)
+                return False
+        return True
+
+
 
 
     def plot_ref(self, title=None):
