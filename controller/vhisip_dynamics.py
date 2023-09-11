@@ -287,6 +287,171 @@ class VHSIP:
 
         return time, pz, vz, az
 
+    def bezier_z_dynamics(self, p0, v0, amax, pmin, pmax, Tfmax=None, Tf=None, pf=None, vf=None, plot=False, Y0 = None):
+
+        X = []
+        X0 = []
+
+        # optimization variables: bezier coefficient, time
+        if Tf is None:
+            T = ca.SX.sym('T', 1)
+            X.append(T)
+            if Tfmax is not None:
+                X0.append(Tfmax)
+            else:
+                X0.append(0.5)
+        else:
+            T = Tf
+
+        # wp0 = opti.variable(1) no need of this
+        wp0 = p0
+        wp1 = ca.SX.sym('wp1', 1)
+        X.append(wp1)
+        X0.append(0.0)
+        wp2 = ca.SX.sym('wp2', 1)
+        X.append(wp2)
+        X0.append(0.0)
+        wp3 = ca.SX.sym('wp3', 1)
+        X.append(wp3)
+        X0.append(0.0)
+        if pf is None or not (pmin < pf < pmax):  # if pf is given, set w4=pf
+            wp4 = ca.SX.sym('wp4', 1)
+            X.append(wp4)
+            X0.append(0.98*pmax)
+        else:
+            wp4 = pf
+
+        # opt variables
+        X = ca.vcat(X)
+
+        # for simplify computations, let's define coeffs of bezier derivatives (do not consider time)
+        wp = ca.Function('wp', [X], [ca.vcat([wp0, wp1, wp2, wp3, wp4])])
+
+        wv0 = 4 * (wp1 - wp0)
+        wv1 = 4 * (wp2 - wp1)
+        wv2 = 4 * (wp3 - wp2)
+        wv3 = 4 * (wp4 - wp3)
+        wv = ca.Function('wv', [X], [ca.vcat([wv0, wv1, wv2, wv3])])
+
+        wa0 = 3 * (wv1 - wv0)
+        wa1 = 3 * (wv2 - wv1)
+        wa2 = 3 * (wv3 - wv2)
+        wa = ca.Function('wa', [X], [ca.vcat([wa0, wa1, wa2])])
+
+        # COST
+        cost = -(self.bezier(wv(X) / T, 1)) ** 2  # 'max vf^2'
+
+        # CONSTRAINTS
+        constrs = []
+        ubconstrs = []
+        lbconstrs = []
+        # initial position
+        # opti.subject_to(wp0==p0)
+        #
+        # final position
+        if pf is None or not (pmin < pf < pmax):  # if pf is given, set w4=pf
+            fin_pos = wp4
+            constrs.append(fin_pos)
+            ubconstrs.append(pmax)
+            lbconstrs.append(pmin)
+        #
+        # initial velocity
+        init_vel = wv0 / T
+        constrs.append(init_vel)
+        ubconstrs.append(v0)
+        lbconstrs.append(v0)
+
+        # causality, limited time
+        if Tf is None:
+            constrs.append(T)
+            if Tfmax is None:
+                ubconstrs.append(+np.inf)
+                lbconstrs.append(0.)
+            else:
+                ubconstrs.append(1.2 * Tfmax)
+                lbconstrs.append(0.8 * Tfmax)
+
+        for tau in self.ctrl_points:
+            # the acceleration is postive and upper bounded
+            constrs.append(self.bezier(wa(X) / T ** 2, tau))
+            ubconstrs.append(amax)
+            # lbconstrs.append(-self.g_mag)
+            lbconstrs.append(0.0)
+
+            # bounds on position
+            constrs.append(self.bezier(wp(X), tau))
+            ubconstrs.append(pmax)
+            if tau == self.ctrl_points[-1]:
+                lbconstrs.append((pmax+p0)/2) # does not allow for squatty jumps
+            else:
+                lbconstrs.append(pmin)
+
+
+        if vf is None:
+            # positive final velocity
+            constrs.append(wv3)
+            ubconstrs.append(np.inf)
+            lbconstrs.append(0.0)
+        else:
+            # if vf is given, equality constaint
+            constrs.append(wv3 / T - vf)
+            ubconstrs.append(0.0)
+            lbconstrs.append(0.0)
+
+        # SOLVER
+        nlp = {'x': X, 'f': cost, 'g': ca.vcat(constrs)}
+        S = ca.nlpsol('S', 'ipopt', nlp)
+
+        if Y0 is not None:
+            X0 = Y0
+        r = S(x0=ca.vcat(X0), lbg=ca.vcat(lbconstrs), ubg=ca.vcat(ubconstrs))
+
+        # evaluate
+        # X = [T, wp1, wp2, wp3, wp4]
+        Tsol = r['x'][0]
+        wpsol = wp(r['x'])
+        wvsol = wv(r['x'])
+        wasol = wa(r['x'])
+
+        time, pz = self.bezierTraj(wpsol, T0=0, Tf=Tsol, step=0.002)
+        vz = self.bezierTraj(wvsol / Tsol, T0=0, Tf=Tsol, step=0.002)[1]
+        az = self.bezierTraj(wasol / (Tsol ** 2), T0=0, Tf=Tsol, step=0.002)[1]
+
+        # plot bezier
+        if plot:
+            fig, axs = plt.subplots(3, 1, figsize=(10, 5))
+            fig.suptitle(str(Tsol))
+            axs[0].plot(time, pz)
+            axs[0].set_ylabel('position [m]')
+            axs[0].hlines(pmin, 0, time[-1], linestyles='dashed')
+            axs[0].hlines(pmax, 0, time[-1], linestyles='dashed')
+            axs[0].plot(0, p0, marker="o", markersize=5)
+            color0 = axs[0].lines[0].get_color()
+            for tau in self.ctrl_points:
+                axs[0].vlines(float(tau * Tsol), pmin, pmax, linestyles='dashed', colors=color0)
+            if pf is not None and (pmin < pf < pmax):
+                axs[0].plot(time[-1], pf, marker="o", markersize=5)
+            axs[0].grid()
+
+            axs[1].plot(time, vz)
+            axs[1].set_ylabel('velocity [m/s]')
+            axs[1].plot(0, v0, marker="o", markersize=5)
+            for tau in self.ctrl_points:
+                axs[1].vlines(float(tau * Tsol), vz[0], vz[-1], linestyles='dashed', colors=color0)
+            axs[1].grid()
+
+            axs[2].plot(time, az)
+            axs[2].set_xlabel('time [s]')
+            axs[2].set_ylabel('acceleration [m/s^2]')
+            axs[2].hlines(0, 0, time[-1], linestyles='dashed')
+            axs[2].hlines(amax, 0, time[-1], linestyles='dashed')
+            for tau in self.ctrl_points:
+                axs[2].vlines(float(tau * Tsol), 0, amax, linestyles='dashed', colors=color0)
+            axs[2].grid()
+
+            plt.subplots_adjust(right=0.85)
+
+        return time, pz, vz, az, np.array(r['x']).tolist()
     def set_init(self, state_x0, state_y0, state_z0):
         self.state_x0 = state_x0.copy()
         self.state_y0 = state_y0.copy()
