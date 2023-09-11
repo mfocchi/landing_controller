@@ -56,6 +56,8 @@ class VHSIP:
         self.w_u = w_u
 
         self.zmp_xy = np.empty(2) * np.nan
+        self.ctrl_points = np.linspace(0, 1, num=6, endpoint=True)
+        self.ctrl_indexes = np.zeros_like(self.ctrl_points)
 
     def duplicate(self):
         return VHSIP(self.L, self.dt, self.g_mag, self.w_v, self.w_p, self.w_u)
@@ -138,6 +140,8 @@ class VHSIP:
     def set_z_dynamics(self, time, pz, vz, az):
         self.time = time.copy()
         self.ctrl_horz = time.shape[0]
+
+        self.ctrl_indexes = (self.ctrl_points * self.ctrl_horz).astype(int)
 
         self._reshape_arrays()
 
@@ -626,6 +630,7 @@ class VHSIP:
         return time, pz, vz, az, np.array(r['x']).tolist()
 
 
+
     def bezier(self, w, tau):
         b = 0.
         deg = w.shape[0] - 1
@@ -641,6 +646,8 @@ class VHSIP:
             tau = (T[i] - T[0]) / deltaT
             B[i] = self.bezier(w, tau)
         return T, B
+
+
     def set_init(self, state_x0, state_y0, state_z0):
         self.state_x0 = state_x0.copy()
         self.state_y0 = state_y0.copy()
