@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import axes3d
+import casadi as ca
 
 class VHSIP:
     def __init__(self, L, dt=0.002, g_mag=9.81, w_v=1., w_p=1., w_u=1.):
@@ -168,6 +169,121 @@ class VHSIP:
             pz[:, ii] = exp_eig_t * t * self.state_z0[0,0] + self.L
             vz[:, ii] = exp_eig_t * (eig_z * t + 1) * self.state_z0[0,0]
             az[:, ii] = -d / m * vz[:, ii] - k / m * (pz[:, ii] - self.L)
+
+        return time, pz, vz, az
+
+    def bezier_z_dynamicsOpti(self, p0, v0, amax, pmin, pmax, Tfmax=None, Tf=None, pf=None, vf=None):
+        opti = ca.Opti()
+
+        # optimization variables: bezier coefficient, time
+        if Tf is None:
+            T = opti.variable(1)
+        else:
+            T = Tf
+
+        # wp0 = opti.variable(1) no need of this
+        wp0 = p0
+        wp1 = opti.variable(1)
+        wp2 = opti.variable(1)
+        wp3 = opti.variable(1)
+        if pf is None or not (pmin < pf < pmax):  # if pf is given, set w4=pf
+            wp4 = opti.variable(1)
+        else:
+            wp4 = pf
+
+        wp = ca.vcat([wp0, wp1, wp2, wp3, wp4])
+
+        # for simplify computations, let define coeffs of bezier derivatives (do not consider time)
+        wv0 = 4 * (wp1 - wp0)
+        wv1 = 4 * (wp2 - wp1)
+        wv2 = 4 * (wp3 - wp2)
+        wv3 = 4 * (wp4 - wp3)
+        wv = ca.vcat([wv0, wv1, wv2, wv3])
+
+        wa0 = 3 * (wv1 - wv0)
+        wa1 = 3 * (wv2 - wv1)
+        wa2 = 3 * (wv3 - wv2)
+        wa = ca.vcat([wa0, wa1, wa2])
+
+        # COST
+        opti.minimize(-(wv[-1] / T) ** 2)  # 'max vf^2'
+
+        # CONSTRAINTS
+        # initial position
+        # opti.subject_to(wp0==p0)
+        #
+        # final position
+        if type(wp4) == ca.casadi.MX:  # if pf is given, set w4=pf
+            opti.subject_to(wp4 <= pmax)
+        #
+        # initial velocity
+        opti.subject_to(wv0 / T == v0)
+        # causality, limited time
+        if Tf is None:
+            #opti.subject_to(T > 0.1)
+            opti.subject_to(T <= Tfmax)
+
+        # positive snap
+        s = wa2 - 2 * wa1 + wa0
+        snap = 2 * s / T ** 4
+        opti.subject_to(s > 0)
+
+        # the minimum of the acceleration is postive
+        a = s / (T ** 4)
+        b = 2 * (wa1 - wa0) / (T ** 3)
+        c = wa0 / (T ** 2)
+
+        Delta = b ** 2 - 4 * a * c
+        av = -Delta / (4 * a)
+        opti.subject_to(Delta <= 0.)
+        # opti.subject_to(av >= 20.)
+
+        # and in (0, T)
+        tv = - b / (2 * a)
+        tauv = tv / T
+        opti.subject_to(tv < T)
+
+        # initial and final acceleration are upper-bounded
+        opti.subject_to(wa0 / (T ** 2) <= amax)
+        opti.subject_to(wa2 / (T ** 2) <= amax)
+
+        # zero velocity at minimum of acceleration
+        vv = self.bezier(wv / T, tauv)
+        opti.subject_to(vv == 0)
+
+        # lower bound of position
+        pv = self.bezier(wp, tauv)
+        opti.subject_to(pv >= pmin)
+
+        if vf is None:
+            # positive final velocity
+            opti.subject_to(wv3 >= 0)
+        else:
+            # if vf is given, equality constaint
+            opti.subject_to(wv3 / T == vf)  # (not tested)
+
+        # INITIAL GUESS
+        opti.set_initial(wp4, 0.98 * pmax)
+        if Tf is None:
+            opti.set_initial(T, Tfmax / 2)
+        # SOLVER
+        p_opts = {"expand": True}
+        s_opts = {"max_iter": 1000}
+        opti.solver("ipopt", p_opts,
+                    s_opts)
+
+        sol = opti.solve()
+
+        # evaluate
+        Tsol = sol.value(T)
+        wpsol = sol.value(wp)
+        wvsol = sol.value(wv)
+        wasol = sol.value(wa)
+
+        # plot bezier
+        time, pz = self.bezierTraj(wpsol, T0=0, Tf=Tsol, step=0.002)
+        vz = self.bezierTraj(wvsol / Tsol, T0=0, Tf=Tsol, step=0.002)[1]
+        az = self.bezierTraj(wasol / (Tsol ** 2), T0=0, Tf=Tsol, step=0.002)[1]
 
         return time, pz, vz, az
 
