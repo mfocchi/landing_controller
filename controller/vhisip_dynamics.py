@@ -758,9 +758,23 @@ class VHSIP:
             fig.suptitle(title)
 
         axs[0].set_ylabel("$c$ [$m$]")
-        axs[0].plot(self.time, self.T_p_com_ref.T)
-        axs[0].plot(self.time, np.ones_like(self.time)*self.zmp_xy[0])
+
+        axs[0].plot(self.time, (self.T_p_com_ref).T)
+
+        axs[0].plot(self.time, np.ones_like(self.time) * self.zmp_xy[0])
+        axs[0].text(-0.02*self.time[-1], self.zmp_xy[0], '$u^x_{opt}$')
+        axs[0].plot(self.time, np.ones_like(self.time) * self.projected_zmp[0], color=axs[0].lines[-1].get_color(),
+                    linestyle='--')
+        axs[0].text(-0.02*self.time[-1], self.projected_zmp[0], '$u^x_{pr}$')
+
         axs[0].plot(self.time, np.ones_like(self.time) * self.zmp_xy[1])
+        axs[0].text(-0.02*self.time[-1], self.zmp_xy[1], '$u^y_{opt}$')
+        axs[0].plot(self.time, np.ones_like(self.time) * self.projected_zmp[1], color=axs[0].lines[-1].get_color(),
+                    linestyle='--')
+        axs[0].text(-0.02*self.time[-1], self.projected_zmp[1], '$u^y_{pr}$')
+
+
+
         axs[0].grid()
 
         axs[1].set_ylabel("$\dot{c}$ [$m/s$]")
@@ -786,13 +800,16 @@ class VHSIP:
         return fig
         
     def plot_3D(self, title=None):
-
-
         fig = plt.figure()
         if title is not None:
             fig.suptitle(title)
         ax = fig.add_subplot(projection='3d')
         plt.plot(self.T_p_com_ref[0], self.T_p_com_ref[1], self.T_p_com_ref[2], label='$c$')
+
+        for id in self.ctrl_indexes:
+            if id == self.ctrl_indexes[-1]:
+                id = -1
+            ax.scatter([self.T_p_com_ref[0, id]], [self.T_p_com_ref[1, id]], [self.T_p_com_ref[2, id]], color='b', marker='o', s=80, alpha=0.6)
 
 
         scale = np.linspace(50, 150, len(self.feasibility.region))
@@ -801,15 +818,17 @@ class VHSIP:
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
 
         idx = 5
+
         for kin_reg in self.feasibility.region:
             colorVal = scalarMap.to_rgba(scale[idx])
             if kin_reg[0, 2] == self.feasibility_l0.nearest_h:
                 idx_h = idx
             idx -= 1
-            p = Polygon(kin_reg[:, :2], facecolor=colorVal, fill=True, alpha=0.1)
+
+            p = Polygon(kin_reg[:, :2]+self.projected_zmp, facecolor=colorVal, fill=True, alpha=0.1)
             ax.add_patch(p)
             art3d.pathpatch_2d_to_3d(p, z=kin_reg[0, 2], zdir="z")
-            p = Polygon(kin_reg[:, :2], facecolor=colorVal, fill=False, edgecolor=colorVal, alpha=0.8)
+            p = Polygon(kin_reg[:, :2]+self.projected_zmp, facecolor=colorVal, fill=False, edgecolor=colorVal, alpha=0.8)
             ax.add_patch(p)
             art3d.pathpatch_2d_to_3d(p, z=kin_reg[0, 2], zdir="z")
 
@@ -820,15 +839,15 @@ class VHSIP:
         ax.scatter([self.zmp_xy[0]], [self.zmp_xy[1]], [0.], color='r', marker='o', s=80, label='$u_{opt}$', alpha=0.6)
 
         colorVal = scalarMap.to_rgba(scale[0])
-        p = Polygon(self.feasibility_l0.region[:, :2], edgecolor='k', facecolor=colorVal, label='$ FR_{l_{0}}$', alpha=0.1)
+        p = Polygon(-self.feasibility_l0.region[:, :2], edgecolor='k', facecolor=colorVal, label='$ FR_{l_{0}}$', alpha=0.1)
         ax.add_patch(p)
         art3d.pathpatch_2d_to_3d(p, z=0., zdir="z")
 
-        floorx_max = np.max([np.abs(self.zmp_xy[0]), np.abs(self.feasibility_l0.region[:, 0]).max()]) + 0.05
-        floory_max = np.max([np.abs(self.zmp_xy[1]), np.abs(self.feasibility_l0.region[:, 0]).max()]) + 0.05
+        floorx_max = np.max([np.abs(self.zmp_xy[0]), np.abs(self.feasibility_l0.region[:, 0]).max(), np.abs(self.T_p_com_ref[0, :]).max()]) + 0.05
+        floory_max = np.max([np.abs(self.zmp_xy[1]), np.abs(self.feasibility_l0.region[:, 0]).max(), np.abs(self.T_p_com_ref[1, :]).max()]) + 0.05
         ax.set_xlim(-floorx_max, floorx_max)
         ax.set_ylim(-floory_max, floory_max)
-        ax.set_zlim(-0.0, self.T_p_com_ref[:, 2].max()+0.05)
+        ax.set_zlim(-0.0, self.feasibility_l0.region[:, 2].max()+0.05)
         ax.set_xlabel("$c^{x}$ [$m$]")
         ax.set_ylabel("$c^{y}$ [$m$]")
         ax.set_zlabel("$c^{z}$ [$m$]")
@@ -974,3 +993,4 @@ if __name__ == '__main__':
     ax.scatter([vhsip.zmp_xy[0]], [vhsip.zmp_xy[1]], [[0.]], color='red')
 
     plt.legend(["$c$", "$u_{o}$"])
+
