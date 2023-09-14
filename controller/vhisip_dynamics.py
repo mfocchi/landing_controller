@@ -66,6 +66,10 @@ class VHSIP:
         self.feasibility = Feasibility(filename, "KINEMATICS_AND_FRICTION")
         self.feasibility_l0 = FeasibilityOnSlice(self.feasibility, self.L)
 
+        lookup_table_forces_filename = os.environ['LOCOSIM_DIR'] + '/landing_controller/controller/lookup_table_forces.mat'
+        data = loadmat(lookup_table_forces_filename)
+        self.lookup_table_forces = data['lookup_table_forces']
+
         self.zmp_xy = np.empty(2) * np.nan
         self.projected_zmp = np.empty(2) * np.nan
 
@@ -717,6 +721,11 @@ class VHSIP:
         return True
 
 
+
+    def suboptimal_force(self, state_x0, state_y0):
+        theta = np.arctan2(state_y0[0], state_x0[0])
+        idx = (np.abs(self.lookup_table_forces[:, 0] - theta)).argmin()
+        return self.lookup_table_forces[idx, 1]
 
 
     def plot_ref(self, title=None):
