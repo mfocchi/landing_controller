@@ -728,7 +728,7 @@ class VHSIP:
 
 
     def is_ZMPfeasible(self):
-        return self.feasibility_l0.checkPointFeasibility(self.zmp_xy)
+        return self.feasibility_l0.checkPointFeasibility(-self.zmp_xy)
 
 
     def is_COMtrajFeasible(self):
