@@ -104,7 +104,7 @@ com_check = None
 KIN_REG = []
 CZ = []
 # kin_reg, computation_time = projection.project_polytope(params, com_check)
-for cz in [height]:#np.arange(0.1, 0.4, 0.01):
+for cz in np.arange(0.1, 0.4, 0.01):
     comWF[2] = cz
     params.setCoMPosWF(comWF)
     kin_reg, computation_time = projection.project_polytope(params, com_check, 36 * np.pi / 180, 0.01)
@@ -176,15 +176,16 @@ for kin_reg in KIN_REG:
     kr = Polygon(kin_reg[: , :-1])
     kin_and_fric_reg = kr.intersection(SP)
     interserction_vertices2d = np.array(kin_and_fric_reg.exterior.coords)
-    KIN_and_FRIC_REG.append(np.hstack([interserction_vertices2d, np.ones([interserction_vertices2d.shape[0], 1])*kin_reg[0, -1] ]))
+    if interserction_vertices2d.shape[0] > 0:
+        KIN_and_FRIC_REG.append(np.hstack([interserction_vertices2d, np.ones([interserction_vertices2d.shape[0], 1])*kin_reg[0, -1] ]))
 
 
-#
-# from scipy.io import savemat
-#
-# data = {'kin_regions': KIN_REG, 'kin_and_fric_reg': KIN_and_FRIC_REG}
-# savemat("go1_kin_region.mat", data)
 
 from scipy.io import savemat
+
 data = {'kin_regions': KIN_REG, 'kin_and_fric_reg': KIN_and_FRIC_REG}
-savemat("go1_kin_region_l0.mat", data)
+savemat("go1_kin_region.mat", data)
+
+# from scipy.io import savemat
+# data = {'kin_regions': KIN_REG, 'kin_and_fric_reg': KIN_and_FRIC_REG}
+# savemat("go1_kin_region_l0.mat", data)
