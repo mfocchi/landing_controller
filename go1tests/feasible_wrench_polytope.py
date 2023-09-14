@@ -171,8 +171,6 @@ kin_fric_reg = data['kin_and_fric_reg'][0]
 lookup_table = np.zeros([kin_fric_reg.shape[0], 2])
 
 for i, comWF in enumerate(kin_fric_reg):
-    if i > 5:
-        continue
 
     tic = time.time()
     params.setCoMPosWF(comWF)
