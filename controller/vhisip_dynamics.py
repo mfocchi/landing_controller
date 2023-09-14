@@ -555,7 +555,7 @@ class VHSIP:
                 lbconstrs.append(0.)
             else:
                 ubconstrs.append(1.2*Tfmax)
-                lbconstrs.append(Tfmax)
+                lbconstrs.append(0.8*Tfmax)
 
         for tau in self.ctrl_points:
             # the acceleration is postive and upper bounded
