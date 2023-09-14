@@ -586,7 +586,9 @@ class VHSIP:
 
         # SOLVER
         nlp = {'x': X, 'f': cost, 'g': ca.vcat(constrs)}
-        S = ca.nlpsol('S', 'ipopt', nlp)
+        opts = {'ipopt.print_level': 0, 'print_time': 0}
+        S = ca.nlpsol('S', 'ipopt', nlp, opts)
+
 
         if Y0 is not None:
             X0 = Y0
