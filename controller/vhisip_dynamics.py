@@ -733,13 +733,17 @@ class VHSIP:
 
     def is_COMtrajFeasible(self):
         for id in self.ctrl_indexes:
+            if id == 0:
+                continue
             if id == self.ctrl_indexes[-1]:
                 id = -1
-            if not self.feasibility.checkPointFeasibility(self.T_p_com_ref[:, id].reshape(3, 1)):
-                print(id, self.T_p_com_ref[:, id], False)
-                return False
-        return True
+            offset = np.array([[self.projected_zmp[0]],
+                               [self.projected_zmp[1]],
+                               [0]])
+            if not self.feasibility.checkPointFeasibility(self.T_p_com_ref[:, id].reshape(3, 1)-offset):
 
+                return False, self.time[id]
+        return True, self.time[id]
 
 
     def suboptimal_force(self, state_x0, state_y0):
