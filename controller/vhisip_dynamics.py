@@ -34,7 +34,6 @@ class VHSIP:
         self.Bxy = np.array([[0.],
                              [0.]])
 
-
         self.Axy_d = np.eye(2)
         self.Axy_d[1, 0] = self.dt
         self.Bxy_d = np.zeros((2, 1))
@@ -541,14 +540,8 @@ class VHSIP:
         # initial position
         # opti.subject_to(wp0==p0)
         #
-        # final position
-        if pf is None or not (pmin < pf < pmax):  # if pf is given, set w4=pf
-            fin_pos = wp_list[N]
-            constrs.append(fin_pos)
-            ubconstrs.append(pmax)
-            lbconstrs.append(pmin)
-        #
-        # initial velocity
+
+        #initial velocity
         init_vel = wv_list[0] / T
         constrs.append(init_vel-v0)
         ubconstrs.append(0.0)
