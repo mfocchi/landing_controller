@@ -678,7 +678,7 @@ class VHSIP:
     def projectPointFRcasadi(self, point):
         # project a 2d point into the Feasible Region at height = l0 solving the LP
         # max k
-        # s.t. x = k*[point_x, point_y, l0]
+        # s.t. x = k*[point_x, point_y]
         #      Ax <= b
         #      k >= 0
         # where A, b describe the FR
