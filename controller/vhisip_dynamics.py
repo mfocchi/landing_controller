@@ -659,9 +659,13 @@ class VHSIP:
 
 
     def set_init(self, state_x0, state_y0, state_z0):
-        self.state_x0 = state_x0.copy()
-        self.state_y0 = state_y0.copy()
-        self.state_z0 = state_z0.copy()
+        self.state_x0[0] = state_x0[0]
+        self.state_y0[0] = state_y0[0]
+        self.state_z0[0] = state_z0[0]
+
+        self.state_x0[1] = 0.
+        self.state_y0[1] = 0.
+        self.state_z0[1] = 0.
 
     def projectPoint(self, point, lb, ub):
         proj_point = np.minimum(np.maximum(point, lb), ub)
