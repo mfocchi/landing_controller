@@ -706,6 +706,27 @@ class VHSIP:
         projected_point = res.x * point
         return projected_point, res
 
+    def index_ref_over_zmp(self, strategy):
+        # positive strategy means to check forward
+        # negative means backward
+        if strategy > 0:
+            i = 0
+            while i <= self.ctrl_horz - 1:
+                if np.all(self.T_p_com_ref[:2, i] <= self.zmp_xy):
+                    i += 1
+                else:
+                    return i
+
+        elif strategy < 0:
+            i = self.ctrl_horz - 1
+            while i > 0:
+                if np.all(vhsip.T_p_com_ref[:2, i] >= vhsip.zmp_xy):
+                    i -= 1
+                else:
+                    return i
+
+
+
     def is_ZMPfeasible(self):
         return self.feasibility_l0.checkPointFeasibility(self.zmp_xy)
 
