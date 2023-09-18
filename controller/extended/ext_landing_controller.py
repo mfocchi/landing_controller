@@ -272,8 +272,8 @@ class ExtendedLandingController:
                 ubconstrs.append(+np.inf)
                 lbconstrs.append(0.)
             else:
-                ubconstrs.append(1.2 * Tfmax)
-                lbconstrs.append(0.8 * Tfmax)
+                ubconstrs.append(1. * Tfmax)
+                lbconstrs.append(0. * Tfmax)
 
         for tau in self.ctrl_points:
             # the acceleration is postive and upper bounded
