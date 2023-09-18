@@ -25,6 +25,12 @@ state_y0 = np.array([[0],
 state_z0 = np.array([[- np.sqrt(2*apex_height*g_mag)],
                      [0.]])
 
+LF_footWF = np.array([  0.20776,   0.18087, 0.])
+RF_footWF = np.array([  0.20776,  -0.18087, 0.])
+LH_footWF = np.array([ -0.16844,   0.18087, 0.])
+RH_footWF = np.array([ -0.16844,   -0.18087, 0.])
+feet = np.vstack([LF_footWF, RF_footWF, LH_footWF, RH_footWF])
+
 
 ELC = ExtendedLandingController(dt=0.002, L=L, g_mag=9.81, w_v=1., w_p=1., w_u=1.)
 ELC.set_init(state_x0, state_y0, state_z0)
@@ -95,3 +101,7 @@ while not solved:
 
 
 
+title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved) + " t_star:" + str(t_star)
+plot_ref(time, ELC.T_p_com_ref, ELC.T_v_com_ref, ELC.T_a_com_ref, ELC.zmp_xy, ELC.projected_zmp, title, t_star)
+plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes, feet,
+        title)

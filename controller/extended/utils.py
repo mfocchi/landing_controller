@@ -94,7 +94,7 @@ def plot_ref(time, pos, vel, acc, zmp_xy = None, projected_zmp = None, title=Non
     return fig
 
 
-def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_indexes, title=None):
+def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_indexes, feet = None, title=None):
     fig = plt.figure()
     if title is not None:
         fig.suptitle(title)
@@ -132,18 +132,23 @@ def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_index
                s=40, label='Pr$(u_{opt}, FR_{l_{0}})$')
     ax.scatter([zmp_xy[0]], [zmp_xy[1]], [0.], color='r', marker='o', s=80, label='$u_{opt}$', alpha=0.6)
 
+    if feet is not None:
+        ax.scatter([feet[:, 0] + projected_zmp[0]], [feet[:, 1] + projected_zmp[1]], [feet[:, 2]], color='k')
+
+
     colorVal = scalarMap.to_rgba(scale[0])
     p = Polygon(-feasibility_zmp.region[:, :2], edgecolor='k', facecolor=colorVal, label='$ FR_{l_{0}}$',
                 alpha=0.1)
     ax.add_patch(p)
     art3d.pathpatch_2d_to_3d(p, z=0., zdir="z")
 
-    floorx_max = np.max([np.abs(zmp_xy[0]), np.abs(feasibility_zmp.region[:, 0]).max(),
-                         np.abs(pos[0, :]).max()]) + 0.05
-    floory_max = np.max([np.abs(zmp_xy[1]), np.abs(feasibility_zmp.region[:, 0]).max(),
-                         np.abs(pos[1, :]).max()]) + 0.05
-    ax.set_xlim(-floorx_max, floorx_max)
-    ax.set_ylim(-floory_max, floory_max)
+
+    floorx_max = np.min( [np.nanmax([np.abs(zmp_xy[0]), np.abs(feasibility_zmp.region[:, 0]).max(),
+                         np.abs(pos[0, :]).max()]), 0.5]) + 0.05
+    floory_max =  np.min( [np.nanmax([np.abs(zmp_xy[1]), np.abs(feasibility_zmp.region[:, 0]).max(),
+                         np.abs(pos[1, :]).max()]), 0.5]) + 0.05
+    ax.set_xlim(-0.2, 0.6)
+    ax.set_ylim(-0.3, 0.3)
     ax.set_zlim(-0.0, feasibility_zmp.region[:, 2].max() + 0.05)
     ax.set_xlabel("$c^{x}$ [$m$]")
     ax.set_ylabel("$c^{y}$ [$m$]")
