@@ -88,7 +88,10 @@ while not solved:
 
 
     ELC.set_init(state_x0, state_y0, state_z0)
-    time, posz, velz, accz, X0 = ELC.bezier_z_dynamicsN(p0=L, v0=state_z0[0], amax=Fzmax/m, pmin=pmin, pmax=pmax, Tfmax=t_star, Tf=None, pf=None, vf=None, Y0=X0, N=5)
+
+    # Fzmax = ELC.suboptimal_force(state_xtd, state_ytd)
+    Fzmax = 600.
+    time, posz, velz, accz, X0 = ELC.bezier_z_dynamicsN(p0=L, v0=state_z0[0], amax=Fzmax/m, pmin=pmin, pmax=pmax, Tfmax=t_star, Tf=None, pf=None, vf=2, Y0=X0, N=5)
 
     ELC.set_z_dynamics(time, posz, velz, accz)
     ELC.propagation_matrices()
