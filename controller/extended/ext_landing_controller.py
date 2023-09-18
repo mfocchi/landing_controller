@@ -48,6 +48,8 @@ class ExtendedLandingController:
         self.state_y0 = np.empty((2, 1)) * np.nan
         self.state_z0 = np.empty((2, 1)) * np.nan
 
+        self.init_velH = np.empty(2) * np.nan
+
         self.Cv = np.array([[1.0, 0.0]])
         self.Cp = np.array([[0.0, 1.0]])
 
@@ -306,6 +308,7 @@ class ExtendedLandingController:
 
         if Y0 is not None:
             X0 = Y0
+
         r = S(x0=ca.vcat(X0), lbg=ca.vcat(lbconstrs), ubg=ca.vcat(ubconstrs))
 
         # evaluate
@@ -335,17 +338,20 @@ class ExtendedLandingController:
         self.state_y0[1] = 0.
         self.state_z0[1] = 0.
 
+        self.init_velH[0] = state_x0[0]
+        self.init_velH[1] = state_y0[0]
+
     # this is faster than above
     def projectPointFR(self, point):
         return projectPointToPolygon(self.feasibility_l0.A, self.feasibility_l0.b, point)
 
-    def index_ref_over_zmp(self, strategy):
+    def index_ref_over_projected_zmp(self, strategy):
         # positive strategy means to check forward
         # negative means backward
         if strategy > 0:
             i = 0
             while i <= self.ctrl_horz - 1:
-                if np.all(np.sign(self.T_v_com_ref[:2, 0]) * (self.T_p_com_ref[:2, i] - self.zmp_xy) <= 0):
+                if np.all(np.sign(self.T_v_com_ref[:2, 0]) * (self.T_p_com_ref[:2, i] - self.projected_zmp) <= 0):
                     i += 1
                 else:
                     return i
@@ -353,7 +359,7 @@ class ExtendedLandingController:
         elif strategy < 0:
             i = self.ctrl_horz - 1
             while i > 0:
-                if np.all(np.sign(self.T_v_com_ref[:2, 0]) * (self.T_p_com_ref[:2, i] - self.zmp_xy) >= 0):
+                if np.all(np.sign(self.T_v_com_ref[:2, 0]) * (self.T_p_com_ref[:2, i] - self.projected_zmp) >= 0):
                     i -= 1
                 else:
                     return i

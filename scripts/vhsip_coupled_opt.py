@@ -68,7 +68,8 @@ X0 = None
 while not solved:
     ctrl_counter += 1
 
-    t_star = ELC.index_ref_over_zmp(-1) * ELC.dt
+    #t_star = ELC.index_ref_over_projected_zmp(-1) * ELC.dt
+
 
     ELC.set_init(state_x0, state_y0, state_z0)
     time, posz, velz, accz, X0 = ELC.bezier_z_dynamicsN(p0=L, v0=state_z0[0], amax=Fzmax/m, pmin=pmin, pmax=pmax, Tfmax=t_star, Tf=None, pf=None, vf=None, Y0=X0, N=5)
