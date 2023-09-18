@@ -249,7 +249,7 @@ class ExtendedLandingController:
         wa = ca.Function('wa', [X], [ca.vcat(wa_list)])
 
         # COST
-        cost = -(bezier(wv(X) / T, 1)) ** 2  # 'max vf^2'
+        cost = 1 # -(bezier(wv(X) / T, 1)) ** 2  # 'max vf^2'
 
         # CONSTRAINTS
         constrs = []
