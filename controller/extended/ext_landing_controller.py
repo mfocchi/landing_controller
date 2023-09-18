@@ -216,6 +216,8 @@ class ExtendedLandingController:
             T = Tf
 
         # wp0 = opti.variable(1) no need of this
+        # in position we have N+1 coeffs
+        # in vel we have N coeffs ...
         wp0 = p0
         wp_list.append(wp0)
         for i in range(1, N):
@@ -290,6 +292,7 @@ class ExtendedLandingController:
             else:
                 lbconstrs.append(pmin)
 
+
         if vf is None:
             # positive final velocity
             constrs.append(wv_list[N - 1])
@@ -303,8 +306,8 @@ class ExtendedLandingController:
 
         # SOLVER
         nlp = {'x': X, 'f': cost, 'g': ca.vcat(constrs)}
-        opts = {'ipopt.print_level': 0, 'print_time': 0}
-        S = ca.nlpsol('S', 'ipopt', nlp, opts)
+        opts = {'knitro.print_level': 0, 'print_time': 0}
+        S = ca.nlpsol('S', 'knitro', nlp)#, opts)
 
         if Y0 is not None:
             X0 = Y0
