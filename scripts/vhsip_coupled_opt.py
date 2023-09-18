@@ -100,6 +100,14 @@ while not solved:
 
     solved = ELC.is_COMtrajFeasible()
 
+    i = ELC.ctrl_horz - 1
+    while i >= 0:
+        if np.all(ELC.T_v_com_ref[:2, i] >= 0.8 * ELC.init_velH):
+            i -= 1
+        else:
+            break
+    t_star = i * ELC.dt
+
 
     if ctrl_counter == 5:
         print('Limit loops reached')
