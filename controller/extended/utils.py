@@ -44,8 +44,8 @@ def plotOptimalBezier(time, pos, vel, acc, Tsol, pmin, pmax, p0, pf, v0, amax, c
     plt.subplots_adjust(right=0.85)
 
 
-def plot_ref(time, pos, vel, acc, zmp_xy = None, projected_zmp = None, title=None):
-    fig, axs = plt.subplots(3, 1, figsize=(10, 5))
+def plot_ref(time, pos, vel, acc, zmp_xy = None, projected_zmp = None, title=None, t_star = None):
+    fig, axs = plt.subplots(3, 1, figsize=(10, 5), sharex=True)
     if title is not None:
         fig.suptitle(title)
 
@@ -68,6 +68,11 @@ def plot_ref(time, pos, vel, acc, zmp_xy = None, projected_zmp = None, title=Non
         axs[0].plot(time, np.ones_like(time) * projected_zmp[1], color=axs[0].lines[-1].get_color(),
                     linestyle='--')
         axs[0].text(-0.02 * time[-1], projected_zmp[1], '$u^y_{pr}$')
+
+    if t_star is not None:
+        axs[0].vlines(t_star, pos.min(), pos.max())
+        axs[1].vlines(t_star, vel.min(), vel.max())
+        axs[2].vlines(t_star, acc.min(), acc.max())
 
     axs[0].grid()
 

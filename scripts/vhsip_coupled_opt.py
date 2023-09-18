@@ -67,9 +67,19 @@ ELC.compute_xy_dynamics(ELC.projected_zmp[0], ELC.projected_zmp[1])
 
 #
 ctrl_counter = 0
-title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved)
-plot_ref(time, ELC.T_p_com_ref, ELC.T_v_com_ref, ELC.T_a_com_ref, ELC.zmp_xy, ELC.projected_zmp, title)
-plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes, title)
+
+
+i = ELC.ctrl_horz-1
+while i >= 0:
+    if np.all(ELC.T_v_com_ref[:2, i] >= 0.8*ELC.init_velH):
+        i -= 1
+    else:
+        break
+t_star = i * ELC.dt
+
+title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved) + " t_star:" + str(t_star)
+plot_ref(time, ELC.T_p_com_ref, ELC.T_v_com_ref, ELC.T_a_com_ref, ELC.zmp_xy, ELC.projected_zmp, title, t_star)
+plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes, feet, title)
 X0 = None
 while not solved:
     ctrl_counter += 1
@@ -87,18 +97,27 @@ while not solved:
 
     solved = ELC.is_COMtrajFeasible()
 
-    title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved)
-    plot_ref(time, ELC.T_p_com_ref, ELC.T_v_com_ref, ELC.T_a_com_ref, ELC.zmp_xy, ELC.projected_zmp, title)
-    plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes,
-            title)
 
     if ctrl_counter == 5:
         print('Limit loops reached')
         break
 
+    # title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved) + " t_star:" + str(t_star)
+    # plot_ref(time, ELC.T_p_com_ref, ELC.T_v_com_ref, ELC.T_a_com_ref, ELC.zmp_xy, ELC.projected_zmp, title, t_star)
+    # plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes, feet,
+    #         title)
+
+    print(ctrl_counter)
+
+    # if ctrl_counter == 5:
+    #     print('Limit loops reached')
+    #     break
+
 
 #ELC.plot_3D(title='ELC'+str(counter)+" solved:"+str(solved))
 
+# plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes, feet,
+#             title)
 
 
 title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved) + " t_star:" + str(t_star)
