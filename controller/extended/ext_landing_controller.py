@@ -76,8 +76,8 @@ class ExtendedLandingController:
         self.zmp_xy = np.empty(2) * np.nan
         self.projected_zmp = np.empty(2) * np.nan
 
-        self.ctrl_points = np.linspace(0, 1, num=6, endpoint=True)
-        self.ctrl_indexes = np.zeros_like(self.ctrl_points)
+        self.ctrl_knots = np.linspace(0, 1, num=6, endpoint=True)
+        self.ctrl_indexes = np.zeros_like(self.ctrl_knots)
 
     def duplicate(self):
         return ExtendedLandingController(self.L, self.dt, self.g_mag, self.w_v, self.w_p, self.w_u)
@@ -159,7 +159,7 @@ class ExtendedLandingController:
         self.time = time.copy()
         self.ctrl_horz = time.shape[0]
 
-        self.ctrl_indexes = (self.ctrl_points * self.ctrl_horz).astype(int)
+        self.ctrl_indexes = (self.ctrl_knots * self.ctrl_horz).astype(int)
 
         self._reshape_arrays()
 
@@ -277,7 +277,7 @@ class ExtendedLandingController:
                 ubconstrs.append(1. * Tfmax)
                 lbconstrs.append(0. * Tfmax)
 
-        for tau in self.ctrl_points:
+        for tau in self.ctrl_knots:
             # the acceleration is postive and upper bounded
             constrs.append(bezier(wa(X) / T ** 2, tau))
             ubconstrs.append(amax)
@@ -287,7 +287,7 @@ class ExtendedLandingController:
             # bounds on position
             constrs.append(bezier(wp(X), tau))
             ubconstrs.append(pmax)
-            if tau == self.ctrl_points[-1]:
+            if tau == self.ctrl_knots[-1]:
                 lbconstrs.append((pmax + p0) / 2)  # does not allow for squatty jumps
             else:
                 lbconstrs.append(pmin)
@@ -327,7 +327,7 @@ class ExtendedLandingController:
 
         # plot bezier
         if plot:
-            plotOptimalBezier(time, pz, vz, az, Tsol, pmin, pmax, p0, pf, v0, amax, self.ctrl_points)
+            plotOptimalBezier(time, pz, vz, az, Tsol, pmin, pmax, p0, pf, v0, amax, self.ctrl_knots)
 
         return time, pz, vz, az, np.array(r['x']).tolist()
 
