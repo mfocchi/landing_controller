@@ -10,7 +10,7 @@ m = 12.
 L = 0.25
 max_spring_compression = 0.1
 max_settling_time = 1.2
-apex_height = 1
+apex_height = .6
 g_mag = 9.81
 pmin = 0.1
 pmax = 0.3
@@ -34,8 +34,9 @@ feet = np.vstack([LF_footWF, RF_footWF, LH_footWF, RH_footWF])
 
 ELC = ExtendedLandingController(dt=0.002, L=L, g_mag=9.81, w_v=1., w_p=1., w_u=1.)
 ELC.set_init(state_x0, state_y0, state_z0)
+
 #Fzmax = ELC.suboptimal_force(state_x0, state_y0)
-FZmax = 800
+
 # msd dynamics
 k_limit = m * (8 / max_settling_time)**2
 eig_z_limit = -np.sqrt(k_limit/m)
@@ -90,7 +91,7 @@ while not solved:
     ELC.set_init(state_x0, state_y0, state_z0)
 
     # Fzmax = ELC.suboptimal_force(state_xtd, state_ytd)
-    Fzmax = 600.
+    Fzmax = 600
     time, posz, velz, accz, X0 = ELC.bezier_z_dynamicsN(p0=L, v0=state_z0[0], amax=Fzmax/m, pmin=pmin, pmax=pmax, Tfmax=t_star, Tf=None, pf=None, vf=2, Y0=X0, N=5)
 
     ELC.set_z_dynamics(time, posz, velz, accz)
