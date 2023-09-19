@@ -343,6 +343,62 @@ class ExtendedLandingController:
 
         # SOLVER
         nlp = {'x': X, 'f': cost, 'g': ca.vcat(constrs)}
+        #opts = {'knitro.print_level': 0, 'print_time': 0}
+        opts = {
+            # "print_level": 8,
+            "ipopt.linear_solver": "ma57",
+            # "ma57_pivtol": 1e-6
+            # "nlp_scaling_max_gradient": 100.0,
+            # "nlp_scaling_min_value": 1e-6,
+            # "tol": 1e-3,
+            # "dual_inf_tol": 1000.0,
+            # "compl_inf_tol": 1e-2,
+            # "constr_viol_tol": 1e-3,
+            # "acceptable_tol": 1e0,
+            # "acceptable_iter": 1,
+            # #"acceptable_compl_inf_tol": 1,
+            # "alpha_for_y": "dual-and-full",
+            # "max_iter": 4000,
+            # "warm_start_bound_frac": 1e-2,
+            # "warm_start_bound_push": 1e-2,
+            # "warm_start_mult_bound_push": 1e-2,
+            # "warm_start_slack_bound_frac": 1e-2,
+            # "warm_start_slack_bound_push": 1e-2,
+            # "warm_start_init_point": "yes",
+            # "required_infeasibility_reduction": 0.8,
+            # "perturb_dec_fact": 0.1,
+            # "max_hessian_perturbation": 10000,
+            # "fast_step_computation": "yes",
+            # "hessian_approximation": "exact",
+        }
+        S = ca.nlpsol('S', 'ipopt', nlp, opts)
+
+        if Y0 is not None:
+            X0 = Y0
+
+        r = S(x0=ca.vcat(X0), lbg=ca.vcat(lbconstrs), ubg=ca.vcat(ubconstrs))
+
+        # constrF = ca.Function('constr', [X], [ca.vcat(constrs)])
+        # print(lbconstrs)
+        # print(constrF(r['x']))
+        # print(ubconstrs)
+
+        # evaluate
+        # X = [T, wp1, wp2, wp3, wp4]
+        Tsol = r['x'][0]
+        wpsol = wp(r['x'])
+        wvsol = wv(r['x'])
+        wasol = wa(r['x'])
+
+        time, pz = bezierTraj(wpsol, T0=0, Tf=Tsol, step=0.002)
+        vz = bezierTraj(wvsol / Tsol, T0=0, Tf=Tsol, step=0.002)[1]
+        az = bezierTraj(wasol / (Tsol ** 2), T0=0, Tf=Tsol, step=0.002)[1]
+
+        # plot bezier
+        if plot:
+            plotOptimalBezier(time, pz, vz, az, Tsol, pmin, pmax, p0, pf, v0, amax, self.ctrl_knots)
+
+        return time, pz, vz, az, np.array(r['x']).tolist()
         opts = {'knitro.print_level': 0, 'print_time': 0}
         S = ca.nlpsol('S', 'knitro', nlp)#, opts)
 
