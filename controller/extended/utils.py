@@ -99,7 +99,7 @@ def plot_ref(time, pos, vel, acc, zmp_xy = None, projected_zmp = None, title=Non
     return fig
 
 
-def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_indexes, feet = None, title=None):
+def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_indexes, feet = None, title=None, i=None):
     fig = plt.figure()
     if title is not None:
         fig.suptitle(title)
@@ -111,6 +111,9 @@ def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_index
             id = -1
         ax.scatter([pos[0, id]], [pos[1, id]], [pos[2, id]], color='b',
                    marker='o', s=80, alpha=0.6)
+    if i is not None:
+        ax.scatter([pos[0, i]], [pos[1, i]], [pos[2, i]], color='r',
+                   marker='*', s=80, alpha=0.6)
 
     scale = np.linspace(50, 150, len(feasibility.region))
     jet = plt.get_cmap('RdBu')
