@@ -1,6 +1,7 @@
 import numpy as np
 from landing_controller.controller.extended.ext_landing_controller import ExtendedLandingController
 from landing_controller.controller.extended.utils import plot_ref, plot_3D
+import time as t_os
 
 np.set_printoptions(threshold=np.inf, precision=5, linewidth=10000, suppress=True)
 
@@ -82,25 +83,33 @@ title = 'ELC: ' + str(ctrl_counter) + " solved:" + str(solved) + " t_star:" + st
 plot_ref(time, ELC.T_p_com_ref, ELC.T_v_com_ref, ELC.T_a_com_ref, ELC.zmp_xy, ELC.projected_zmp, title, t_star)
 plot_3D(ELC.T_p_com_ref, ELC.zmp_xy, ELC.projected_zmp, ELC.feasibility, ELC.feasibility_l0, ELC.ctrl_indexes, feet, title)
 X0 = None
+X0 = np.zeros(6)
+X0[0] = t_star
 while not solved:
     ctrl_counter += 1
-
-    #t_star = ELC.index_ref_over_projected_zmp(-1) * ELC.dt
-
 
     ELC.set_init(state_x0, state_y0, state_z0)
 
     # Fzmax = ELC.suboptimal_force(state_xtd, state_ytd)
     Fzmax = 600
+
+    tic = t_os.time()
     time, posz, velz, accz, X0 = ELC.bezier_z_dynamicsN(p0=L, v0=state_z0[0], amax=Fzmax/m, pmin=pmin, pmax=pmax, Tfmax=t_star, Tf=None, pf=None, vf=2, Y0=X0, N=5)
 
+    # time, posz, velz, accz, X0 = ELC.bezier_z_dynamics_cpp(p0=L, v0=float(state_z0[0]), amax=Fzmax / m, pmin=pmin, pmax=pmax,
+    #                                                     Tfmax=t_star, vf=2, X0=np.array(X0))
+    toc = t_os.time()
+    print('optimize bezier:', toc - tic)
+
+    tic = t_os.time()
     ELC.set_z_dynamics(time, posz, velz, accz)
     ELC.propagation_matrices()
     #ELC.zmp_xy = ELC.zmp_xy.copy()
     ELC.compute_xy_dynamics(ELC.projected_zmp[0], ELC.projected_zmp[1])
+    toc = t_os.time()
+    print('horz dynamics:', toc - tic)
 
-    solved = ELC.is_COMtrajFeasible()
-
+    tic = t_os.time()
     i = ELC.ctrl_horz - 1
     while i >= 0:
         if np.all(ELC.T_v_com_ref[:2, i] >= 0.8 * ELC.init_velH):
@@ -109,6 +118,9 @@ while not solved:
             break
     t_star = i * ELC.dt
 
+    solved = ELC.is_COMtrajFeasible(i)
+    toc = t_os.time()
+    print('feasibility and t intersection:', toc - tic)
 
     if ctrl_counter == 5:
         print('Limit loops reached')
