@@ -463,12 +463,15 @@ class ExtendedLandingController:
     def is_ZMPfeasible(self):
         return self.feasibility_l0.checkPointFeasibility(-self.zmp_xy)
 
-    def is_COMtrajFeasible(self):
+    def is_COMtrajFeasible(self, i=None):
         for id in self.ctrl_indexes:
             if id == 0:
                 continue
             if id == self.ctrl_indexes[-1]:
-                id = -1
+                if i is None:
+                    id = -1
+                else:
+                    id = i
             offset = np.array([[self.projected_zmp[0]],
                                [self.projected_zmp[1]],
                                [0]])
