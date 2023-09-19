@@ -79,6 +79,13 @@ class ExtendedLandingController:
         self.ctrl_knots = np.linspace(0, 1, num=6, endpoint=True)
         self.ctrl_indexes = np.zeros_like(self.ctrl_knots)
 
+        opts = {'ipopt.print_level': 0, 'print_time': 0}
+        self.solver = ca.nlpsol("solver", "ipopt", "./nlp.so", opts)
+        self.ubconstrsFunction = ca.external("ubconstrs", "./nlp.so")
+        self.lbconstrsFunction = ca.external("lbconstrs", "./nlp.so")
+        self.wp = ca.external("wp", "./nlp.so")
+        self.wv = ca.external("wv", "./nlp.so")
+        self.wa = ca.external("wa", "./nlp.so")
     def duplicate(self):
         return ExtendedLandingController(self.L, self.dt, self.g_mag, self.w_v, self.w_p, self.w_u)
 
@@ -192,6 +199,36 @@ class ExtendedLandingController:
             az[:, ii] = -d / m * vz[:, ii] - k / m * (pz[:, ii] - self.L)
 
         return time, pz, vz, az
+
+    def bezier_z_dynamics_cpp(self, p0, v0, amax, pmin, pmax, Tfmax, vf, X0):
+        self.param = np.array([p0,
+                         v0,
+                         amax,
+                         pmin,
+                         pmax,
+                         Tfmax,
+                         vf])
+
+        res = self.solver(
+            ubg=self.ubconstrsFunction(self.param),
+            lbg=self.lbconstrsFunction(self.param),
+            x0=X0,
+            p=self.param)
+
+        Tsol = res['x'][0]
+        wpsol = self.wp(p0, res['x'])
+        wvsol = self.wv(p0, res['x'])
+        wasol = self.wa(p0, res['x'])
+
+        time, pz = bezierTraj(wpsol, T0=0, Tf=Tsol, step=0.002)
+        vz = bezierTraj(wvsol / Tsol, T0=0, Tf=Tsol, step=0.002)[1]
+        az = bezierTraj(wasol / (Tsol ** 2), T0=0, Tf=Tsol, step=0.002)[1]
+
+        return time, pz, vz, az, np.array(res['x']).tolist()
+
+
+
+
 
     def bezier_z_dynamicsN(self, p0, v0, amax, pmin, pmax, Tfmax=None, Tf=None, pf=None, vf=None, plot=False, Y0=None,
                            N=None):
