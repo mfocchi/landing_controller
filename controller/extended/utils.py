@@ -145,7 +145,7 @@ def plot_3D(pos, zmp_xy, projected_zmp, feasibility, feasibility_zmp, ctrl_index
 
 
     colorVal = scalarMap.to_rgba(scale[0])
-    p = Polygon(-feasibility_zmp.region[:, :2], edgecolor='k', facecolor=colorVal, label='$ FR_{l_{0}}$',
+    p = Polygon(feasibility_zmp.region[:, :2]+ projected_zmp.reshape(1,2), edgecolor='k', facecolor=colorVal, label='$ FR_{l_{0}}$',
                 alpha=0.1)
     ax.add_patch(p)
     art3d.pathpatch_2d_to_3d(p, z=0., zdir="z")
@@ -190,10 +190,10 @@ def bezierTraj(w, T0=0, Tf=1, step=0.002):
 
 # noinspection PyDeprecation
 def projectPointToPolygon(A, b, point):
-    # (A, b) describes a 2d polygon, i.e. the point x belongs to the polygon if A@x + b <= 0.
+    # (A, b) describes a 2d convex polygon, i.e. the point x belongs to the polygon if A@x + b <= 0.
     # The origin is inside the polygon
     # The function finds the intersection between the line joining the origin and the given point and the polygon,
-    # in the direction of the point, solving the following NLP
+    # in the direction of the point, solving the following LP
     # max k
     # s.t. x = k*[point_x, point_y]
     #      Ax + b <= 0
