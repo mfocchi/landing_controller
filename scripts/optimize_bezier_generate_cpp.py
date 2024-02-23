@@ -115,34 +115,35 @@ compiler = "gcc"  # Linux
 flags = ["-O3"]  # Linux/OSX
 
 # Create an NLP solver instance
-opts = {
-            "ipopt.print_level": 8,
-            "ipopt.linear_solver": "ma57",
-            "ipopt.ma57_pivtol": 1e-6,
-            "ipopt.nlp_scaling_max_gradient": 100.0,
-            "ipopt.nlp_scaling_min_value": 1e-6,
-            "ipopt.tol": 1e-3,
-            "ipopt.dual_inf_tol": 1000.0,
-            "ipopt.compl_inf_tol": 1e-2,
-            "ipopt.constr_viol_tol": 1e-3,
-            "ipopt.acceptable_tol": 1e0,
-            "ipopt.acceptable_iter": 1,
-            "ipopt.acceptable_compl_inf_tol": 1,
-            "ipopt.alpha_for_y": "dual-and-full",
-            "ipopt.max_iter": 4000,
-            "ipopt.warm_start_bound_frac": 1e-2,
-            "ipopt.warm_start_bound_push": 1e-2,
-            "ipopt.warm_start_mult_bound_push": 1e-2,
-            "ipopt.warm_start_slack_bound_frac": 1e-2,
-            "ipopt.warm_start_slack_bound_push": 1e-2,
-            "ipopt.warm_start_init_point": "yes",
-            "ipopt.required_infeasibility_reduction": 0.8,
-            "ipopt.perturb_dec_fact": 0.1,
-            "ipopt.max_hessian_perturbation": 10000,
-            "ipopt.fast_step_computation": "yes",
-            "ipopt.hessian_approximation": "exact",
+s_opts = {
+            "print_level": 8,
+            "linear_solver": "ma57",
+            "ma57_pivtol": 1e-6,
+            "nlp_scaling_max_gradient": 100.0,
+            "nlp_scaling_min_value": 1e-6,
+            "tol": 1e-3,
+            "dual_inf_tol": 1000.0,
+            "compl_inf_tol": 1e-2,
+            "constr_viol_tol": 1e-3,
+            "acceptable_tol": 1e0,
+            "acceptable_iter": 1,
+            "acceptable_compl_inf_tol": 1,
+            "alpha_for_y": "dual-and-full",
+            "max_iter": 4000,
+            "warm_start_bound_frac": 1e-2,
+            "warm_start_bound_push": 1e-2,
+            "warm_start_mult_bound_push": 1e-2,
+            "warm_start_slack_bound_frac": 1e-2,
+            "warm_start_slack_bound_push": 1e-2,
+            "warm_start_init_point": "yes",
+            "required_infeasibility_reduction": 0.8,
+            "perturb_dec_fact": 0.1,
+            "max_hessian_perturbation": 10000,
+            "fast_step_computation": "yes",
+            "hessian_approximation": "exact",
         }
-solver = ca.nlpsol("solver", "ipopt", nlp, opts)
+opts = {}
+solver = ca.nlpsol("solver", "ipopt", nlp, opts, s_opts)
 #
 # # Generate C code for the NLP functions
 solver.generate_dependencies("solver.c")
