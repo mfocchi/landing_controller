@@ -53,8 +53,11 @@ class Normal:
 
 def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr = ''
-    SIMstr += 'id: '   + simulation['id'] + '\n'
-    SIMstr += 'name: ' + simulation['name'] + '\n'
+    keys = simulation.keys()
+    if 'id' in keys:
+        SIMstr += 'id: '   + simulation['id'] + '\n'
+    if 'name' in keys:
+        SIMstr += 'name: ' + simulation['name'] + '\n'
     SIMstr += 'base height: ' + str(np.round(simulation['pose'][2], 3)) + ' m\n'
     SIMstr += 'base orientation: ' + str(np.round(simulation['pose'][3:]/DEG2RAD, 3)) + ' deg\n'
     SIMstr += 'base lin vel: ' + str(np.round(simulation['twist'][:3], 3)) + ' m/s\n'
@@ -62,6 +65,7 @@ def initCond2str(simulation, printVideo=True, speedUpDown=1.):
     SIMstr += 'useWBC: ' +  str(simulation['useWBC']) + '\n'
     SIMstr += 'useIK: ' + str(simulation['useIK'])
     return SIMstr
+
 
 def findLimitsInitCond2str_angularTest(simulation):
     s0 = ' FIND LIMITS \n'
@@ -210,13 +214,13 @@ def saveAllInitConds(directory, SIMS, speedUpDown=1., verbose=False):
         print(directory + '/ALL_simulations.txt saved')
 
 def saveInitConds(directory, simulation, speedUpDown=1., verbose=False):
-    f = open(directory + "/simulations.txt", "w")
+    f = open(directory + "/simulation.txt", "w")
     f.write(initCond2str(simulation, speedUpDown=speedUpDown) + '\n' + '-' * 10 + '\n')
     f.close()
     if verbose:
-        print(directory + '/simulations.txt saved')
+        print(directory + '/simulation.txt saved')
 
-def setSavePath(SETTINGS, directory='simulation'):
+def setSavePath(SETTINGS, directory='simulations'):
     #if SETTINGS['WORKSPACE']['save'] or SETTINGS['PLOTS']['save'] or SETTINGS['save_log'] or SETTINGS['INIT_CONDS']['save_all']: # set save path in all the cases
         now = datetime.datetime.now()
         now_s = str(now)
