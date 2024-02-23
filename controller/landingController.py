@@ -60,18 +60,18 @@ class LandingController:
         self.L = self.com_home[2]
 
         self.max_spring_compression = 0.4 * self.L
-        w_v = 1.
-        w_p = 1.
-        w_u = 0.
-        max_settling_time = 1.8
+        self.w_v = 1.
+        self.w_p = 1.
+        self.w_u = 0.
+        self.max_settling_time = 1.8
 
         self.slip_dyn = SLIP_dynamics(  self.dt,
                                         self.L,
                                         self.max_spring_compression,
                                         self.m,
                                         self.g_mag,
-                                        w_v, w_p, w_u,
-                                        max_settling_time)
+                                        self.w_v, self.w_p, self.w_u,
+                                        self.max_settling_time)
 
         self.euler_TD = np.zeros(3)
         self.eig_ang = 0.
@@ -90,6 +90,7 @@ class LandingController:
 
         self.B_feet_task = []
         self.T_feet_task = []
+        self.T_centroid = np.zeros(2)
 
         self.legs = ['lf', 'lh', 'rf', 'rh']
 
@@ -99,10 +100,12 @@ class LandingController:
             self.B_feet_home.append(B_foot.copy())
             self.B_feet_task.append(B_foot.copy())
 
-            T_foot = np.array([B_foot[0], B_foot[1], 0.0])
+            T_foot = np.array([B_foot[0], B_foot[1], 0.00])
             self.T_feet_home.append(T_foot.copy())
             self.T_feet_task.append(T_foot.copy())
-
+            for elem in self.T_feet_home:
+                self.T_centroid += elem[:2]
+            self.T_centroid /= 4
 
         self.init_pos = np.zeros([3, 1])
         self.init_vel = np.zeros([3, 1])
