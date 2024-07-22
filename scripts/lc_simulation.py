@@ -15,7 +15,7 @@ if __name__ == '__main__':
         logfile = open(SETTINGS['save_path'] + "/log.txt", "w")
 
     try:
-        p = Controller(ROBOT_NAME)
+        p = QuadrupedController(ROBOT_NAME)
         if SETTINGS['VIDEO']['save']:
             world_name = 'camera_'+world_name
 

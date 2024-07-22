@@ -250,7 +250,7 @@ class LandingManager:
                 self.p.B_contacts_des[leg] = self.lc.B_feet_task[leg].copy()
 
             # finally, send commands
-            self.p.send_command(q_des, qd_des, tau_ffwd)
+            self.p.send_command(q_des, qd_des, tau_ffwd, log_data_in_send_command=True)
 
         if not self.p.real_robot:
             self.p.pause_physics_client()

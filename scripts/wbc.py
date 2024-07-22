@@ -42,7 +42,7 @@ test['profile'] = True
 
 
 if __name__ == '__main__':
-    p = Controller(robotName)
+    p = QuadrupedController(robotName)
     if test['profile']:
         pr = cProfile.Profile()
 
