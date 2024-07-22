@@ -1,7 +1,7 @@
 # this is a copy of wbc.py
 import time
 
-from base_controllers.quadruped_controller import Controller
+from base_controllers.quadruped_controller import QuadrupedController
 import rospy as ros
 import numpy as np
 

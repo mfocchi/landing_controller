@@ -8,7 +8,7 @@ np.set_printoptions(linewidth=np.inf,  # number of characters per line before ne
                     suppress=True,  # suppress scientific notation
                     threshold=np.inf)
 
-from base_controllers.quadruped_controller import Controller
+from base_controllers.quadruped_controller import QuadrupedController
 import rospy as ros
 from base_controllers.utils.common_functions import *
 import base_controllers.params as conf

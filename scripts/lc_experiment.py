@@ -3,7 +3,7 @@
 # it does not call reset,
 # (not used yet)
 
-from base_controllers.quadruped_controller import Controller
+from base_controllers.quadruped_controller import QuadrupedController
 from landing_controller.controller.landingManager import LandingManager
 from landing_controller.settings import SETTINGS # simumation details are in SETTINGS['SIMS']
 from landing_controller.controller.utility import *
@@ -19,7 +19,12 @@ if __name__ == '__main__':
         stdout = sys.stdout
         logfile = open(SETTINGS['save_path'] + "/log.txt", "w")
     try:
-        p = Controller(ROBOT_NAME)
+        p = QuadrupedController(ROBOT_NAME)
+        
+        # TODO: Michele check this one that I add
+        # p.des_robot = RobotWrapper.BuildFromURDF(
+        #     os.environ.get('LOCOSIM_DIR') + "/robot_urdf/generated_urdf/" + p.robot_name + ".urdf",
+        #     root_joint=pinocchio.JointModelFreeFlyer())
 
         p.startController(additional_args=['go0_conf:=standDown',
                                            'pid_discrete_implementation:=true'])

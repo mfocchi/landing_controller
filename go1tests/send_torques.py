@@ -8,7 +8,7 @@ np.set_printoptions(linewidth=np.inf,  # number of characters per line befor new
                     suppress=True,  # suppress scientific notation
                     threshold=np.inf)
 
-from base_controllers.quadruped_controller import Controller
+from base_controllers.quadruped_controller import QuadrupedController
 import rospy as ros
 import time
 
