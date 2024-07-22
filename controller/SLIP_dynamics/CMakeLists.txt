@@ -37,3 +37,8 @@ target_compile_definitions(SLIP_dynamics_lib PRIVATE SLIP_DYNAMICS_LIBRARY)
 
 target_include_directories(SLIP_dynamics_lib PRIVATE ${PYTHON_INCLUDE_DIRS} /opt/openrobots/include)
 
+
+
+install(TARGETS SLIP_dynamics_lib
+  DESTINATION  ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+  
