@@ -296,7 +296,7 @@ if __name__ == '__main__':
 
             # finally, send commands
             p.unpause_physics_client()
-            p.send_command(q_des, qd_des, tau_ffwd)
+            p.send_command(q_des, qd_des, tau_ffwd, log_data_in_send_command=True)
 
         p.pid.setPDjoints(p.kp_j, p.kd_j, p.ki_j)
         p.gravityCompensation()

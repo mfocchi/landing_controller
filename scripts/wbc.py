@@ -172,7 +172,7 @@ if __name__ == '__main__':
                 p.gravityCompensation()
 
             # send desired command to the ros controller
-            p.send_command()
+            p.send_command(log_data_in_send_command=True)
 
 
 
