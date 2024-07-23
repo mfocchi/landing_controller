@@ -6,6 +6,7 @@ import datetime
 import os
 import pinocchio as pin
 import rospy as ros
+from termcolor import colored
 
 class LandingManager:
     def __init__(self, p, settings = None, noise=None):
@@ -14,8 +15,170 @@ class LandingManager:
 
         self.settings = settings
         self.noise = noise
+        self.firstTime = True
+
+    def runAtApex(self, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False):
+        if self.firstTime:
+            self.firstTime = False
+            # fsm_state = 0 - before APEX: kinematic adjustment (not used in simulations)
+            # fsm_state = 1 - from APEX to TOUCH DOWN: compute landing trajectory + kinematic adjustment
+            # fsm_state = 2 - from TOUCH DOWN to END: use last landing trajectory
+            # fsm_state = 3 - quit
+            self.fsm_state = 1
+            #########
+            # reset #
+            #########
+
+            if self.p.real_robot:
+                 self.lc = LandingController(robot=self.p.robot,
+                                            dt=2 * self.p.dt,
+                                            q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
+                                                          self.p.quaternion,
+                                                          self.p.q_des]),
+                                            smoothing_param=0.02)
+
+            else:
+                self.baseLinVelW_init = baseTwist_init[:3].copy()
+                self.lc = LandingController(robot=self.p.robot,
+                                            dt=2 * self.p.dt,
+                                            q0=np.hstack([self.p.u.linPart(self.p.basePoseW),
+                                                          self.p.quaternion,
+                                                          self.p.q_des]),
+                                            smoothing_param=0.02,
+                                            naive=naive)
+                self.lc.setCheckTimings(expected_lift_off_time=None,
+                                        expected_apex_time=None,
+                                        expected_touch_down_time=self.p.time + np.sqrt(2 * (self.p.basePoseW[2] - 0.25) / self.lc.g_mag),
+                                        clearance=0.05)  # about 12 mm of error in touch down
+
+
+        ###############################
+        #### FINITE STATE MACHINE #####
+        ###############################
+        finished = False
+        q_des = self.p.q_des.copy()
+        qd_des = np.zeros_like(q_des)
+        tau_ffwd = np.zeros_like(q_des)
+        ###############################################
+        # STATE 0 - before APEX: kinematic adjustment #
+        ###############################################
+        if self.fsm_state == 1:
+            # check if touch down is occurred
+            if self.p.real_robot:
+                self.lc.touchDownReal(t=self.p.time,
+                                      sample=self.p.log_counter,
+                                      contacts_state=self.p.contact_state)
+            else:
+                self.lc.touchDown(t=self.p.time,
+                                  sample=self.p.log_counter,
+                                  contacts_state=self.p.contact_state)
+
+            if self.lc.lc_events.touch_down.detected:
+                print(colored("LC: TD detected", "red"))
+                self.fsm_state += 1
+                height = 0.
+                for leg in range(4):
+                    height -= self.p.B_contacts[leg][2]
+                height /= 4
+                self.p.leg_odom.reset(np.hstack([0., 0., height, self.p.quaternion, self.p.q]))
+                # if use only ik -> same pid gains
+                # if use ik + wbc -> reduce pid gains
+                # if only wbc -> zero pid gains
+                if not useIK:
+                    self.p.pid.setPDs(0., 0., 0.)
+                elif useWBC and useIK:
+                    self.p.pid.setPDjoints(self.p.kp_wbc_j, self.p.kd_wbc_j, self.p.ki_wbc_j)
+                # elif not simulation['useWBC'] and simulation['useIK'] :
+                #       do not change gains
+
+                # save the  position at touch down
+                comPoseH, comRateH = self.p.World2Hframe(self.p.comPoseW, self.p.comTwistW)
+                self.lc.landed(comPoseH, comRateH)
+
+                self.p.W_contacts_TD = copy.deepcopy(self.p.W_contacts)
+
+            else:
+                # compute landing trajectory + kinematic adjustment
+                w_R_hf = pin.rpy.rpyToMatrix(0, 0, self.p.u.angPart(self.p.basePoseW)[2])
+
+                if self.p.real_robot:
+                    self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.p.u.linPart(self.p.baseTwistW))
+                else:
+                    self.baseLinVelW_init[2] = self.p.baseTwistW[2]
+                    self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.baseLinVelW_init)
+
+                # set references
+                # joints position
+                for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
+                    q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
+                                                             leg,
+                                                             self.p.legConfig[leg][0],
+                                                             self.p.legConfig[leg][1])
+
+                    if isFeasible:
+                        self.p.u.setLegJointState(i, q_des_leg, q_des)
+
+                    # joints velocity
+                    B_contact_err = self.lc.B_feet_task[i] - self.p.B_contacts[i]
+                    kv = .01 / self.p.dt
+                    self.p.B_vel_contacts_des[i] = kv * B_contact_err
+                    qd_des_leg = self.p.J_inv[i] @ self.p.B_vel_contacts_des[i]
+                    self.p.u.setLegJointState(i, qd_des_leg, qd_des)
+
+                tau_ffwd = self.p.self_weightCompensation()
+
+        #################################################################
+        # STATE 2 - from TOUCH DOWN to END: use last landing trajectory #
+        #################################################################
+        if self.fsm_state == 2:
+            if self.lc.lp_counter > 2 * self.lc.ref_k + 100:  # take a bit before quitting
+                self.fsm_state = 3
+                finished = True
+                print(colored("finished", "red"))
+            else:
+                # use last computed trajectories
+                self.lc.landed_phase(self.p.time)
+
+                # set references
+                b_R_w_des = pin.rpy.rpyToMatrix(self.p.u.angPart(self.lc.pose_des)).T
+                omega_des_skew = pin.skew(b_R_w_des @ self.p.u.angPart(self.lc.pose_des))
+                # joints position
+                for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
+                    q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
+                                                             leg,
+                                                             self.p.legConfig[leg][0],
+                                                             self.p.legConfig[leg][1])
+                    if isFeasible:
+                        self.p.u.setLegJointState(i, q_des_leg, q_des)
+
+                    # joints velocity
+                    self.p.B_vel_contacts_des[i] = omega_des_skew.T @ self.lc.B_feet_task[
+                        i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
+                    qd_leg_des = self.p.J_inv[i] @ self.p.B_vel_contacts_des[i]
+                    self.p.u.setLegJointState(i, qd_leg_des, qd_des)
+
+                if not useWBC:
+                    tau_ffwd = self.p.gravityCompensation()
+
+                # save LC references for com, feet, zmp
+                self.p.comPoseW_des, self.p.comTwistW_des, comAccW_des = self.p.Hframe2World(self.lc.pose_des,
+                                                                                             self.lc.twist_des,
+                                                                                             self.lc.acc_des)
+
+                if useWBC:
+                    tau_ffwd = self.p.WBC(self.p.comPoseW_des, self.p.comTwistW_des, comAccW_des, type=typeWBC)
+
+        for leg in range(4):
+            self.p.W_contacts_des[leg] = self.p.u.linPart(self.p.basePoseW) + self.p.b_R_w.T @ self.lc.B_feet_task[leg]
+            self.p.B_contacts_des[leg] = self.lc.B_feet_task[leg].copy()
+
+        if ros.is_shutdown():
+            finished = True
+
+        return q_des, qd_des, tau_ffwd, finished
 
     def run(self, simulation_counter, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False):
+
         #########
         # reset #
         #########
