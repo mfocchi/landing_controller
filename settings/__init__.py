@@ -13,10 +13,10 @@ SETTINGS['SIMS'] = SIMS_SETTINGS
 SETTINGS['VIDEO'] = VIDEO
 SETTINGS['INIT_CONDS'] = INIT_CONDS
 
-SETTINGS['verbose'] = False
-SETTINGS['save_log'] = True
+SETTINGS['verbose'] = True
+SETTINGS['save_log'] = False
 SETTINGS['save_path'] = ''
-SETTINGS['finally_close'] = False
+SETTINGS['finally_close'] = True
 
 
 # modificable settings (all the settings can be modified, but it's very likely that you will not need them)

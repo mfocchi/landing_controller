@@ -2,5 +2,5 @@
 # video settings #
 ##################
 VIDEO = {}
-VIDEO['save'] = True
+VIDEO['save'] = False
 VIDEO['speedUpDown'] = 0.2

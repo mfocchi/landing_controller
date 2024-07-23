@@ -4,7 +4,7 @@ from landing_controller.settings import SETTINGS # simumation details are in SET
 from landing_controller.controller.utility import *
 
 ROBOT_NAME = 'go1'  # go1, solo, (aliengo)
-world_name = 'slow.world' # if camera is activated , world will become slow
+world_name = 'fast.world' # if camera is activated , world will become slow
 use_gui = True
 
 if __name__ == '__main__':
@@ -16,9 +16,6 @@ if __name__ == '__main__':
 
     try:
         p = QuadrupedController(ROBOT_NAME)
-        if SETTINGS['VIDEO']['save']:
-            world_name = 'camera_'+world_name
-
         p.startController(world_name=world_name,
                           use_ground_truth_pose=True,
                           use_ground_truth_contacts=False,
@@ -27,7 +24,7 @@ if __name__ == '__main__':
                                            'pid_discrete_implementation:=false'])
 
         p.startupProcedure()
-
+        p.setSimSpeed(max_update_rate=200)
         lm = LandingManager(p, SETTINGS)
         sim_counter = -1
         if SETTINGS['save_log']:
@@ -64,15 +61,18 @@ if __name__ == '__main__':
             logfile.close()
             sys.stdout = stdout
         print(e)
+        ros.signal_shutdown("killed")
+        p.deregister_node()
+
     finally:
+        ros.signal_shutdown("killed")
+
         if SETTINGS['save_log']:
             logfile.close()
             sys.stdout = stdout
 
-        if SETTINGS['finally_close']:
-            ros.signal_shutdown("killed")
-            p.deregister_node()
-            os.system("killall rosmaster rviz gzserver gzclient ros_control_node")
+
+
 
         # store all the init conds
         if SETTINGS['INIT_CONDS']['save_all']:
@@ -120,3 +120,4 @@ if __name__ == '__main__':
                            frame='W',
                            sharex=True, sharey=False)
 
+        p.deregister_node()
