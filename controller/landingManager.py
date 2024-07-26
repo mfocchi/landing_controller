@@ -50,7 +50,7 @@ class LandingManager:
                                         expected_apex_time=None,
                                         expected_touch_down_time=self.p.time + np.sqrt(2 * (self.p.basePoseW[2] - 0.25) / self.lc.g_mag),
                                         clearance=0.05)  # about 12 mm of error in touch down
-
+            print(colored(f"LC: Starting LC at time t={self.p.time}", "red"))
 
         ###############################
         #### FINITE STATE MACHINE #####
@@ -74,7 +74,7 @@ class LandingManager:
                                   contacts_state=self.p.contact_state)
 
             if self.lc.lc_events.touch_down.detected:
-                print(colored("LC: TD detected", "red"))
+                print(colored(f"LC: TD detected at time t={self.p.time}", "red"))
                 self.fsm_state += 1
                 height = 0.
                 for leg in range(4):
@@ -100,23 +100,29 @@ class LandingManager:
             else:
                 # compute landing trajectory + kinematic adjustment
                 w_R_hf = pin.rpy.rpyToMatrix(0, 0, self.p.u.angPart(self.p.basePoseW)[2])
-
+                hf_R_b = pin.rpy.rpyToMatrix(self.p.u.angPart(self.p.basePoseW)[0], self.p.u.angPart(self.p.basePoseW)[1], 0)
                 if self.p.real_robot:
                     self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.p.u.linPart(self.p.baseTwistW))
                 else:
                     self.baseLinVelW_init[2] = self.p.baseTwistW[2]
-                    self.lc.flyingDown_phase(self.p.b_R_w @ w_R_hf, w_R_hf.T @ self.baseLinVelW_init)
+                    self.lc.flyingDown_phase(hf_R_b.T, w_R_hf.T @ self.baseLinVelW_init)
 
                 # set references
                 # joints position
-                for i, leg in enumerate(self.lc.legs):  # ['lf', 'rf', 'lh', 'lh']
+                for i, leg in enumerate(self.lc.legs):  # ['lf', 'lf', 'rf', 'rh']
+
+                    # q_des_leg, isFeasible = self.p.ikin.footInverseKinematicsFixedBaseLineSearch(self.lc.B_feet_task[i],
+                    #                                                                              self.p.robot.model.frames[self.p.robot.model.getFrameId(self.p.ee_frames[i])].name,
+                    #                                                                              q0_leg=np.array([0.0, 0.7, -1.4]))
+
                     q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
                                                              leg,
                                                              self.p.legConfig[leg][0],
                                                              self.p.legConfig[leg][1])
 
-                    if isFeasible:
-                        self.p.u.setLegJointState(i, q_des_leg, q_des)
+                    # set also if it is not feasible we clamp in the send_command
+                    self.p.u.setLegJointState(i, q_des_leg, q_des)
+
 
                     # joints velocity
                     B_contact_err = self.lc.B_feet_task[i] - self.p.B_contacts[i]
@@ -124,6 +130,10 @@ class LandingManager:
                     self.p.B_vel_contacts_des[i] = kv * B_contact_err
                     qd_des_leg = self.p.J_inv[i] @ self.p.B_vel_contacts_des[i]
                     self.p.u.setLegJointState(i, qd_des_leg, qd_des)
+
+                # clip q_des qd_des inside joint limits
+                q_des = np.clip(q_des, self.p.robot.model.lowerPositionLimit[-self.p.robot.na:], self.p.robot.model.upperPositionLimit[-self.p.robot.na:])
+                qd_des = np.clip(qd_des, -self.p.robot.model.velocityLimit[-self.p.robot.na:], self.p.robot.model.velocityLimit[-self.p.robot.na:])
 
                 tau_ffwd = self.p.self_weightCompensation()
 
@@ -144,18 +154,27 @@ class LandingManager:
                 omega_des_skew = pin.skew(b_R_w_des @ self.p.u.angPart(self.lc.pose_des))
                 # joints position
                 for i, leg in enumerate(self.lc.legs):  # ['lf', 'lh', 'rf','rh']
+
+                    # q_des_leg, isFeasible = self.p.ikin.footInverseKinematicsFixedBaseLineSearch(self.lc.B_feet_task[i],
+                    #                                                                              self.p.robot.model.frames[self.p.robot.model.getFrameId(self.p.ee_frames[i])].name,
+                    #                                                                              q0_leg=np.array([0.0, 0.7, -1.4]))
+
                     q_des_leg, isFeasible = self.p.IK.ik_leg(self.lc.B_feet_task[i],
                                                              leg,
                                                              self.p.legConfig[leg][0],
                                                              self.p.legConfig[leg][1])
-                    if isFeasible:
-                        self.p.u.setLegJointState(i, q_des_leg, q_des)
+
+                    #set also if it is not feasible we clamp in the send_command
+                    self.p.u.setLegJointState(i, q_des_leg, q_des)
 
                     # joints velocity
-                    self.p.B_vel_contacts_des[i] = omega_des_skew.T @ self.lc.B_feet_task[
-                        i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
+                    self.p.B_vel_contacts_des[i] = omega_des_skew.T @ self.lc.B_feet_task[i] - b_R_w_des @ self.p.u.linPart(self.lc.twist_des)
                     qd_leg_des = self.p.J_inv[i] @ self.p.B_vel_contacts_des[i]
                     self.p.u.setLegJointState(i, qd_leg_des, qd_des)
+
+                # clip q_des qd_des inside joint limits
+                q_des = np.clip(q_des, self.p.robot.model.lowerPositionLimit[-self.p.robot.na:], self.p.robot.model.upperPositionLimit[-self.p.robot.na:])
+                qd_des = np.clip(qd_des, -self.p.robot.model.velocityLimit[-self.p.robot.na:], self.p.robot.model.velocityLimit[-self.p.robot.na:])
 
                 if not useWBC:
                     tau_ffwd = self.p.gravityCompensation()
