@@ -46,32 +46,12 @@ class LandingController:
         # q_neutral[0:7] and v_neutral[0:6] cannot be modified
         self._q_neutral = pin.neutral(self.robot.model)
 
-        self.foot2base = self.base_height(q_j=self.qj_home)
-        # here I assume all the feet has the same radius
-        floor2foot = 0.
-        for obj in robot.collision_model.geometryObjects:
-            if "foot" in obj.name:
-                if hasattr(obj.geometry, 'radius'):
-                    floor2foot = obj.geometry.radius
-            break
-
-        self._q_neutral[2] = self.foot2base + floor2foot
-        self.com_home = self.robot.robotComW(self._q_neutral)
-        self.L = self.com_home[2]
-
-        self.max_spring_compression = 0.4 * self.L
         self.w_v = 1.
         self.w_p = 1.
         self.w_u = 0.
         self.max_settling_time = 1.8
 
-        self.slip_dyn = SLIP_dynamics(  self.dt,
-                                        self.L,
-                                        self.max_spring_compression,
-                                        self.m,
-                                        self.g_mag,
-                                        self.w_v, self.w_p, self.w_u,
-                                        self.max_settling_time)
+        self.setQ0(q0)
 
         self.euler_TD = np.zeros(3)
         self.eig_ang = 0.
@@ -83,7 +63,7 @@ class LandingController:
         self.T_comPose_TD = np.zeros(6)
         self.T_comTwist_TD = np.zeros(6)
 
-        self.T_o_B = np.array([0, 0, self.L])
+
 
         self.B_feet_home = []
         self.T_feet_home = []
@@ -118,8 +98,20 @@ class LandingController:
 
         self.lc_events = LcEvents()
 
+    def setQ0(self, q0):
+        self.qj_home = q0[7:]
+        self.foot2base = self.compute_base_height(q_j=self.qj_home)
+        # here I assume all the feet has the same radius
+        self.floor2foot = 0.
+        for obj in self.robot.collision_model.geometryObjects:
+            if "foot" in obj.name:
+                if hasattr(obj.geometry, 'radius'):
+                    floor2foot = obj.geometry.radius
+            break
+        self.setRobotHeight(self.foot2base)
 
-    def base_height(self, q_j):
+
+    def compute_base_height(self, q_j):
         # assumes all the feet in contact and contact surface horizontal
         self._q_neutral[7:] = q_j
         pin.forwardKinematics(self.robot.model, self.robot.data, self._q_neutral)
@@ -128,6 +120,22 @@ class LandingController:
         for ee_id in self.robot.getEndEffectorsFrameId:
             foot2base -= self.robot.data.oMf[ee_id].translation[2].copy()
         return foot2base/4
+
+    def setRobotHeight(self, robot_height):
+        self.foot2base = robot_height
+        self._q_neutral[2] = self.foot2base + self.floor2foot
+        self.com_home = self.robot.robotComW(self._q_neutral)
+        self.L = self.com_home[2]
+        self.max_spring_compression = 0.4 * self.L
+
+        self.slip_dyn = SLIP_dynamics(self.dt,
+                                      self.L,
+                                      self.max_spring_compression,
+                                      self.m,
+                                      self.g_mag,
+                                      self.w_v, self.w_p, self.w_u,
+                                      self.max_settling_time)
+        self.T_o_B = np.array([0, 0, self.L])
 
 
     def pushing_phase(self):

@@ -17,7 +17,7 @@ class LandingManager:
         self.noise = noise
         self.firstTime = True
 
-    def runAtApex(self, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False):
+    def runAtApex(self, basePose_init=None, baseTwist_init=None, useIK=False, useWBC=True, typeWBC='projection', naive=False, robot_height = None):
         if self.firstTime:
             self.firstTime = False
             # fsm_state = 0 - before APEX: kinematic adjustment (not used in simulations)
@@ -98,6 +98,9 @@ class LandingManager:
                 self.p.W_contacts_TD = copy.deepcopy(self.p.W_contacts)
 
             else:
+                if robot_height is not None:
+                    self.setRobotHeight(self.foot2base)
+
                 # compute landing trajectory + kinematic adjustment
                 w_R_hf = pin.rpy.rpyToMatrix(0, 0, self.p.u.angPart(self.p.basePoseW)[2])
                 hf_R_b = pin.rpy.rpyToMatrix(self.p.u.angPart(self.p.basePoseW)[0], self.p.u.angPart(self.p.basePoseW)[1], 0)
